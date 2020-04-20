@@ -1,0 +1,101 @@
+---
+title: "figure_1_lipids"
+author: "rra"
+date: "4/18/2020"
+output: html_document
+---
+
+load packages
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(MASS) #for stats stuff
+library(qtl)
+library(lme4) #Needed for mixed model
+library(arm) #Visualizing mixed model
+library(lsmeans) #Needed for BLUPs
+library(pbkrtest) #For lsmeans
+library(cowplot) 
+library(viridis)
+library(qtlcharts)
+library(readr)
+library(ggfortify)
+library(ggmap)
+library(maps)
+library(qtlcharts)
+```
+
+Load data for Hilo Panel
+
+```{r}
+#file with hilo panel metadata
+
+hilo_panel <- read_csv("data/fig_1/hilo_panel_info.csv")
+
+
+```
+
+Plot map with location of accessions
+
+```{r}
+#register google_key
+
+register_google(key = "AIzaSyC7ysJP7aVkxc-r1fIPskFkUtRiKGkzxCk")
+
+basemap <- get_map(location=c(lon = -85, lat = -5), zoom = 3, maptype = "hybrid", color='bw', source='google', scale = 4)
+ggmap(basemap)
+
+map <- ggmap(basemap, extent='panel', base_layer=ggplot(hilo_panel, aes(x=Long, y=Lat))) #adds hilo panel info
+
+map + geom_point(aes(colour = ele_cont), size = 3) +
+  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
+  theme(legend.position="none") +
+  theme_cowplot()
+
+
+
+```
+
+```{r}
+#file with hilo panel lipid data
+
+hilo_lipids <- read_csv("data/fig_1/hilo_panel_lipid.csv")
+
+# add elevation continent variable
+hilo_lipids %>% 
+  mutate(ele_cont = ifelse(continent == "Mex" & elevation == "High", 1,
+                    ifelse(continent == "Mex" & elevation == "aLow", 2, 
+                    ifelse(continent == "SA" & elevation == "High", 3, 4))))
+
+hilo_lipids$ele_cont <- paste(hilo_lipids$continent, hilo_lipids$elevation, sep = "_")
+
+A <- hilo_lipids %>%
+  filter (FIELD == "MT2016") %>%
+  #filter(PCs/LPCs > 5) %>%
+  ggplot(aes(x = log10(PCs/LPCs), y = log10(LPCs), color = ele_cont)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_manual(values=c("#df1b23", "#1260ad", "#fbe912", "#14ade8")) +
+  coord_fixed(ratio = 1.2) +
+  theme_cowplot(12) +
+  theme(legend.position="none") 
+  
+
+
+B <- hilo_lipids %>%
+  filter (FIELD == "MT2016") %>%
+  #filter(LPC_18_1 < 5e+05) %>%
+  ggplot(aes(x = ele_cont, y = log10(PC34_1_LPC18_1) , color = ele_cont)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme_cowplot(12) +
+  coord_fixed(ratio = 1.25) +
+  xlab("Elevation") + 
+  ylab("log10(PC34:1/LPC18:1)") +
+  theme(legend.position="none") 
+
+plot_grid(A, B, ncol = 2)
+```
+
