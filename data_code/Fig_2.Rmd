@@ -1,0 +1,28 @@
+---
+title: "Fig 2 Code"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(data.table)
+library(cowplot)
+library(wesanderson)
+library(ggplot2)
+library(MASS) 
+library(qtl)
+library(lme4) 
+library(arm) 
+library(lsmeans) 
+library(pbkrtest)
+library(cowplot) 
+library(viridis)
+library(qtlcharts)
+library(readr)
+library(ggfortify)
+library(ggmap)
+library(maps)
+library(qtlcharts)
+library(Hmisc)
+```
+
+

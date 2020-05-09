@@ -1,0 +1,58 @@
+---
+title: "fig4_teo_introgression"
+author: "rra"
+date: "5/4/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(cowplot)
+library(wesanderson)
+library(ggplot2)
+library(MASS) 
+library(qtl)
+library(lme4) 
+library(arm) 
+library(lsmeans) 
+library(pbkrtest)
+library(cowplot) 
+library(viridis)
+library(qtlcharts)
+library(readr)
+library(ggfortify)
+library(ggmap)
+library(maps)
+library(qtlcharts)
+library(Hmisc)
+
+```
+
+fd from palomeros and mushito
+
+```{r}
+fd_chr3 <- read_csv("data/fig_4/fd_chr_3_pts.csv")
+
+names(fd_chr3)[7] <- "fd"
+	
+fd_chr3 %>% 
+	#filter(`Yes-No`=="S") %>%
+	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
+	scale_color_viridis() +
+	geom_segment(size = 2) +
+	ylim(0,1) +
+	geom_segment(x = 1000000, xend = 21000000, y = 0, yend = 0, colour = "black")
+
+fd_chr3 %>% 
+	filter(POS > 750000) %>% 
+	filter(POS < 20000000) %>%
+	filter(`Yes-No`=="S") %>%
+	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
+	scale_color_viridis() +
+	geom_segment(size = 2) +
+	ylim(0,1) +
+	geom_vline(xintercept = 8542106, colour = "red", linetype="dotted", size = 1)
+
+
+```
