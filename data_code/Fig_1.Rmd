@@ -29,10 +29,10 @@ library(Hmisc)
 #PBE analysis
 
 ```{r}
-mex<-fread("data/fig_1/MexHigh.allPBE.txt",header=T) %>% mutate(POP="MH",POS=POS/1E6)
-gua<-fread("data/fig_1/GuaHigh.allPBE.txt",header=T) %>% mutate(POP="GH",POS=POS/1E6)
-and<-fread("data/fig_1/Andes.allPBE.txt",header=T) %>% mutate(POP="AN",POS=POS/1E6)
-swu<-fread("data/fig_1/SW_US.allPBE.txt",header=T) %>% mutate(POP="US",POS=POS/1E6)
+mex<-fread("data/0largedata/MexHigh.allPBE.txt",header=T) %>% mutate(POP="MH",POS=POS/1E6)
+gua<-fread("data/0largedata/GuaHigh.allPBE.txt",header=T) %>% mutate(POP="GH",POS=POS/1E6)
+and<-fread("data/0largedata/Andes.allPBE.txt",header=T) %>% mutate(POP="AN",POS=POS/1E6)
+swu<-fread("data/0largedata/SW_US.allPBE.txt",header=T) %>% mutate(POP="US",POS=POS/1E6)
 all_pops_pbe<-rbind(swu,mex,gua,and) %>% mutate(POP=factor(POP,levels=c("US","MH","GH","AN")))
 
 #GRMZM2G353444(Chr3:8.442106..8.444078)

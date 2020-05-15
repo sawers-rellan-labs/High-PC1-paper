@@ -25,4 +25,82 @@ library(qtlcharts)
 library(Hmisc)
 ```
 
+```{r}
+# Load all files
+
+gbs <- read_csv("data/hpl_GBS_data.csv")
+mapping_file <- read_csv("data/mapping_file.csv")
+AccID <- read_csv("data/AccID.csv")
+allLines_mapping <- read_csv("data/allLines_with_GID.csv")
+load("data/fig_2/pcadapt_corrected.Rimage")
+
+
+# All chromosomes figure
+
+colm %>%
+	#filter(CHR == 5) %>%
+	#filter(BP > 194500000) %>%
+	#filter(BP < 196500000) %>%
+	#filter(P > 900) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 0.3) +
+	theme_cowplot(9) +
+	facet_wrap( ~ CHR, ncol=5)
+	#geom_segment(x = 195.495, xend = 195.505, y = 110, yend = 110, colour = "red", size = 6) +
+	#xlim(5379695, 5395010) +
+	#ylim(0, 130)
+
+# LPCAT1 figure
+
+colm %>%
+	filter(CHR == 5) %>%
+	filter(BP > 194500000) %>%
+	filter(BP < 196500000) %>%
+	#filter(-log10(P) > 70) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 1) +
+	theme_cowplot(16) +
+	#facet_wrap( ~ CHR, ncol=5)
+	geom_segment(x = 195.443, xend = 195.454, y = 110, yend = 110, colour = "red", size = 6) +
+	#xlim(5379695, 5395010) +
+	ylim(0, 130)
+	
+	# ZmPLA1.2 figure
+	
+	colm %>%
+	filter(CHR < 3) %>%
+	filter(BP > 7500000) %>%
+	filter(BP < 9500000) %>%
+	filter(-log10(P) > 5) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 2) +
+	theme_cowplot(12) +
+	geom_segment(x = 8.541, xend = 8.543, y = 120, yend = 120, colour = "red", size = 6) +
+	#xlim(5379695, 5395010) +
+	ylim(0, 130)
+```
+
+
+```{r}
+colm %>%
+	filter(CHR == 6) %>%
+	filter(BP > 0) %>%
+	filter(BP < 15974565) %>%
+	filter(-log10(P) > 35) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 1) +
+	theme_cowplot(9)
+	#facet_wrap( ~ CHR, ncol=5)
+	#geom_segment(x = 195.495, xend = 195.505, y = 110, yend = 110, colour = "red", size = 6) +
+	#xlim(5379695, 5395010) +
+	#ylim(0, 130)
+```
 

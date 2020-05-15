@@ -1,6 +1,8 @@
 ---
 title: "Fig 3 Code"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 ```{r}
 library(tidyverse)
@@ -25,4 +27,221 @@ library(qtlcharts)
 library(Hmisc)
 ```
 
+
+```{r}
+
+data <- read.csv("data/fig_3/metepec_lipids.csv")
+
+#estimate breeding values
+
+traits <- colnames(data)
+#traits 72 to 140 hold LIPID values
+
+for (i in 3:57) {
+#fit mixed model taking into account the three replicate blocks in each of the fields
+mix = lmer(data[,i] ~ MUM_GEN + (1|BLOCK_FIELD),data=data, na.action=na.exclude)
+#sjp.lmer(mix, type="re") #plots the random effects as deviations from the main effect 
+#Extract Breeding Values
+bv <- lsmeans(mix, specs = ~ MUM_GEN)
+bv <- summary(bv) 
+bv=bv[,1:2]
+bv[,2]=round(bv[,2])
+colnames(bv)[1]="RIL"
+colnames(bv)[2]=traits[i]
+
+}
+
+#calculate average values per RIL
+
+data_avg <- data %>%
+  group_by(data$RILS) %>%
+  summarise_at(vars(-RILS), funs(mean(., na.rm=TRUE)))
+
+write_csv(data_avg,"data/fig_3/data_avg.csv")
+#read cross object
+
+cross <- read.cross(format="csv",file="data/fig_3/cross_object_metepec.csv", genotypes=c("AA","AB","BB"), alleles=c("B73","PT"), BC.gen=1, F.gen=5, crosstype = "bcsft")
+
+cross <- read.cross(format="csv",file="data/fig_3/cross_object_metepec.csv", genotypes=c("AA","AB","BB"), alleles=c("B73","PT"), crosstype = "riself")
+
+summary(cross)
+plotMap(cross)
+head(cross$pheno)
+
+data_cross <- read_csv("data/fig_3/cross_object_metepec.csv")
+
+data_cross <- data_cross[3:54,]
+
+geno.image(cross)
+
+
+```
+
+
+
+```{r}
+cross <- calc.genoprob(cross, step=1)
+
+#We now perform single QTL analysis for each trait using Haley-Knott regression
+
+#LPCs QTL
+
+for (i in 2:2){
+trait=colnames(cross$pheno)[i]
+out.hk <- scanone(cross,pheno.col=i,method="hk")
+plot(out.hk, col=c("black"), lwd = 0.7, main=trait) #all plots on same scale
+#Estimate LOD cut-off using permutation; add 5% cut off to plots
+perm <- scanone(cross, pheno.col=i, n.perm=1000, method="hk")
+cut.off <- summary(perm, alpha=0.05)[1]
+abline(h=cut.off,col="red",lty=2) #5% cut off for hk
+}
+
+#find markers 
+
+
+lpc_markerchr3 <- bayesint(out.hk, 3, 0.95, expandtomarkers=TRUE)
+lpc_markerchr7 <- bayesint(out.hk, 7, 0.95, expandtomarkers=TRUE)
+
+find.marker(cross, chr=3, pos= 50)
+find.marker(cross, chr=7, pos= 124)
+
+#Effect plots
+
+effect_plot_lpc_chr3 <- data_cross %>%
+  #filter(S3_8542287 != "NA") %>%
+  ggplot(aes(x = S3_8542287, y = LPCs/10E6, colour = S3_8542287)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  #ylim(0,2e+05) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme(legend.position="none") +
+  theme_cowplot() +
+  ylab("LPCs") +
+  theme(axis.title.x=element_blank()) +
+  ggtitle("qLPCs3@8.5") +
+  theme(legend.position = "none")
+
+
+effect_plot_lpc_chr7 <- data_cross %>%
+  #filter(S7_161685599 != "NA") %>%
+  ggplot(aes(x = S7_161685599, y = LPCs/10E6, colour = S7_161685599)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  #ylim(0,2e+05) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme(legend.position="none") +
+  theme_cowplot() +
+  ylab("LPCs") +
+  theme(axis.title.x=element_blank()) +
+  ggtitle("qLPCs7@162") +
+  theme(legend.position = "none")
+
+
+#epistasis plots LPCs
+
+epistasis_chr3_B73_LPCs <- data_cross %>%
+  filter(S3_8542287 == "AA" & S7_161685599 == "AA" | S7_161685599 == "BB") %>%
+  ggplot(aes(x = S7_161685599, y =  LPCs/10E6, colour = S7_161685599)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  #ylim(0,2e+05) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme(legend.position="none") +
+  theme_cowplot() +
+  ylab("LPCs") +
+  theme(axis.title.x=element_blank()) +
+  ggtitle("3@8.54Mb_B73") +
+  theme(legend.position = "none")
+
+epistasis_chr3_PT_LPCs <- data_cross %>%
+  filter(S3_8542287 == "BB" & S7_161685599 == "AA" | S7_161685599 == "BB") %>%
+  ggplot(aes(x = S7_161685599, y =  LPCs/10E6, colour = S7_161685599)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  #ylim(0,2e+05) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme(legend.position="none") +
+  theme_cowplot() +
+  ylab("LPCs") +
+  theme(axis.title.x=element_blank()) +
+  ggtitle("3@8.54Mb_PT") +
+  theme(legend.position = "none")
+
+
+#PCs QTL
+
+for (i in 3:3){
+trait=colnames(cross$pheno)[i]
+out.hk <- scanone(cross,pheno.col=i,method="hk")
+plot(out.hk, col=c("black"), lwd = 0.7, main=trait) #all plots on same scale
+#Estimate LOD cut-off using permutation; add 5% cut off to plots
+perm <- scanone(cross, pheno.col=i, n.perm=1000, method="hk")
+cut.off <- summary(perm, alpha=0.05)[1]
+abline(h=cut.off,col="red",lty=2) #5% cut off for hk
+}
+
+#find markers 
+
+
+lpc_markerchr3 <- bayesint(out.hk, 3, 0.95, expandtomarkers=TRUE)
+
+
+find.marker(cross, chr=3, pos= 50)
+
+
+#Effect plot
+
+effect_plot_pcs_chr3 <- data_cross %>%
+  filter(S3_8542287 != "NA") %>%
+  ggplot(aes(x = S3_8542287, y = PCs/10E6, colour = S3_8542287)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  #ylim(0,2e+05) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme(legend.position="none") +
+  theme_cowplot() +
+  ylab("PCs") +
+  theme(axis.title.x=element_blank()) +
+  ggtitle("qPCs3@8.5") +
+  theme(legend.position = "none")
+
+#PCs QTL
+
+for (i in 13:17){
+trait=colnames(cross$pheno)[i]
+out.hk <- scanone(cross,pheno.col=i,method="hk")
+plot(out.hk, col=c("black"), lwd = 0.7, main=trait) #all plots on same scale
+#Estimate LOD cut-off using permutation; add 5% cut off to plots
+perm <- scanone(cross, pheno.col=i, n.perm=1000, method="hk")
+cut.off <- summary(perm, alpha=0.05)[1]
+abline(h=cut.off,col="red",lty=2) #5% cut off for hk
+}
+
+#find markers 
+
+
+pc_lpc_markerchr3 <- bayesint(out.hk, 3, 0.95, expandtomarkers=TRUE)
+
+
+find.marker(cross, chr=3, pos= 50)
+
+
+#Effect plot
+
+effect_plot_pcs_lpcs_chr3 <- data_cross %>%
+  filter(S3_8542287 != "NA") %>%
+  ggplot(aes(x = S3_8542287, y = PCs_LPCs, colour = S3_8542287)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  #ylim(0,2e+05) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme(legend.position="none") +
+  theme_cowplot() +
+  ylab("PCs/LPCs") +
+  theme(axis.title.x=element_blank()) +
+  ggtitle("qPCs/LPCs3@8.5") +
+  theme(legend.position = "none")
+
+
+
+
+
+
+
+
+```
 
