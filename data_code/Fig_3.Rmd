@@ -61,7 +61,6 @@ data_avg <- data %>%
 write_csv(data_avg,"data/fig_3/data_avg.csv")
 #read cross object
 
-cross <- read.cross(format="csv",file="data/fig_3/cross_object_metepec.csv", genotypes=c("AA","AB","BB"), alleles=c("B73","PT"), BC.gen=1, F.gen=5, crosstype = "bcsft")
 
 cross <- read.cross(format="csv",file="data/fig_3/cross_object_metepec.csv", genotypes=c("AA","AB","BB"), alleles=c("B73","PT"), crosstype = "riself")
 
@@ -87,7 +86,7 @@ cross <- calc.genoprob(cross, step=1)
 
 #LPCs QTL
 
-for (i in 3:3){
+for (i in 3:50){
 trait=colnames(cross$pheno)[i]
 out.hk <- scanone(cross,pheno.col=i,method="hk")
 plot(out.hk, col=c("black"), lwd = 0.7, main=trait) #all plots on same scale
