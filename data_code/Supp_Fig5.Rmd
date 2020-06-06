@@ -1,0 +1,193 @@
+---
+title: "Supplemental Figure 5"
+author: "Fausto Rodríguez Zapata"
+date: "5/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PBE resampling for SNPs in Glycerolipid pathway
+
+```{r} 
+
+library(dplyr)
+library(GenomicRanges)
+library(regioneR) 
+
+pvalue_string <- function(x, n = 10000){
+  if(x == 0){
+    paste("p <", formatC(1/n, format = "G", digits = 2))
+  } else{
+    paste("p =", formatC(x, format = "G", digits = 2))
+  }
+}
+
+datadir <- file.path("","Users","fvrodriguez","Projects","NCSU","05_PLA1")
+refdir <-  file.path("","ref","zea")
+```
+
+
+### Get the genome annotation 
+B73_RefGen_v3_Chr.bed 
+file with each chromosome start and end coordinates
+this is useful for checking the genome version of the markers
+
+```{r} 
+AGPv3 <- regioneR::toGRanges(file.path(refdir,"B73_RefGen_v3_Chr.bed"))
+seqlengths(AGPv3) <- width(AGPv3)
+genome(AGPv3 ) <- "AGPv3"
+
+B73v3 <- rtracklayer::import(
+  file.path(refdir,"zea_mays.protein_coding_chr.gff"))
+
+genes <- subset(B73v3, 
+                type == "gene" &
+                  biotype != "transposable_element" & 
+                  biotype != "pseudogene" &
+                  seqnames %in% 1:10) + 10000 # + 10Kb upstream and downstream
+nrow(mcols(genes))
+```
+
+### Loading the test gene set and SNP statistic files 
+
+SNP PBE files are divided in different populations
+
+```{r} 
+geneset <- read.csv(file.path(datadir,"glycerolipid_pathways.csv"))
+
+pops <- colnames(geneset)[2:5]
+pbe_files <- c("SW_US.allPBE.txt",  "MexHigh.allPBE.txt",
+               "GuaHigh.allPBE.txt", "Andes.allPBE.txt")
+```
+
+### Sampling and plot
+
+```{r} 
+pdf(file = file.path("output","sample_PBE_nonredundant_genic.pdf"))
+par(mfrow=c(2,2))
+
+for(idx in 1:4){
+  # idx = 4
+  pop <- pops[idx]
+  pbe_in <- pbe_files[idx]
+  pbe <- read.delim(file.path(datadir,"PBE",pbe_in), header = TRUE)
+  head(pbe)
+  colnames(pbe)[1:2]<-c("CHR","BP")
+  colnames(pbe)[ncol(pbe)] <- "PBE"
+  
+  SNP <- makeGRangesFromDataFrame(pbe,
+                                  keep.extra.columns=TRUE,
+                                  ignore.strand=TRUE,
+                                  seqinfo = seqinfo(AGPv3),
+                                  seqnames.field="CHR",
+                                  start.field="BP",
+                                  end.field="BP")
+  SNP$BP <- pbe$BP
+  SNP$CHR <- pbe$CHR
+  
+  # Find genic SNPs for background null distribution
+  
+  genes_olap <- findOverlaps(SNP,genes)
+  
+  in_genes <- queryHits(genes_olap) %>% unique()
+  
+  length(SNP$BP)
+  length(in_genes)
+  
+  # Find SNPs in test genes
+  
+  testgeneID <- as.character(geneset$geneID)
+  
+  testgenes <-  subset(genes, ID %in% testgeneID)
+  
+  ngene <- length(testgeneID)
+  
+  # some test genes are not in this genome annotation
+  testgeneID[! testgeneID %in% genes$ID ] 
+  
+  testgenes_olap <- findOverlaps(SNP, testgenes)
+  
+  testgenes_with_SNP <- subjectHits(testgenes_olap) %>% unique()
+  in_testgenes <- queryHits(testgenes_olap) %>% unique()
+  
+  length(testgenes_with_SNP)
+  length(in_testgenes)
+  
+  hits <- data.frame( 
+    CHR  = SNP$CHR[queryHits(testgenes_olap)],
+    BP   =  SNP$BP[queryHits(testgenes_olap)],
+    gene = testgenes$ID[subjectHits(testgenes_olap)])
+  
+  testgeneSNP <- hits %>% 
+    dplyr::inner_join(as.data.frame(SNP), by=c("CHR","BP")) %>% 
+    arrange(CHR,BP)  
+  testgeneSNP$gene %>% unique() %>% length() 
+  
+  # Resampling for estimating null distribution ________________________________
+  
+  # # Redundant sampling  as Li Wang 2019 ________________________________________
+  # # A particular SNP appears as many times as it has overlaps with the +-10 Kb
+  # # extended genes 
+  # 
+  # sampling <- "r"
+  # 
+  # test <- testgeneSNP$PBE
+  # 
+  # ## Genomic background, i.e. all SNPs genic and intergenic
+  # #  
+  # bg_name <- "genomic"
+  # bg <- SNP$PBE
+  # 
+  # # Genic SNPs background
+  # # bg_name <- "genic"
+  # # bg <- SNP$PBE[in_genes]
+  
+  # Non redundant sampling _______________________________________________________
+  # A particular SNP appears a single time in the test set
+  
+  sampling <- "nr"
+  
+  test <- SNP$PBE[in_testgenes]
+
+  
+  ## Genomic background, i.e. all SNPs genic and intergenic
+  #  
+  ##  bg_name <- "genomic"
+  ##  bg <- SNP$PBE
+  
+  # Genic SNPs background
+  bg_name <- "genic"
+  bg <- SNP$PBE[in_genes]
+  
+  # ____________________________________________________________________________
+  
+  n <- length(test)
+  test_mean <- mean(test)
+  
+  n_bg <- length(bg)
+  bg_mean <- mean(bg)
+  
+  # Null distribution
+  PBE <- replicate(10000, mean(sample(bg, n, replace=FALSE)))
+  
+  pvalue <- 1 - ecdf(PBE)(test_mean) 
+  
+  # Plot
+  #  quartz()
+  hist(PBE , breaks = 100, col = "black",
+       xlim = c(min(PBE,test_mean), max(PBE,test_mean)),
+       main = paste(pop,"Glycerolipid genes",
+                    pvalue_string(pvalue), "\n",
+                    "bg:",n_bg, bg_name, "SNPs\n",
+                    "test:", n, sampling, "SNPs",
+                    "from", length(testgenes_with_SNP), "genes"))
+  abline(v = bg_mean, col = "darkgreen",lwd = 2)
+  abline(v = test_mean, col = "red",lwd = 2)
+}
+
+dev.off()
+```
+
