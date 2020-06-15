@@ -13,6 +13,7 @@
 \author[$\ast$,$\dagger$, 1]{Fausto Rodríguez-Zapata}
 \author[$\dagger$, 1]{Karla Blöcher-Juárez}
 \author[$\dagger$]{Rocío Aguilar-Rangel}
+\author[$\ast$]{Allison Barnes}
 \author[$\dagger$]{Juan M Estévez-Palmas}
 \author[$\ddagger$]{Dan Gates}
 \author[$\S$]{Garret Janzen}
@@ -132,6 +133,15 @@ While under negative mode we identified 16 lipids, of which, 14 were fatty acids
 For the source parameters, ESI gas temperature was set at 325 °C, nebulizer pressure of 35 psig, gas flow of 11L/min, capillary voltage at 3500 V, nozzle voltage at 1000V, MS TOF fragmentor and skimmer at 120 and 65 V, respectively. 
 Under the acquisition parameters a mass range between 60 and 1700 m/z was set. As for reference mass parameters, a detection window of 100 ppm and a minimum height of 1000 counts were set. 
 
+\subsection*{Association of \textit{ZmPla1.2} with agronomic traits}
+We re-analyzed phenotypic data from the F1 Association Mapping (FOAM) panel of Romero-Navarro \textit{et al} \cite{Romero_Navarro2017-cn} and Gates \textit{et al} \cite{Gates2019-xu} to more fully characterize associations signatures of \textit{ZmPla1.2}. 
+Full descriptions of this experiment and data access are described in those references. 
+We downloaded BLUPs for each trait and line from Germinate 3, and subsetted to only those lines with GBS genotype data from Mexico. 
+We fit a similar model to the GWAS model used by Gates \textit{et al} \cite{Gates2019-xu} to estimate the effect of \textit{ZmPla1.2} genotype on the trait's intercept and slope on trial elevation, accounting for effects of tester ID in each field and genetic background and family effects on the trait intercept and slope using four independent random effects. 
+We implemented this model in the \textit{R} package \textit{GridLMM} \cite{GridLMM2019}. 
+We extracted effect sizes and covariances conditional on the REML variance component estimates and used these to calculate standard errors for the total \textit{ZmPla1.2} effect as a function of elevation. 
+To test whether the phenotypic effects of \textit{ZmPla1.2} on yield components could be explained as indirect effects via flowering time, we additionally re-fit each model using Days-To-Anthesis as a covariate with an independent effect in each trial.
+
 \subsection{Data Availability}
 
 At the end of the Materials and Methods section, include a statement on reagent and data availability. Please read the Data and Reagent Policy before writing the statement. Make sure to list the accession numbers or DOIs of any data you have placed in public repositories. List the file names and descriptions of any data you will upload as supplemental information. The statement should also include any applicable IRB numbers. You may include specifications for how to properly acknowledge or cite the data.
@@ -145,6 +155,7 @@ For example: Strains are available upon request. File S1 contains detailed descr
 \subsection{Glycerophospholipid pathways are under selection in  highland maize} 
 We analyzed selection of glycerolipid related pathways in highland maize using several approaches. 
 We first selected 211 genes that are in glycerolipid related enzymatic pathways from the Plant Metabolic Network (Schläpfer et al., 2017). 
+We 
 We then used the Population Branch excess (PBE) statistic (Pool et al., 2017), to analyze if glycerolipid pathway genes are under selection in highland populations. 
 PBE quantifies changes in allele frequencies in focal populations relative to two independent “outgroup” populations. 
 
