@@ -8,20 +8,23 @@
 % {gos} Genetics of Sex 
 % {mp} Multiparental Populations
 
+\newcommand{\jri}[1]{\textcolor{blue}{[\begin{tiny}\textbf{JRI:} {#1}\end{tiny}]}}
+
 \title{The Genetics of Phospholipid Metabolism In Maize Highland Adaptation}
 
 \author[$\ast$,$\dagger$, 1]{Fausto Rodríguez-Zapata}
 \author[$\dagger$, 1]{Karla Blöcher-Juárez}
-\author[$\dagger$]{Rocío Aguilar-Rangel}
-\author[$\ast$]{Allison Barnes}
-\author[$\dagger$]{Juan M Estévez-Palmas}
 \author[$\ddagger$]{Dan Gates}
-\author[$\S$]{Garret Janzen}
-\author[$\dagger$]{Sergio Pérez-Limón}
 \author[$\S$]{Li Wang}
+\author[$\ast$]{Allison Barnes}
+\author[$\S$]{Garret Janzen}
+\author[$\dagger$]{Rocío Aguilar-Rangel}
+\author[$\dagger$]{Juan M Estévez-Palmas}
+\author[$\dagger$]{Sergio Pérez-Limón}
 \author[$\ast\ast$]{Oliver Fiehn}
-\author[$\S$]{Matthew Hufford}
+\author[$\ddagger$]{Daniel Runcie}
 \author[$\ddagger$]{Jeffrey Ross-Ibarra}
+\author[$\S$]{Matthew Hufford}
 \author[$\dagger$,$\dagger\dagger$]{Ruairidh JH Sawers}
 \author[$\ast$,$\dagger$, 2]{Rubén Rellán-Álvarez}
 
@@ -60,10 +63,12 @@ After domestication from lowland teosinte in the warm, humid Mexican southwest m
 \correspondingauthoraffiliation{3}{Department of Molecular and Structural Biochemistry, North Carolina State University, 27607, Raleigh, NC. Email: rrellan@ncsu.edu}
 \vspace{-33pt}% Only used for adjusting extra space in the left column of the first page
 
+\section{Introduction}
+
 \lettrine[lines=2]{\color{gray}M}aize (\textit{Zea mays spp. mays}) was domesticated in the tropical basin of the Balsas River (Guerrero, Mexico) around 10,000 years ago from the wild relative teosinte parviglumis (\textit{Zea mays spp. parviglumis}) \citep{Matsuoka2002-bg,Piperno2009-fj}). 
 After domestication, maize expanded throughout México, north into the US \citep{Da_Fonseca2015-zh} and south into Central America and South America (Wang et al., 2017) and has been adapted to a wide diversity of environments and today is grown in a wider geographical range than any other crop \citep{Hake2015-or}.  
 Maize has also adapted to a wide variety of uses, from the myriad culinary applications of local communities growing maize landraces particularly in Mexico \citep{Bellon2018-cm} to the diverse range of products (from ethanol to high fructose syrup) that are produced with modern hybrids in modern agronomical operations. 
-The genetic changes that lead to maize domestication \citep{Doebley1995-su,Doebley1997-oy, Wang2005-by, Clark2006-xh,Dorweiler1993-ik} and maize adaptation to a wider latitudinal range \citep{Liang2018-af, Guo2018-on, Coles2010-db, Huang2018-ga, Yang2013-lg, Salvi2007-ku, Wang2017-oz} provide a relatively good understanding of the genetic regions and mechanism that shaped maize domestication and latitudinal expansion. 
+The genetic changes that lead to maize domestication \citep{Doebley1995-su,Doebley1997-oy, Wang2005-by, Clark2006-xh,Dorweiler1993-ik} and maize adaptation to a wider latitudinal range \citep{Liang2018-af, Guo2018-on, Coles2010-db, Huang2018-ga, Yang2013-lg, Salvi2007-ku, Wang2017-bc} provide a relatively good understanding of the genetic regions and mechanism that shaped maize domestication and latitudinal expansion. 
 However, the mechanisms involved in maize landrace local adaptation that enabled maize to adapt to such a diverse range of environmental conditions are still largely unknown. 
 
 In this paper, we posit  phospholipid pathways are under selection in highland balance had an important role in maize adaptation to highlands.  
@@ -87,24 +92,116 @@ We have also found that Palomero Toluqueño (a Mexican highland landrace) has hi
 In this paper we set out to study the possible role glycerolipid and in particular phospholipid metabolism in the process of maize adaptation to highland conditions. 
 Using a multi pronged approach that combined QTL analyses of phospholipid content biparental RIL mapping made of a cross of B73 and Palomero Toluqueño (a highland landrace), phospholipid analysis in a 120 landrace diversity panel, analysis of genome wide signals of selection to highland altitude using WGS of 30 landraces and GBS data of 2700 landraces we identified candidate loci at that were both under selection in highland maize and that show phospholipid quantitative variation  in biparental populations. 
 In particular, our analysis identified a major QTL controlling phosphatidylcholine and lyso-phosphatidylcholine levels. A phospholipase type A1 (\textit{ZmPLa1.2}) that shows strong signals of selection in highland maize and is located at the peak of the QTL. Further analysis using the genetic materials generated in this paper will allow us to test the adaptive significance of this metabolic trait to maize adaptation to highland conditions and will help to better understand if natural variation in the candidate loci could be used to improve modern maize varieties that face similar environmental conditions than highland maize like early season cold stress. 
+\section{Results}
+\label{sec:results}
+
+\subsection{Glycerophospholipid pathways are under selection in  highland maize} 
+We analyzed selection of glycerolipid related pathways in highland maize using several approaches. 
+We first identified glycerolipid related pathways in Kegg and the Plant Metabolic Network \cite{Schlapfer2017-yl}. We identified 29 pathways with a total of 594 genes. 
+We first this list to analyze if the enzymatic pathways involved in determining the glycerolipid makeup of maize are under selection in highland maize and also the extent of possible convergent selection across different maize highland regions. 
+We were particularly interested in identifying possible patterns of convergent selection in maize populations that have adapted independently to highland conditions (Figure \ref{Fig1}A).  
+We first used the Population Branch excess (PBE) statistic \cite{Pool2017-oa} and applied it to four highland populations (Southwest US, Mexican Highland, Guatemalan Highlands and Andes). 
+Each group contains three to six accessions from that particular area and have been sequenced at an average 30X coverage \cite{Wang2017-bc}. 
+In short, PBE quantifies changes in allele frequencies in focal populations relative to two independent “outgroup” populations. We used \textit{teosinte parviglumis} as one of the outgroup populations for all four highland groups. 
+The other outgroup was Mexican lowlands in the case of SW US, Mexican highlands and Guatemalan highlands, and South American lowlands in the case of the Andes Populations. A SNP was classified as a potential target of selection if it was in the top 5\% 
+A genome wide PBE analysis of the same populations \cite{Wang2017-bc} found strong indications of convergent adaptation to highland environments across all four populations at the SNP, gene and pathway level.
+Within the list of 594 we identified a significant excess of genes that were target of selection in more than two populations (p < 2.87e – 5, Figure \ref{SupFig1}A). This excess was particularly strong (p < 2.87e – 5, Figure \ref{SupFig1}A) in the SWUS, Mexican and Guatemalan Highland populations. 
+These three populations also showed the highest number of genes that recurrently selected in all populations. There were 22 genes that were selection outliers in all four populations. 
+We then performed an independent analysis for each of the 29 pathways and compared the average PBE value for SNPs 10kb windows around genes in that pathway with a genome wide random sampling distribution. 
+
+\begin{figure*}[!ht]
+\begin{center}
+\includegraphics[width=0.8\paperwidth]{Figures/Fig_1.png}
+\caption{Glycerolipid pathway selection 
+A) Populations used in the Population Branch Excess (PBE)analysis. 
+B) Average PBE values within genes and 10KB windows upstream and downstream of the gene of each pathway were compared against random genome wide sample of the same number of genes. The heatmap shows p-values of a (indicate what type of test) for each pathways. 
+C) PBE values of SNPs in ZmLpcat1 and ZmPla1.2 across SWUS, Mexican Highlands, Guatemalan Highlands an Andes populations (from top to bottom). Dark shade rectangles mark the coding sequence of each gene. Light shading rectanles on the borders of the coding sequence mark 10KB upstream and downstream windows. 
+D) Map showing the geographical origin of the 120 accessions used in the common garden experiment to quantify glycerolipid compounds.
+E) Correlation between  lyso-phosphatydilcholine (LPC) species and the ratio of  phosphatydilcholine (PCs) species and LPC species. 
+F) Logaritmic values of the PC34:1/LPC18:1 ratio of highland and lowland landraces from Mesoamerica and Southamerica}
+\label{Fig1}
+\end{center}
+\end{figure*} 
+Pathways involved in phosphatydilcholine (the most abundant phospholipid species) remodelling were significantly enriched in selection outlier genes across all 4 populations indicating an adaptive role of phospholipid remodelling in maize highland adaptation (Figure \ref{Fig1}B, Supplementary Fig1B).
+Pathways involved in triacylglycerol degradation and galactolipid biosynthesis were recurrently selected in the SWUS, Mexican Highlands and the Andes while others involved in sulpholipid and diacylglycerol and phosphatidylglycerol biosynthesis were selected in the SWUS and mesoamerican populations (Figure \ref{Fig1}B).
+ZmLpcat1 (lyso-phosphatydilcholine acyl transferase 1) is an example of a gene selected in all four populations that is part of the phospholipid remodelling and phosphatydilcholine acyl editing pathways. 
+It contains several outlier SNPs within the codins sequence of the gene that are shared across all four highland populations (Figure \ref{Fig1}C). ZmPla1.2 (Phospholipase A1 2) performs the reverse reaction than ZmLpcat1 and is part of the phosphatidylcholine acyl editing, triacylglycerol degradation and phospholipases pathways. 
+ZmPla1.2 is a good example of an outlier gene in the SWUS and Mesoamerican populations with particularly high PBE values in the Mexican highland population and outlier SNPs that are unique for each population and others that are shared across populations (Figure \ref{Fig1}C).
+
+To evaluate if selection on genes involved in glycerophospholipid metabolism in highland maize was reflected in glycerophospholipid levels we developed a diversity panel composed of a 120 highland and lowland landraces from Mesoamerica and South America (Figure \ref{Fig1}D). 
+We grew this diversity panel in Mexican highland conditions in Metepec, Edo de México at 2650 masl. We collected samples at V4-V6 and analyzed glycerolipid levels. 
+Despite the intrinsic biological and environmental variability associated with analyzing open-pollinated varieties in field conditions, we could observe that highland landraces, and in particular Mesoamerican Highland landraces, showed  high phosphatidylcholine / lyso-phosphatidylcholine ratios, mainly due to low lyso-phosphatidylcholine levels (Figure \ref{Fig1}E). 
+Figure \ref{Fig1}F shows an example a pair of one of the most abundant PC and LPC species ratio. 
+We then used DartSeq genotypic data from the same plants that were used to analyze glycerolipid levels and we calculated the Qst-Fst values for each glycerolipid species for highland/lowland populations of each subcontinent.
+\jri{more lead-in and explanation required for  fst-qst, also maybe a figure?}
+We observed several PC and LPC species with much higher Qst values than the neutral Fst calculated value in both sub continents (Supplementary Figure \ref{SupFig1}C-D, Supplementary table x.) 
+
+\subsection{\textit{pcadapt} analysis of biological adaptation of Mexican landraces} 
+
+We then used GBS data from 2700 geo-referenced landraces from Mexico generated by the SeeD project \citep{Romero_Navarro2017-cn, Gates2019-xu} to run a \textit{pcadapt} analysis that detects genetics markers involved in biological adaptation using a Principal Component Analysis of genetic markers \cite{Luu2017-ws}. The first principal component of \textit{pcadapt} polarizes Mexican landraces based on elevation of the geographical origin of the landrace (Supplementary Figure \ref{SupFig2}A). Using this first Principal Component we can identify then Outlier SNP across the genome that are significantly associated with elevation of origen of the landrace and are potentially involved in local adaptation changes in elevation (Supplementary Figure \ref{SupFig2}B). 
+From those genes that were PBE selection outliers in the Mexican highland population X had significant -log(P) values on the first \textit{pcadapt} principal component. This analysis also revealed that genes involved in phospholipid remodelling had signigcantly high -log(P) values indicating strong selection with elevation. In Figure A and B and zoomed sections we can observe that that SNPs located in the CDS of \textit{ZmPla1.2} and \textit{ZmLpcat1} are among the most significant PC1 outliers in chr 3 and 5. This is confirmed by the strong correlation between the increase in frequency of the minor allele with elevation of both genes       
+
+All taken together, the PBE selection data, the lipodomic analysis of the 120 landrace diversity panel, the Qst-Fst analysis of lipidomics data and the \textit{pcadapt} analisis of GBS data thousands of geo-referenced landraces from Mexico strongly indicate that glycerolipid pathways and in particular those involved in phospholipid remodelling show clear signs of recurrent selection across several highland populations both the genetic and metabolic level. We further identify \textit{ZmPla1.2} and \textit{ZmLpcat1} two genes that code for enzymes performing opposite enzymatic reactions that show strong signals of selection across all the analysis we performed.   
+
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[width=0.4\paperwidth]{Figures/Fig_2.png}
+\caption{Manhattan plots of minus log10(P‐values) \textit{Pcadapt} outliers. A) and B) \textit{Pcadapt} PC1 outliers plots of chromosome 3 and 5, respectively. 
+Lower panels are zoomed areas of outlier SNPs that colocalize with the physical position of the coding sequences of \textit{ZmPLa1.2} and \textit{ZmLpcat1}. E) and F) show the geographic and elevation dependent frequencies of the highland (blue) and lowland (red) alleles of one of the outlier SNPs in the coding sequence of \textit{ZmPLa1.2} and \textit{ZmLpcat1}. 
+}
+\label{Fig2}
+\end{center}
+\end{figure} 
+
+\subsection{QTL analysis of phospholipid content in the B73 x Palomero Toluqueño BIL mapping population} 
+
+Our PBE and lipid analysis of multiple highland and lowland populations across the Americas showed a unique signature of selection for high PC/LPC ratios highland maize from mesoamerica together with selection at the gene level of genes that are involved in determining these metabolic phenotypes. 
+However, these results might be confounded by population structure that is commonly observed in maize landraces \cite{Romero_Navarro2017-cn}. 
+We break population structure and further characterize selection and identify loci involved in glycerolipid synthesis in highland maize we developed a bi-parental mapping population using B73, a temperate inbred line, and Palomero Toluqueño (PT) accession Mexi5 (CIMMYTMA 1567). 
+Palomero Toluqueño is popcorn (Palomero means popcorn in Spanish) highlandhighland landrace from the Toluca valley in México. 
+We developed a small (52 Backcross Inbred  Lines BC1S5), using B73 as the recurrent parent (75\% B73, 25\% PT). 
+This mapping population was grown in triplicate on the same common garden in Metepec, Edo de Mexico, Mexico as the 120 landrace diversity panel. The field site is only a few kilometers away from the original collection site of the Mexi5 accession.  
+Plants were sampled at the same time as the diversity panel for glycerolipid analysis. in the same way for glycerolipids analysis. 
+Using the sum of lyso-phosphatydilcholines species (LPCs) we found a major QTL peak located at 8.5 Mb of chromosome 3 -qLPCs3- (Figure \ref{Fig3}A). We also found a major QTL peak -qLPCs3- when we use the sum of phosphatidylcholine species (PCs) (Fig 2B). Effect size plots in this QTL peak show opposite genotypic behaviours. In the case of LPCs (Fig 2C), BILS that are homozygous B73 at the QTL peak, have higher concentrations of LPCs that BILS that are homozygous PT. In the case of PCs (Fig 2D), homozygous B73 BILS at the QTL peak have lower concentrations of PCs than homozygous PT BILS. Based on these results we hypothesized that a locus controlling the PCs/LPCs ratio should be behind  qLPCs3 and qPCs3. We then used the B73 v3 genome assembly and identified 72 genes in the 7.9-10 Mb 99% confidence interval around the QTL peak (Supp file 2). We searched this list of genes for genes that
+
+\begin{figure*}[!ht]
+\begin{center}
+\includegraphics[width=0.8\paperwidth]{Figures/Fig_3.png}
+\caption{Glycerolipid pathway selection 
+A) Populations used in the Population Branch Excess (PBE)analysis. 
+B) Average PBE values within genes and 10KB windows upstream and downstream of the gene of each pathway were compared against random genome wide sample of the same number of genes. The heatmap shows p-values of a (indicate what type of test) for each pathways. 
+C) PBE values of SNPs in ZmLpcat1 and ZmPla1.2 across SWUS, Mexican Highlands, Guatemalan Highlands an Andes populations (from top to bottom). Dark shade rectangles mark the coding sequence of each gene. Light shading rectanles on the borders of the coding sequence mark 10KB upstream and downstream windows. 
+D) Map showing the geographical origin of the 120 accessions used in the common garden experiment to quantify glycerolipid compounds.
+E) Correlation between  lyso-phosphatydilcholine (LPC) species and the ratio of  phosphatydilcholine (PCs) species and LPC species. 
+F) Logaritmic values of the PC34:1/LPC18:1 ratio of highland and lowland landraces from Mesoamerica and Southamerica}
+\label{Fig3}
+\end{center}
+\end{figure*}  
 
 \section{Materials and Methods}
 \label{sec:materials:methods}
 
 \subsection{Populations used in the analysis } 
-B73 x PT RILs
+Highland and lowland populations used for Population Branch Excess analysis consisted in three to six accessions from each of the populations and have been previously described in \cite{Wang2020-mp, Wang2017-bc}. 
+The HiLo Diversity Panel was selected from
+
+
+B73 x PT BILs
 Hilo Panel
 Li genomes (can cite Li 2017)
 
 We used landraces individual accessions genotypic data from the CIMMYT Seeds of Discovery project (SeeD). The SeeD project has genotyped 24,000 landraces from the  CIMMYT International Germplasm Bank maize collection primarily from American origin.
 
 
-\subsection{Field Experimental Conditions} 
-Here we also include some comparisons between the greenhouse plants and plants of the same genotype grown in a highland field. In the field, 8 plants per genotype were sampled, in a field located in Metepec, Mexico State, (19°13'28.7"N 99°32'51.6"W) within the Trans-Mexican volcanic belt. The field is placed at 2610 meters above sea level (masl), the range of average monthly temperatures along the year vary from 5 °C to 21.5 °C with an average annual of 13.6 °C. The field samples were collected between 10:00 am and 12:00 pm, approximately 3 h after sunrise.  From all plants 50 mg of fresh tissue was collected from the tip of the S2 leaf (two leaves younger of the last leaf with a fully developed collar), when the plants were around the V5 developmental stage. 
+\subsection{Field Experimental Conditions and sampling} 
+Two replicas of the Hilo Diversity panel accessions and three replicas B73 x PT BILs were planted in a field located in Metepec, Edo de Mexico, (19°13'28.7"N 99°32'51.6"W) within the Trans-Mexican volcanic belt. 
+The field is at 2610 meters above sea level (masl), the range of average monthly temperatures along the year vary from 5 °C to 21.5 °C with an average annual of 13.6 °C.  
+Fifty mg of fresh tissue was collected using a leaf puncher from the tip of the S2 leaf (two leaves younger of the last leaf with a fully developed collar), when the plants were around the V5 developmental stage. 
+Tissue discs were immediately fast froze it in liquid nitrogen. All samples were collected in a single day between 10:00 am and 12:00 pm, approximately 3 h after sunrise. 
+Samples were transported in dry ice to the lab and stored in -80 C until extraction. 
 
-\subsection{Lipid extraction and UHPLC-QTOF MS/MS lipid profiling} 
-
-We collected fifty mg of leaf tissue using a leaf puncher and fast froze it in liquid nitrogen. Frozen material was homogenized in a tissue grinder Retsch (Haan, Germany) for 40 seconds at a frequency of 30 1/s. After grinding, samples were extracted. 
+\subsection{Glycerolipid extraction and UHPLC-QTOF MS/MS lipid profiling} 
+We collected fifty mg of leaf tissue  Frozen material was homogenized in a tissue grinder Retsch (Haan, Germany) for 40 seconds at a frequency of 30 1/s. After grinding, samples were extracted. 
 We performed lipid extraction as reported by Matyash and collaborators (Matyash et al. 2008). 
 First, 225 $\mu$L of cold methanol (MeOH), was added to each sample. 
 For the blanks, MeOH previously prepared with a Quality Control (QC) mix was added (Supplementary Table XX). Each sample was vortexed for 10 seconds, keeping the rest of materials on ice. 
@@ -126,12 +223,36 @@ We injected 1.67 $\mu$L per sample into UHPLC-QTOF MS/MS ESI (+), the running ti
 Mobile phase “B” consisted of 90:10 isopropanol:acetonitrile, 10 mM ammonium formate and 0.1\% of formic acid. 
 The flow rate was maintained at 0.6 mL/min and the column compartment was maintained at 65 °C. Initial conditions were 15\% B; the gradient uniformly increased until reaching 100\%. 
 At 12.10 min the mobile phase composition returned to initial conditions.
-
-The mass spectrometer (QTOF MS/MS) was operated in positive electrospray ionization mode (ESI), based on the diversity and amount of lipid species identified under ESI (+) and (-) during the lipid profiling optimization (See supplementary Table 3) on Agilent® ultra high performance liquid chromatography and quadrupole time of flight mass spectrometry (UHPLC-QTOF MS). For this optimization we used 8 samples of B73, 8 samples of PT and 10 samples of a recombinant inbred line population (RILs) generated by crossing B73 and PT, only MS1 data was acquired. Same samples were utilized for both ESI modes. 
+The mass spectrometer (QTOF MS/MS) was operated in positive electrospray ionization mode (ESI), based on the diversity and amount of lipid species identified under ESI (+) and (-) during the lipid profiling optimization (See supplementary Table 3) on Agilent® ultra high performance liquid chromatography and quadrupole time of flight mass spectrometry (UHPLC-QTOF MS). 
+For this optimization we used 8 samples of B73, 8 samples of PT and 10 samples of a recombinant inbred line population (RILs) generated by crossing B73 and PT, only MS1 data was acquired. 
+The same samples were utilized for both ESI modes. 
 Under positive mode 24 lipids were identified, having two cholesterol esters (CE), 3 diacylglycerols (DG), 2 lysophosphatidylcholines (LPC), 10 phosphatidylcholines (PC), 1 phosphoethanolamine (PE) and 6 triacylglycerols (TG). 
 While under negative mode we identified 16 lipids, of which, 14 were fatty acids (FA) and 2 were PC species. 
-For the source parameters, ESI gas temperature was set at 325 °C, nebulizer pressure of 35 psig, gas flow of 11L/min, capillary voltage at 3500 V, nozzle voltage at 1000V, MS TOF fragmentor and skimmer at 120 and 65 V, respectively. 
+For the source parameters, ESI gas temperature was set at 325 °C, nebulizer pressure of 35 psig, gas flow of 11L/min, capillary voltage at 3500 V, nozzle voltage at 1000V, MS TOF fragmentor and skimmer at 120 and 65 V, respectively.
 Under the acquisition parameters a mass range between 60 and 1700 m/z was set. As for reference mass parameters, a detection window of 100 ppm and a minimum height of 1000 counts were set. 
+
+\subsection{Glycerolipid data processing}
+
+We performed a retention time (rt) correction of the acquired data using Agilent MassHunter Qualitative Analysis® B.06.00 version and Microsoft Excel. 
+To extract ion chromatograms (EICs) of the internal standards within the run we used Agilent MassHunter Qualitative Analysis.
+We identified the time of the highest intensity point of each EIC, which then was used as the current retention time of the experiment. 
+In Microsoft Excel, using the method retention time for internal standards and the current rt, a polynomial regression was performed to obtain an equation that was used for calculating new retention times for 501 lipids listed in a MS1 m/z-rt library from Dr. Oliver Fiehn laboratory (See Supplementary Table 2). 
+To identify other lipid species we decided to perform un-targeted MS/MS to explore in the lipid diversity within the samples. 
+To acquire MS/MS data we selected 36 samples from the study to be run across four m/z ranges: 120-300, 300-600, 600-900 and 900-1200. 
+From this MS/MS data, we used MSDIAL \cite{Tsugawa2015-kh} to check for false positives by analyzing how many fragments of each identified lipid matched the spectra from \textit{lipidblast} library (Kind et al. 2013). 
+After this, we were able to add 339 new annotations into the mz-rt library, ending up with a total of 840 lipids species within this library which later were used to reprocess the spectra using MSDIAL and MS-FLO \cite{DeFelice}. 
+Acquiring MS/MS data allowed us to identified additional lipid species, that we were not able to detect using only MS1 data, like monogalactosyldiacylglycerols (MGDG), digalactosyldiacylglycerols (DGDG) and plasmenylphosphatidylcholine (plasmenylPC). 
+Within MSDIAL \cite{Tsugawa2015-kh}. Identification of lipids is based on two approaches: the MSP file and MS/MS identification setting included within the software and the use of a post identification file containing accurate m/z and rt for a list of lipids. In this study we used both identification approaches. 
+The MSP file and MS/MS identification setting has a total of 51 lipid classes, under positive ion mode, that can be selected for identification. 
+The post identification file that we used was the retention time-corrected MS1-MS2 mz-rt lipid library that we explained before. 
+We used MSDIAL \cite{Tsugawa2015-kh} version 3.40. To use MSDIAL, the raw data was converted from .d to .abf format with Reifycs Abf converter (https://www.reifycs.com/AbfConverter/). The MSDIAL alignment results were filtered out based on whether compounds intensity was ten times above blank intensity. Then, filtered data was normalized using Systematic Error Removal using Random Forest (SERRF) \cite{Fan}(Fan et al. 2019) , this normalization is based on the quality-control pool samples used along the study. Normalized features were filtered out considering a coefficient of variation (CV) equal or less than 30% along the pools. To curate the data for duplicate features, isotopes and ion-adducts we utilized MS-FLO (DeFelice et al. 2017). Curated data was also normalized using sum known metabolite signal (mTIC), in Excel software.
+
+
+\subsection{Population Branch Excess Analysis}
+
+\subsection{\textit{Qst-Fst} analysis of glycerolipid data}
+
+\subsection{\textit{pcadapt} analysis of biological adaptation in Mexican landraces}
 
 \subsection*{Association of \textit{ZmPla1.2} with agronomic traits}
 We re-analyzed phenotypic data from the F1 Association Mapping (FOAM) panel of Romero-Navarro \textit{et al} \cite{Romero_Navarro2017-cn} and Gates \textit{et al} \cite{Gates2019-xu} to more fully characterize associations signatures of \textit{ZmPla1.2}. 
@@ -149,102 +270,6 @@ At the end of the Materials and Methods section, include a statement on reagent 
 For example: Strains are available upon request. File S1 contains detailed descriptions of all supplemental files. File S2 contains SNP ID numbers and locations. File S3 contains genotypes for each individual. Sequence data are available at GenBank and the accession numbers are listed in File S3. Gene expression data are available at GEO with the accession number: GDS1234. Code used to generate the simulated data is provided in file S4. 
 
 
-\section{Results}
-\label{sec:results}
-
-\subsection{Glycerophospholipid pathways are under selection in  highland maize} 
-We analyzed selection of glycerolipid related pathways in highland maize using several approaches. 
-We first selected 211 genes that are in glycerolipid related enzymatic pathways from the Plant Metabolic Network (Schläpfer et al., 2017). 
-We 
-We then used the Population Branch excess (PBE) statistic (Pool et al., 2017), to analyze if glycerolipid pathway genes are under selection in highland populations. 
-PBE quantifies changes in allele frequencies in focal populations relative to two independent “outgroup” populations. 
-
-\begin{figure*}[!ht]
-\begin{center}
-\includegraphics[width=0.8\paperwidth]{Figures/Fig_1.png}
-\caption{Glycerolipid pathway selection 
-A) Populations used in the Population Branch Excess (PBE)analysis. 
-B) Mean PBE values of SNPs located within 10Kb flanking glycerolipid enzyme genes for each highland population are show in red lines against the genomic background distribution. 
-C) Intersection of glycerolipid pathways related genes among the four highland populations. 
-D) Map showing the geographical origin of the 120 accessions used in the common garden experiment to quantify glycerolipid compounds. 
-E) Correlation between  lyso-phosphatydilcholine (LPC) species and the ratio of  phosphatydilcholine (PCs) species and LPC species. 
-F) Logaritmic values of the PC/LPC ratio of highland and lowland landraces from Mesoamerica.}
-\label{PBE_Qst-Fst}
-\end{center}
-\end{figure*} 
-
-We performed PBE analysis in four different highland populations: Southwest US, Mexican Highlands, Guatemalan Highlands and Andes and used a Mexican Lowland population -in the case of Southwest US, Mexican and Guatemalan Highlands- or a South American Lowland -in the case of Andes- (Fig 1A) (Wang et al., 2017) and teosinte parviglumis (Zea mays spp. parviglumis) as the two outgroups. 
-When compared with a random sampling distribution of PBE values, the median PBE value of glycerolipid pathway genes was significantly higher indicating that glycerolipid pathway genes are under selection in all 4 highland populations (Fig 1B). 
-Twenty three genes were under selection in at least three highland populations (Fig 1C, table 1 and Supplementary Table 1) and the majority of them are genes involved in the synthesis and degradation of phospholipids. 
-Among these we find several types of phospholipases (Ryu, 2004) such as Zm00001d039542 (PLA1 type) Zm00001d029955 (PLA2 type), Zm00001d014386 (PLAT-PLA type) and lyso-phospholipd acylases such as Zm00001d017584 and Zm00001d007638 (ZmPls1).  
-These two types of genes are involved in determining the relative abundance of phospholipids and lyso-phospholipids. 
-
-%\begin{table*}[htbp]
-% \caption{\bf PBE outlier genes in at least 3 highland populations and \textit{pcadapt} -logP values}
-% \begin{tableminipage}{\textwidth}
-% \begin{tabularx}{\textwidth}{XXXX}
-% \hline
-% Gene ID        & US & MH & GH & AN & Sum & Function       & \_-logP pcadapt \\
-% Zm00001d048835 & 1  & 1  & 1  & 1  & 4   & PL degradation & 39.2            \\
-% Zm00001d014386 & 1  & 1  & 1  & 1  & 4   & PL degradation & 6.9             \\
-% Zm00001d017584 & 1  & 1  & 1  & 1  & 4   & PL synthesis   & 99.3            \\
-% Zm00001d045927 & 1  & 1  & 1  & 1  & 4   & DG degradation & 40.1            \\
-% Zm00001d018593 & 1  & 1  & 1  & 1  & 4   & DG synthesis   & 31.9            \\
-% Zm00001d018595 & 1  & 1  & 1  & 1  & 4   & SL Synthesis   & 31.9            \\
-% Zm00001d029955 & 1  & 1  & 1  & 0  & 3   & PL degradation & 1.1             \\
-% Zm00001d033683 & 0  & 1  & 1  & 1  & 3   & PL degradation & 1.4             \\
-% Zm00001d039542 & 1  & 1  & 1  & 0  & 3   & PL degradation & 110.3           \\
-% Zm00001d013935 & 1  & 1  & 1  & 0  & 3   & PL synthesis   & 0.8             \\
-% Zm00001d007638 & 1  & 1  & 1  & 0  & 3   & PL synthesis   & 0.0             \\
-% Zm00001d020647 & 1  & 1  & 1  & 0  & 3   & PL synthesis   & 24.0            \\
-% Zm00001d018594 & 1  & 1  & 1  & 0  & 3   & DG synthesis   & 31.9            \\
-% Zm00001d053009 & 1  & 1  & 1  & 0  & 3   & TG Synthesis   & 1.5             \\
-% Zm00001d039274 & 1  & 1  & 1  & 0  & 3   & TG Synthesis   & 5.0             \\
-% Zm00001d028482 & 1  & 0  & 1  & 1  & 3   & PL degradation & 15.3            \\
-% Zm00001d004913 & 1  & 0  & 1  & 1  & 3   & PL degradation & 0.9             \\
-% Zm00001d044052 & 1  & 0  & 1  & 1  & 3   & PL degradation & 16.7            \\
-% Zm00001d005770 & 1  & 0  & 1  & 1  & 3   & PL degradation & 0.7             \\
-% Zm00001d006507 & 1  & 0  & 1  & 1  & 3   & PL degradation & 23.6            \\
-% Zm00001d032973 & 1  & 0  & 1  & 1  & 3   & PL synthesis   & 30.7            \\
-% Zm00001d028698 & 1  & 0  & 1  & 1  & 3   & PL synthesis   & 8.3             \\
-% Zm00001d048766 & 1  & 0  & 1  & 1  & 3   & PL synthesis   & 1.8            
-% \hline
-% \end{tabularx}
-%   \label{tab:shape-functions}
-% \end{tableminipage}
-% \end{table*}
-
-These results indicate that glycerolipid pathway genes and in particular genes involved in phospholipid metabolism are under convergent selection in all four highland populations. 
-We then analyzed if the levels of phospholipids varied between highland and lowland landraces. 
-We grew a panel of 120 landraces selected from highland (> 2000 masl) and lowland (<1000 masl) from Mesoamerica and South America (Fig 1D, Supplementary Table 2) in a common garden experiment in Metepec, Edo de México.
-This field is located at 2600 masl and represents a typical highland environment of central Mexico. 
-We sampled plants at V4-V6 developmental stages and we analyzed glycerolipid composition using LC-MS. We analyzed the levels phosphatidylcholine (PC) and lyso-phosphatydilcholine (LPC) species, the most abundant phospho/lyso-phospholipid species. 
-We found that the ratios of the sums of PCs over LPcs species were significantly higher in highland landraces than in lowland landraces, particularly in landraces from Mesoamerica.  
-This high ratio is driven by low levels of lyso phosphatydilcholine species (Fig 1E-F, Supplementary Fig 1).
-
-We also genotyped the individual plants that were used for glycerolipid analysis and conducted Qst-Fst analysis on the landraces glycerolipid data. 
-The majority of glycerolipid species we quantified showed Qst values higher than Fst when we compared between highland and lowland populations from Mesoamerica and South America (Supplementary Fig 2). 
-
-\begin{figure}[!ht]
-\begin{center}
-\includegraphics[width=0.4\paperwidth]{Figures/Fig_2.png}
-\caption{Manhattan plots of minus log10(P‐values) \textit{Pcadapt} outliers. A) and B) \textit{Pcadapt} PC1 outliers plots of chromosome 3 and 5, respectively. 
-Lower panels are zoomed areas of outlier SNPs that colocalize with the physical position of the coding sequences of \textit{ZmPLa1.2} and \textit{ZmLpcat1}. E) and F) show the geographic and elevation dependent frequencies of the highland (blue) and (lowland) alleles of one of the outlier SNPs in the coding sequence of \textit{ZmPLa1.2} and \textit{ZmLpcat1}. 
-}
-\label{pcadapt}
-\end{center}
-\end{figure} 
-
-We then used GBS data from 2700 geo-referenced landraces from Mexico generated by the SeeD project \citep{Romero_Navarro2017-cn, Gates2019-we} to run a \textit{pcadapt} analysis that detects genomic regions under selection based on genetic data. We found that the first principal component of \textit{pcadapt} polarizes Mexican landraces based on elevation of origin of the landrace. 
-The average -log10(P‐value) of the list of 211 glycerolipid pathways genes was higher than a random sample distribution from the genomic background indicating that glycerolipid pathway genes are under selection on an elevation dependent fashion. Most of the genes that were PBE outliers were also \textit{pcadapt} outliers     
-
-Taken together, these data indicate that both at the gene and the metabolite level, glycerolipid pathways are under selection in highland maize. 
-In particular, genes coding for enzymes involved in the synthesis and degradation of phospholipids were convergently selected across different highland populations. 
-
-QTL analysis of phospholipid content in the B73 x Palomero Toluqueño BIL mapping population
-Our PBE and lipid analysis of multiple highland and lowland populations across the Americas showed a unique signature of selection for high PC/LPC ratios highland maize from mesoamerica together with selection at the gene level of genes that are involved in determining these metabolic phenotypes. However, these results might be confounded by population structure that is commonly observed in maize landraces (Romero Navarro et al., 2017). We break population structure and further characterize selection and identify loci involved in glycerolipid synthesis in highland maize we developed a bi-parental mapping population using B73, a temperate inbred line, and Palomero Toluqueño (PT) a popcorn, a highland landrace from the Toluca valley in México. We developed 120 BC1S5 backcross Inbred  lines (BILs), using B73 as the recurrent parent (75% B73, 25% PT). This mapping population was grown on the same common garden as the 120 landrace panel and plants were sampled in the same way for glycerolipids analysis. 
-Using the sum of lyso-phosphatydilcholines species (LPCs) we found a major QTL peak located at 8.5 Mb of chromosome peak -qLPCs3- (Fig 2A). We also found a major QTL peak -qLPCs3- when we use the sum of phosphatidylcholine species (PCs) (Fig 2B). Effect size plots in this QTL peak show opposite genotypic behaviours. In the case of LPCs (Fig 2C), BILS that are homozygous B73 at the QTL peak, have higher concentrations of LPCs that BILS that are homozygous PT. In the case of PCs (Fig 2D), homozygous B73 BILS at the QTL peak have lower concentrations of PCs than homozygous PT BILS. Based on these results we hypothesized that a locus controlling the PCs/LPCs ratio should be behind  qLPCs3 and qPCs3. We then used the B73 v3 genome assembly and identified 72 genes in the 7.9-10 Mb 99% confidence interval around the QTL peak (Supp file 2). We searched this list of genes for genes that 
-
 \section{Discussion}
 \label{sec:discusion}
 
@@ -252,8 +277,6 @@ Using the sum of lyso-phosphatydilcholines species (LPCs) we found a major QTL p
 \label{sec:acknowledgments}
 
 \bibliography{bibliography}
-
-\clearpage
 
 \section*{Supplemental Tables and Figures}
 
@@ -264,22 +287,44 @@ Using the sum of lyso-phosphatydilcholines species (LPCs) we found a major QTL p
 
 \begin{figure*}[t]
 \begin{center}
-\includegraphics[width=0.4\paperwidth]{Sup_Figures/Sup_Fig_1.png}
-\caption{\textit{Pcadapt} analysis of Latin America Landraces. We used GBS data from the Mexican landraces of the SEEDs dataset \citep{Romero_Navarro2017-cn} and run a \textit{pcadat} analysis \citep{Luu2017-ws} that identified (A) elevation as the major driver of genetic differentiation. 
-B) Distributions of pcadapt -log10(p values) of PC1 probabilities in a random sample with the average value of pcadapt scores from the glycerolipid PBE outliers in the Mexican highland population shown with a red vertical line . 
+\includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_1.png}
+\caption{A) Population Branch Excess Analysis of glycerolipid pathway genes. From the initial set of 211 genes we used 186 genes with 6219 non redundant SNPs and 683162 non redundant SNPs for the SW US group; 186 genes with 6106 non redundant SNPs and 664555 non redundant SNPs for the Mexican Highland group; 185 genes with 5912 non redundant SNPs and 641186 non redundant SNPs for the Guatemalan Highlands group; and 184 genes with 5698 non redundant SNPs and 614783 non redundant SNPs for the Andes group.    
+\textit{Qst-Fst} analysis of glycerolipid compounds between highland and lowland landraces from Mesoamerica (B) and South America (C). Samples for Dart-Seq genotyping were taken from the same plants that were grown in the common garden experiment shown in Figure 1D-F and that were used for glycerolipid analysis   
 }
-\label{s-fig1}
+\label{SupFig1}
 \end{center}
 \end{figure*} 
 
 \begin{figure*}[t]
 \begin{center}
-\includegraphics[width=0.4\paperwidth]{Sup_Figures/Sup_Fig_2.png}
-\caption{\textit{Qst-Fst} analysis of glycerolipid species analyzed from the 120 Hilo landrace panel. 
+\includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_2.png}
+\caption{\textit{Pcadapt} analysis of Latin America Landraces. We used GBS data from the Mexican landraces of the SEEDs dataset \citep{Romero_Navarro2017-cn} and run a \textit{pcadat} analysis \citep{Luu2017-ws} that identified (A) elevation as the major driver of population differentiation polarizing PC1.  
+B) Genome wide analysis of \textit{Pcadapt} PC1 outliers. 
+C) Distributions of pcadapt -log10(p values) of PC1 probabilities in a random sample with the average value of pcadapt scores from the glycerolipid PBE outlier genes of each of the four highland populations. 
 }
-\label{s-fig1}
+\label{SupFig2}
 \end{center}
 \end{figure*} 
+
+\begin{figure*}[t]
+\begin{center}
+\includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_3.png}
+\caption{A) Genomic Location of genes coding for enzymes predicted Phospholipase A1 activity. B) B73 expression levels of genes coding for enzymes with predicted Phospholipase A1 activity across different tissues. \textit{ZmPla1.2} is indicated in blue. C) \textit{ZmPla1.2} expression levels of temperate inbreds B73, Mo17, Oh43, and Ph207 under control, control and heat stress. Values taken from \cite{Waters2017-nat}. D) \textit{ZmPla1.2} and \textit{ZmLpcat1} expression levels correlations in the base of leave 3 in the 282 maize diversity pane \cite{Kremling2018-gn}. 
+}
+\label{SupFig3}
+\end{center}
+\end{figure*}  
+
+\begin{figure*}[t]
+\begin{center}
+\includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_4.png}
+\caption{A) \textit{ZmPla1.2-B73} sequence with Palomero Toluqueño synonimous and non-synonimous SNPs indicated in grey and orange respectively. The main domains including the lipase domain, the catalytic tria, the flap lid and the nucleophilic elbow are marked. B) Protein sequence alignment the flap lid domain and the catalytic triad in several species.  
+}
+\label{SupFig4}
+\end{center}
+\end{figure*}  
+
+
 
 
 \end{document}
