@@ -23,6 +23,7 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
+library(ggpubr)
 ```
 
 ```{r}
@@ -111,7 +112,7 @@ colm %>%
 # Source data from:
 #  http://germinate.seedsofdiscovery.org/maize/#accession-overview
 # SeeD GWAS GbS Analysisa ccessions (4022)
-
+accn_file <- file.path('data','fig_2','germinate_SEED_GWAS_GBS_4022.tab')
 accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
 nrow(accn_info)
 SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
@@ -126,7 +127,7 @@ colnames(GWAS_ID)[1] <-"sample_id"
 
 GWAS_ID <- GWAS_ID %>% 
   dplyr::select(sample_id,taxa) %>%
-  inner_join(SEED_GWAS_GID)
+  dplyr::inner_join(SEED_GWAS_GID)
 
 mex <- accn_info %>% 
   dplyr::filter(!is.na(locations_longitude) & !is.na(locations_longitude)) %>%
@@ -151,9 +152,10 @@ mex_filtered <- mex %>% dplyr::inner_join(bins) %>%
 ##########################################################################
 # Extracted genotypes from Romero Navarro data with Tassel
 # input as tassel table
-genotype <- read.table("S3_8542287.tab", header = TRUE, sep ="\t") %>%
-  # dplyr::inner_join(read.table("S4_5387180.tab", header = TRUE, sep ="\t"))   %>%
-  dplyr::inner_join(read.table("S5_195455216.tab", header = TRUE, sep ="\t"))
+genotype <- read.table(file.path('data','fig_2','S3_8542287.tab'), header = TRUE, sep ="\t") %>%
+  # dplyr::inner_join(read.table(file.path('data','fig_2','S4_5387180.tab'), header = TRUE, sep ="\t")  %>%
+  dplyr::inner_join(read.table(file.path('data','fig_2','S5_195455216.tab'), header = TRUE, sep ="\t"))
+
 colnames(genotype) <- c("taxa","S3_8542287", "S5_195455216")
 
 
@@ -170,8 +172,6 @@ mex_info <- GWAS_ID %>%
 ele_fr  <- mex_info %>% 
   ungroup() %>% 
   dplyr::select(ele_bin, ends_with("fr")) %>%
-  unique()%>% dplyr::left_join(soil_bin) %>%
-  dplyr::select(-HiVH) %>%
   dplyr::rename(Elevation ="ele_bin")
 
 pla1_plot <- ele_fr %>% ggpubr::ggscatter(  x = "Elevation", y = "S3_8542287_fr",
@@ -187,18 +187,19 @@ pla1_plot <- ele_fr %>% ggpubr::ggscatter(  x = "Elevation", y = "S3_8542287_fr"
 
 
 lpcat_plot <- ele_fr %>% 
-  ggpubr::ggscatter(  x = "Elevation", y = "S5_195455216_fr",
-                               add = "loess",               # Add regression line
-                               conf.int = TRUE,                # Add confidence interval
-                               color = "#1260ad") +
+  ggpubr::ggscatter( x = "Elevation", 
+                     y = "S5_195455216_fr",
+                     add = "loess",               # Add regression line
+                     conf.int = TRUE,  # Add confidence interval
+                     color = "#1260ad") +
   ggplot2::ggtitle("5@195.5 Mb") + 
   ggplot2::ylab("Minor Allele Frequency") +
   ggplot2::scale_x_continuous(breaks = seq(0, 3000, 1000), limits = c(0, 3000)) +
   ggplot2::scale_y_continuous(breaks = seq(0, 1, .25), limits = c(0, 1.15)) +
   ggpubr::theme_classic2(base_size = 20)
 
-pdf("fig1_CD.pdf")
-ggpubr::ggarrange(pla1_plot,pcat_plot) %>% print()
+pdf(file.path('output',"fig_1CD.pdf"), width = 14)
+ggpubr::ggarrange(pla1_plot,lpcat_plot) %>% print()
 dev.off()
 ```
 

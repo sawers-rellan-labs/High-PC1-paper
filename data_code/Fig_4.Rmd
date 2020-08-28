@@ -26,7 +26,7 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
-
+library(pegas)
 ```
 
 fd from palomeros and mushito
@@ -60,10 +60,11 @@ fd_chr3 %>%
 # Haplotype Network
 
 ```{r}
-# Getting georeference data
-
+# Getting georeferenced data
+accn_file <- file.path('data','fig_2','germinate_SEED_GWAS_GBS_4022.tab')
 accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
 nrow(accn_info)
+
 SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
                             header = TRUE, quote = "",sep ="\t")
 
@@ -84,25 +85,25 @@ mex <- accn_info %>%
   dplyr::select(accn_GID  ="general_identifier",collnumb, lon ="locations_longitude",
                 lat="locations_latitude",  ele="locations_elevation", country = "countries_country_code3") 
 
+# Selecting just Mexican accessions (SEEDs) 
 assoc <- mex %>% 
-  inner_join(GWAS_ID) %>% dplyr::select(taxa,collnumb) %>%
-  inner_join(traits) %>% 
-  arrange(locations_elevation) %>%
-  group_by(locations_elevation)
+  dplyr::inner_join(GWAS_ID) %>% dplyr::select(taxa,collnumb) %>%
+  dplyr::inner_join(traits) %>% 
+  dplyr::arrange(locations_elevation) %>%
+  dplyr::group_by(locations_elevation)
 
 # Using a combination of tassel and shell cmds I:
-# Selected just Mexican accessions (SEEDs) genotype and Teosintes ( HAPMAP not georeferenced).
-# Merging SEEDs data with HapMap required:
+# Merged SEEDs data with HapMap, which required:
 # Download data from hapmap 282 set in AGPV2 for ZmPLA1.2
 # Merge with SEDDs data for ZmPLA1.2 that is in AGPv2
 # Liftover to AGPV3
-# Filter heterozygotes out
+# Filter heterozygote accessions out
 # In order to use the Haplotype network plotting function
 # I had to add phasing replacing '/' with '|' in the genotypes
 # From 56 initial variants found in SEEDs down to 11 sites
 
 
-vcf_file <-  file.path('data','fig_2', 'zmpla12_merged_het0_AGPv3_phased.vcf')
+vcf_file <-  file.path('data','fig_4', 'zmpla12_merged_het0_AGPv3_phased.vcf')
 
 vcf <- vcfR::read.vcfR(vcf_file) 
 ncol(vcf@gt) - 1
@@ -114,8 +115,7 @@ vcf <-vcf[,is_mexican | is_teosinte ]
 ncol(vcf@gt) - 1
 
 # 916 mexican  out of  1379 initial
-dna <- vcfR2DNAbin(vcf)
-as.alignment(dna)
+dna <- vcfR::vcfR2DNAbin(vcf)
 h <- haplotype(dna, what="label")
 
 
@@ -138,7 +138,7 @@ majordnaid  <- haptab$dnaid[haptab$h %in% majorhid ]
 
 majordna <- dna[majordnaid,]
 
-h <- haplotype(majordna) # Here we get the sequences as haplotypes fro plotting
+h <- haplotype(majordna) # Here we get the sequences as haplotypes for plotting
 
 check_mexicana <- function(x,h,dna) {
   h_names <- rownames(dna)[attr(h,"index")[[x]]]
@@ -156,8 +156,7 @@ hapind <- stack(setNames(attr(h, "index"), rownames(h))) %>%
   dplyr::mutate(is_mexicana    = grepl("TIL08|TIL25", taxa, perl = TRUE)) %>%
   dplyr::mutate(is_parviglumis = grepl("TIL|Teo", taxa, perl = TRUE) & !is_mexicana) 
 
-table(cut(hapind$locations_elevation, breaks = c(0,1000,2000,4000)), right = TRUE)
-  
+
 hapind$ele_class <- cut(
   hapind$locations_elevation, breaks = c(0,1000,2000,4000), 
   labels = c("low","mid","high"))
@@ -172,24 +171,34 @@ net <- pegas::haploNet(h)
 pal <- c("#CC6677","#BCDCAD", "#88CCEE")
 
 
+# Preliminary plot just for getting layout coordinates
 p <- plot(net, legend = FALSE,
+     size=attr(net, "freq")/50, 
+     scale.ratio = 2, cex = 0., 
+     pie= pie_tab,
+     col = "white",
+     bg=pal,
+     show.mutation = 2,threshold =0 )
+
+# Parameters for adjusting pie labels (manually):
+size.adjust <- c(0.8, 0.6,0.7, 1.5,1.5,0.6,1,1.2,1.5)
+angle.adjust <- -c(pi/3,pi/3,pi/3,-pi/2, pi/2, pi/3, -pi/3, -pi/2,pi)
+
+# Final plot
+pdf(file.path('output',"fig_1B.pdf"))
+plot(net, legend = FALSE,
      labels = FALSE,
      size=attr(net, "freq")/50, 
      scale.ratio = 2, cex = 0., 
      pie= pie_tab,
      bg=pal,
      show.mutation = 2,threshold =0, )
-# Adjusting pie labels:
-size.adjust <- c(0.8, 0.6,0.7, 1.5,1.5,0.6,1,1.2,1.5)
-angle.adjust <- c(pi/3,pi/3,pi/3,-pi/2, pi/2, pi/3, -pi/3, -pi/2,pi)
-text(p$xx- cos(angle.adjust)*p$size*size.adjust , 
-     p$yy+ sin(angle.adjust)*p$size*size.adjust ,
+# Adjusting pie labels
+text(p$xx + cos(angle.adjust)*p$size*size.adjust , 
+     p$yy + sin(angle.adjust)*p$size*size.adjust ,
      labels = p$labels, srt = 90)
 legend(-25,30, box.lty = 0, colnames(pie_tab), fill=pal,
        title = "Population by Elevation", ncol =3)
-
-pdf("fig_1B.pdf")
-print(p)
 dev.off()
 
 ```
