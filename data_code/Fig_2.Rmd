@@ -108,16 +108,18 @@ colm %>%
 
 ```{r}
 
-
+# Source data from:
+#  http://germinate.seedsofdiscovery.org/maize/#accession-overview
+# SeeD GWAS GbS Analysisa ccessions (4022)
 
 accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
 nrow(accn_info)
-SEED_GWAS_GID <- read.table(file = paste(extdata, "SEED_GWAS_GID.tab", sep = "/"),
+SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
                             header = TRUE, quote = "",sep ="\t")
 
 # There are one or more GWAS seed identifiers per general identifier in the table
 
-GWAS_ID <- read.table(file = file.path(data, "GWAS_ID.tab"), quote = "",sep ="\t")
+GWAS_ID <- read.table(file = file.path('data','fig_2',"GWAS_ID.tab"), quote = "",sep ="\t")
 GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
 
 colnames(GWAS_ID)[1] <-"sample_id"

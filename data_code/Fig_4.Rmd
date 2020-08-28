@@ -56,3 +56,141 @@ fd_chr3 %>%
 
 
 ```
+
+# Haplotype Network
+
+```{r}
+# Getting georeference data
+
+accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
+nrow(accn_info)
+SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
+                            header = TRUE, quote = "",sep ="\t")
+
+# There are one or more GWAS seed identifiers per general identifier in the table
+
+GWAS_ID <- read.table(file = file.path('data','fig_2',"GWAS_ID.tab"), quote = "",sep ="\t")
+GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
+
+colnames(GWAS_ID)[1] <-"sample_id"
+
+GWAS_ID <- GWAS_ID %>% 
+  dplyr::select(sample_id,taxa) %>%
+  inner_join(SEED_GWAS_GID)
+
+mex <- accn_info %>% 
+  dplyr::filter(!is.na(locations_longitude) & !is.na(locations_longitude)) %>%
+  dplyr::filter(countries_country_code3 =="MEX") %>% # use the geolocator to retrieve this info
+  dplyr::select(accn_GID  ="general_identifier",collnumb, lon ="locations_longitude",
+                lat="locations_latitude",  ele="locations_elevation", country = "countries_country_code3") 
+
+assoc <- mex %>% 
+  inner_join(GWAS_ID) %>% dplyr::select(taxa,collnumb) %>%
+  inner_join(traits) %>% 
+  arrange(locations_elevation) %>%
+  group_by(locations_elevation)
+
+# Using a combination of tassel and shell cmds I:
+# Selected just Mexican accessions (SEEDs) genotype and Teosintes ( HAPMAP not georeferenced).
+# Merging SEEDs data with HapMap required:
+# Download data from hapmap 282 set in AGPV2 for ZmPLA1.2
+# Merge with SEDDs data for ZmPLA1.2 that is in AGPv2
+# Liftover to AGPV3
+# Filter heterozygotes out
+# In order to use the Haplotype network plotting function
+# I had to add phasing replacing '/' with '|' in the genotypes
+# From 56 initial variants found in SEEDs down to 11 sites
+
+
+vcf_file <-  file.path('data','fig_2', 'zmpla12_merged_het0_AGPv3_phased.vcf')
+
+vcf <- vcfR::read.vcfR(vcf_file) 
+ncol(vcf@gt) - 1
+
+is_mexican <- colnames(vcf@gt) %in% c("FORMAT",assoc$taxa) 
+is_teosinte <- grepl("TIL.*|Teo",colnames(vcf@gt), perl = TRUE)
+
+vcf <-vcf[,is_mexican | is_teosinte ]
+ncol(vcf@gt) - 1
+
+# 916 mexican  out of  1379 initial
+dna <- vcfR2DNAbin(vcf)
+as.alignment(dna)
+h <- haplotype(dna, what="label")
+
+
+haptab <- stack(setNames(attr(h, "index"), rownames(h))) %>%
+  dplyr::mutate(h = as.numeric(ind)) %>%
+  dplyr::select(h, label =ind, dnaid= values)
+
+sumhap <- haptab %>% 
+  dplyr::group_by(h,label) %>%
+  dplyr::summarise(count= length(h))  %>%
+  dplyr::arrange(-count) %>% ungroup() %>%
+  dplyr::mutate(countrank = row_number()) %>%
+  dplyr::mutate(cumcount = cumsum(count)) %>% 
+  dplyr::mutate(cumfreq  = cumcount/sum(count)) %>% 
+  dplyr::mutate(is_major = cumfreq < 0.9) %>%  # haplotypes covering 90% of the population fro the plot
+  as.data.frame()
+
+majorhid <- sumhap$h[sumhap$is_major]
+majordnaid  <- haptab$dnaid[haptab$h %in% majorhid ]
+
+majordna <- dna[majordnaid,]
+
+h <- haplotype(majordna) # Here we get the sequences as haplotypes fro plotting
+
+check_mexicana <- function(x,h,dna) {
+  h_names <- rownames(dna)[attr(h,"index")[[x]]]
+  if(any(grepl("TIL08|TIL25",h_names))) {x} else {NULL}
+}
+
+
+hapind <- stack(setNames(attr(h, "index"), rownames(h))) %>% 
+  dplyr::mutate(h = as.numeric(ind)) %>%
+  dplyr::select(h, label =ind, dnaid = values) %>%
+  dplyr::mutate(seqname = rownames(majordna)[dnaid]) %>%
+  dplyr::mutate(seq = as.alignment(majordna)$seq) %>%
+  dplyr::mutate(taxa = gsub("_.*","",seqname,perl = TRUE)) %>%
+  dplyr::left_join(assoc) %>%
+  dplyr::mutate(is_mexicana    = grepl("TIL08|TIL25", taxa, perl = TRUE)) %>%
+  dplyr::mutate(is_parviglumis = grepl("TIL|Teo", taxa, perl = TRUE) & !is_mexicana) 
+
+table(cut(hapind$locations_elevation, breaks = c(0,1000,2000,4000)), right = TRUE)
+  
+hapind$ele_class <- cut(
+  hapind$locations_elevation, breaks = c(0,1000,2000,4000), 
+  labels = c("low","mid","high"))
+
+hapind$pop <- hapind$ele_class 
+hapind$pop <- factor(hapind$pop, levels = c("low","mid","high"))
+
+pie_tab <- with(hapind, table(hap=label, pop=pop))
+
+net <- pegas::haploNet(h)
+
+pal <- c("#CC6677","#BCDCAD", "#88CCEE")
+
+
+p <- plot(net, legend = FALSE,
+     labels = FALSE,
+     size=attr(net, "freq")/50, 
+     scale.ratio = 2, cex = 0., 
+     pie= pie_tab,
+     bg=pal,
+     show.mutation = 2,threshold =0, )
+# Adjusting pie labels:
+size.adjust <- c(0.8, 0.6,0.7, 1.5,1.5,0.6,1,1.2,1.5)
+angle.adjust <- c(pi/3,pi/3,pi/3,-pi/2, pi/2, pi/3, -pi/3, -pi/2,pi)
+text(p$xx- cos(angle.adjust)*p$size*size.adjust , 
+     p$yy+ sin(angle.adjust)*p$size*size.adjust ,
+     labels = p$labels, srt = 90)
+legend(-25,30, box.lty = 0, colnames(pie_tab), fill=pal,
+       title = "Population by Elevation", ncol =3)
+
+pdf("fig_1B.pdf")
+print(p)
+dev.off()
+
+```
+
