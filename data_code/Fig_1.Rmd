@@ -23,8 +23,68 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
+library(ComplexHeatmap)
 ```
 
+
+#PBE resample P-value HeatMap
+
+```{r}
+
+pval        <- read.csv(file.path( "data","fig_1", "PBE_pvalues.csv"))
+pglipid_cyc <- read.csv(file.path( "data","fig_1", "pglipid_cyc.csv"))
+
+pwy_summary <- pval  %>%
+  dplyr::left_join(pglipid_cyc, by =c(geneset ="Pathway.id") )
+
+rownames(m) <- pwy_summary$Pathway.name
+
+
+m[m ==0] = 1e-5
+
+hm <-   ComplexHeatmap::Heatmap(
+  m,
+  name = "p value",
+  row_names_max_width = ComplexHeatmap::max_text_width(rownames(m))
+)
+
+ht <- ComplexHeatmap::draw(hm, heatmap_legend_side = "left")
+
+row_dend <- row_dend(ht)
+row_dend <- rev(row_dend)
+
+pwy_summary$geneset[order.dendrogram(row_dend)]
+rownames(m)[order.dendrogram(row_dend)]
+
+
+# s1 <- m
+# n_test <- nrow(s1)*ncol(s1)
+# s1[m > 0] <- ""
+# s1[m <  0.05] <- "*"
+# s1[m < 0.05 / n_test] <- "**"
+
+hm <-   ComplexHeatmap::Heatmap(
+  m,
+  name = "p value",
+  cluster_rows = row_dend,
+  row_dend_reorder = FALSE,
+  column_order = colnames(m),
+  column_names_side = "top",
+  column_names_rot = 0,
+  column_names_centered = TRUE,
+  column_names_gp = gpar(fontsize = 10),
+  row_names_max_width = ComplexHeatmap::max_text_width(rownames(m)),
+  row_names_gp = gpar(fontsize = 10)
+#   cell_fun = function(j, i, x, y, width, height, fill) {
+#     grid.text( s1[i, j], x, y, gp = gpar(fontsize = 10, col = "white"))
+#   }
+)
+
+pdf(file = "fig_1B.pdf")
+print(hm)
+dev.off()
+
+```
 
 #PBE analysis
 
