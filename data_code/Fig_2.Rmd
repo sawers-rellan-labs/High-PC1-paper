@@ -104,3 +104,99 @@ colm %>%
 	#ylim(0, 130)
 ```
 
+## Elevation bin plots
+
+```{r}
+
+
+
+accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
+nrow(accn_info)
+SEED_GWAS_GID <- read.table(file = paste(extdata, "SEED_GWAS_GID.tab", sep = "/"),
+                            header = TRUE, quote = "",sep ="\t")
+
+# There are one or more GWAS seed identifiers per general identifier in the table
+
+GWAS_ID <- read.table(file = file.path(data, "GWAS_ID.tab"), quote = "",sep ="\t")
+GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
+
+colnames(GWAS_ID)[1] <-"sample_id"
+
+GWAS_ID <- GWAS_ID %>% 
+  dplyr::select(sample_id,taxa) %>%
+  inner_join(SEED_GWAS_GID)
+
+mex <- accn_info %>% 
+  dplyr::filter(!is.na(locations_longitude) & !is.na(locations_longitude)) %>%
+  dplyr::filter(countries_country_code3 =="MEX") %>% # use the geolocator to retrieve this info
+  dplyr::select(accn_GID  ="general_identifier",collnumb, lon ="locations_longitude",
+                lat="locations_latitude",  ele="locations_elevation", country = "countries_country_code3") 
+
+mex$ele_bin <- cut(
+  mex$ele, breaks = seq(0, 3100, by= 100), 
+  labels = seq(50, 3100, by= 100)) %>% 
+  as.character() %>%
+  as.integer()
+
+bins <- mex %>% 
+  dplyr::group_by(ele_bin) %>%
+  dplyr::summarise(ele_count = length(accn_GID))
+
+mex_filtered <- mex %>% dplyr::inner_join(bins) %>%
+  dplyr::filter(ele_count>10)   # Filter low n bins
+
+
+##########################################################################
+# Extracted genotypes from Romero Navarro data with Tassel
+# input as tassel table
+genotype <- read.table("S3_8542287.tab", header = TRUE, sep ="\t") %>%
+  # dplyr::inner_join(read.table("S4_5387180.tab", header = TRUE, sep ="\t"))   %>%
+  dplyr::inner_join(read.table("S5_195455216.tab", header = TRUE, sep ="\t"))
+colnames(genotype) <- c("taxa","S3_8542287", "S5_195455216")
+
+
+mex_info <- GWAS_ID %>% 
+  dplyr::inner_join(mex_filtered) %>%
+  dplyr::inner_join(genotype) %>%
+  dplyr::group_by(ele_bin) %>%
+  dplyr::mutate(S3_8542287_fr   = (2*sum(S3_8542287   == "C") + sum(S3_8542287   == "S")) / (2*length(taxa))) %>%
+  # dplyr::mutate(S4_5387180_fr   = (2*sum(S4_5387180   == "T") + sum(S4_5387180   == "Y")) / (2*length(taxa)))  %>%
+  dplyr::mutate(S5_195455216_fr = (2*sum(S5_195455216 == "G") + sum(S5_195455216 == "R")) / (2*length(taxa)))%>%
+  dplyr::arrange(ele_bin) %>%
+  as.data.frame()
+
+ele_fr  <- mex_info %>% 
+  ungroup() %>% 
+  dplyr::select(ele_bin, ends_with("fr")) %>%
+  unique()%>% dplyr::left_join(soil_bin) %>%
+  dplyr::select(-HiVH) %>%
+  dplyr::rename(Elevation ="ele_bin")
+
+pla1_plot <- ele_fr %>% ggpubr::ggscatter(  x = "Elevation", y = "S3_8542287_fr",
+                               add = "loess",               # Add regression line
+                               conf.int = TRUE,             # Add confidence interval
+                               color = "#1260ad") + 
+  ggplot2::ggtitle("3@8.5 Mb") +
+  ggplot2::ylab("Minor Allele Frequency") +
+  ggplot2::scale_x_continuous(breaks = seq(0, 3000, 1000), limits = c(0, 3000)) +
+  ggplot2::scale_y_continuous(breaks = seq(0, 1, .25), limits = c(0, 1.15)) +
+  ggpubr::theme_classic2(base_size = 20)
+
+
+
+lpcat_plot <- ele_fr %>% 
+  ggpubr::ggscatter(  x = "Elevation", y = "S5_195455216_fr",
+                               add = "loess",               # Add regression line
+                               conf.int = TRUE,                # Add confidence interval
+                               color = "#1260ad") +
+  ggplot2::ggtitle("5@195.5 Mb") + 
+  ggplot2::ylab("Minor Allele Frequency") +
+  ggplot2::scale_x_continuous(breaks = seq(0, 3000, 1000), limits = c(0, 3000)) +
+  ggplot2::scale_y_continuous(breaks = seq(0, 1, .25), limits = c(0, 1.15)) +
+  ggpubr::theme_classic2(base_size = 20)
+
+pdf("fig1_CD.pdf")
+ggpubr::ggarrange(pla1_plot,pcat_plot) %>% print()
+dev.off()
+```
+
