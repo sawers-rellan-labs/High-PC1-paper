@@ -60,7 +60,7 @@ fd_chr3 %>%
 # Haplotype Network
 
 ```{r}
-# Getting georeference data
+# Getting georeferenced data
 
 accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
 nrow(accn_info)
