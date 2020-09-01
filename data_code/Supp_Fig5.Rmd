@@ -51,12 +51,21 @@ genes <- subset(B73v3,
 nrow(mcols(genes))
 ```
 
-### Loading the test gene set and SNP statistic files 
+### Loading the test gene set and specifying SNP statistic files
 
 SNP PBE files are divided in different populations
 
 ```{r} 
 geneset <- read.csv(file.path(datadir,"glycerolipid_pathways.csv"))
+
+testgeneID <- as.character(geneset$geneID)
+
+testgenes <-  subset(genes, ID %in% testgeneID)
+
+ngene <- length(testgeneID)
+
+# some test genes are not in this genome annotation
+testgeneID[! testgeneID %in% genes$ID ] 
 
 pops <- colnames(geneset)[2:5]
 pbe_files <- c("SW_US.allPBE.txt",  "MexHigh.allPBE.txt",
@@ -98,15 +107,6 @@ for(idx in 1:4){
   length(in_genes)
   
   # Find SNPs in test genes
-  
-  testgeneID <- as.character(geneset$geneID)
-  
-  testgenes <-  subset(genes, ID %in% testgeneID)
-  
-  ngene <- length(testgeneID)
-  
-  # some test genes are not in this genome annotation
-  testgeneID[! testgeneID %in% genes$ID ] 
   
   testgenes_olap <- findOverlaps(SNP, testgenes)
   

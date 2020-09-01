@@ -1,0 +1,52 @@
+Pathway.id,Pathway.name,n,n_test,cover,odds_ratio,p_value,FDR
+LIPAS-PWY,triacylglycerol degradation,141,141,1,Inf,4.52E-34,2.30E-32
+PHOSLIPSYN2-PWY,superpathway of phospholipid biosynthesis II (plants),104,104,1,Inf,1.42E-24,7.10E-23
+LIPASYN-PWY,phospholipases,95,95,1,Inf,2.36E-22,1.16E-20
+PWY-6803,phosphatidylcholine acyl editing,88,88,1,Inf,1.20E-20,5.75E-19
+PWY-6352,3-phosphoinositide biosynthesis,76,76,1,Inf,9.05E-18,4.25E-16
+TRIGLSYN-PWY,diacylglycerol and triacylglycerol biosynthesis,60,60,1,Inf,5.13E-14,2.36E-12
+PWY4FS-8,phosphatidylglycerol biosynthesis II (non-plastidic),53,53,1,Inf,2.10E-12,9.46E-11
+PWY-4762,superpathway of choline biosynthesis,52,52,1,Inf,3.56E-12,1.57E-10
+PWY-6351,"D-myo-inositol (1,4,5)-trisphosphate biosynthesis",49,49,1,Inf,1.72E-11,7.41E-10
+PWY-7039,phosphatidate metabolism as a signaling molecule,49,49,1,Inf,1.72E-11,7.41E-10
+PWY-6952,glycerophosphodiester degradation,43,43,1,Inf,3.95E-10,1.62E-08
+PWY-5667,CDP-diacylglycerol biosynthesis I,40,40,1,Inf,1.87E-09,7.49E-08
+PWY-7416,"phospholipid remodeling (phosphatidylcholine, yeast)",35,35,1,Inf,2.46E-08,9.61E-07
+PWY-3561,choline biosynthesis III,30,30,1,Inf,3.18E-07,1.21E-05
+PWY-6348,phosphate acquisition,30,30,1,Inf,3.18E-07,1.21E-05
+PWY4FS-7,phosphatidylglycerol biosynthesis I (plastidic),26,26,1,Inf,2.43E-06,8.74E-05
+PWY-3385,choline biosynthesis I,22,22,1,Inf,1.83E-05,0.000641076852681
+PWY4FS-5,superpathway of phosphatidylcholine biosynthesis,22,22,1,Inf,1.83E-05,0.000641076852681
+PWY-5143,long-chain fatty acid activation,21,21,1,Inf,3.03E-05,0.00099991647176
+PWY4FS-2,phosphatidylcholine biosynthesis II,19,19,1,Inf,8.27E-05,0.002647645247673
+PWY-401,galactolipid biosynthesis I,16,16,1,Inf,0.000371300426361,0.011510313217194
+PWY4FS-6,phosphatidylethanolamine biosynthesis II,15,15,1,Inf,0.000611553643418,0.018346609302548
+PWY-5669,phosphatidylethanolamine biosynthesis I,14,14,1,Inf,0.001006538748892,0.02918962371787
+PWY-5269,cardiolipin biosynthesis II,13,13,1,Inf,0.001655442850742,0.046352399820774
+PWY0-1319,CDP-diacylglycerol biosynthesis II,13,13,1,Inf,0.001655442850742,0.046352399820774
+PWY4FS-3,phosphatidylcholine biosynthesis III,12,12,1,Inf,0.002720736970415,0.070739161230789
+PWY4FS-4,phosphatidylcholine biosynthesis IV,12,12,1,Inf,0.002720736970415,0.070739161230789
+PWY3O-450,phosphatidylcholine biosynthesis I,10,10,1,Inf,0.007333325386933,0.175999809286386
+PWY-6118,glycerol-3-phosphate shuttle,6,6,1,Inf,0.052824300600588,1
+PWYQT-4427,sulfoquinovosyl diacylglycerol biosynthesis,5,5,1,Inf,0.086387755133813,1
+PWY-6825,phosphatidylcholine biosynthesis V,4,4,1,Inf,0.141177826858322,1
+PWY-3941,&beta;-alanine biosynthesis II,3,3,1,Inf,0.230556594941288,1
+PWY-6367,D-<i>myo</i>-inositol-5-phosphate metabolism,8,6,0.75,1.89751974072136,0.343627847778204,1
+PWY-6804,diacylglycerol biosynthesis (PUFA enrichment in oilseed),5,3,0.6,0.944306034357601,0.706225077340933,1
+PWY-5989,stearate biosynthesis II (bacteria and plants),40,21,0.525,0.684428173027565,0.909283485487924,1
+PWY-4261,glycerol degradation I,3,1,0.333333333333333,0.314028776642781,0.942615556835596,1
+PWY-5971,palmitate biosynthesis II (bacteria and plants),42,21,0.5,0.615606057338051,0.955016718080684,1
+PWY-6733,sporopollenin precursors biosynthesis,42,21,0.5,0.615606057338051,0.955016718080684,1
+PWY0-1313,acetate conversion to acetyl-CoA,6,2,0.333333333333333,0.312796710964104,0.96543022168801,1
+PWY-5147,oleate biosynthesis I (plants),45,21,0.466666666666667,0.533826546036203,0.986328210294631,1
+PWY-5884,wax esters biosynthesis I,11,2,0.181818181818182,0.137109593067242,0.999506451017035,1
+PWY-321,cutin biosynthesis,57,21,0.368421052631579,0.343048924293097,0.999969099289715,1
+PWY-5136,fatty acid &beta;-oxidation II (peroxisome),24,5,0.208333333333333,0.158490854488049,0.999992786326453,1
+PWY-5754,4-hydroxybenzoate biosynthesis I (eukaryotes),17,1,0.058823529411765,0.037735343410115,0.999999925155205,1
+PWY-6363,"D-myo-inositol (1,4,5)-trisphosphate degradation",20,1,0.05,0.031495545710455,0.999999996083995,1
+PWY-5156,superpathway of fatty acid biosynthesis II (plant),74,21,0.283783783783784,0.220590160389574,0.999999999568903,1
+PWY-1121,suberin monomers biosynthesis,78,21,0.269230769230769,0.20239214589695,0.999999999977448,1
+PWY66-21,ethanol degradation II,32,2,0.0625,0.038646562614648,0.999999999998598,1
+PWY-561,superpathway of glyoxylate cycle and fatty acid degradation,75,5,0.066666666666667,0.036471558551389,1,1
+PWY1F-FLAVSYN,flavonoid biosynthesis,47,1,0.021276595744681,0.01197415441865,1,1
+PWY-361,phenylpropanoid biosynthesis,64,1,0.015625,0.008255828524837,1,1

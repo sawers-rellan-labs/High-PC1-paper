@@ -8,13 +8,13 @@ library(data.table)
 library(cowplot)
 library(wesanderson)
 library(ggplot2)
-library(MASS) 
+library(MASS)
 library(qtl)
-library(lme4) 
-library(arm) 
-library(lsmeans) 
+library(lme4)
+library(arm)
+library(lsmeans)
 library(pbkrtest)
-library(cowplot) 
+library(cowplot)
 library(viridis)
 library(qtlcharts)
 library(readr)
@@ -23,9 +23,67 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
-library(scales)
+library(ComplexHeatmap)
 ```
 
+#PBE resample P-value HeatMap
+
+```{r}
+
+pval        <- read.csv(file.path( "data","fig_1", "PBE_pvalues.csv"))
+pglipid_cyc <- read.csv(file.path( "data","fig_1", "pglipid_cyc.csv"))
+
+pwy_summary <- pval  %>%
+  dplyr::left_join(pglipid_cyc, by =c(geneset ="Pathway.id") )
+
+rownames(m) <- pwy_summary$Pathway.name
+
+
+m[m ==0] = 1e-5
+
+hm <-   ComplexHeatmap::Heatmap(
+  m,
+  name = "p value",
+  row_names_max_width = ComplexHeatmap::max_text_width(rownames(m))
+)
+
+ht <- ComplexHeatmap::draw(hm, heatmap_legend_side = "left")
+
+row_dend <- row_dend(ht)
+row_dend <- rev(row_dend)
+
+pwy_summary$geneset[order.dendrogram(row_dend)]
+rownames(m)[order.dendrogram(row_dend)]
+
+
+# s1 <- m
+# n_test <- nrow(s1)*ncol(s1)
+# s1[m > 0] <- ""
+# s1[m <  0.05] <- "*"
+# s1[m < 0.05 / n_test] <- "**"
+
+hm <-   ComplexHeatmap::Heatmap(
+  m,
+  name = "p value",
+  cluster_rows = row_dend,
+  row_dend_reorder = FALSE,
+  column_order = colnames(m),
+  column_names_side = "top",
+  column_names_rot = 0,
+  column_names_centered = TRUE,
+  column_names_gp = gpar(fontsize = 10),
+  row_names_max_width = ComplexHeatmap::max_text_width(rownames(m)),
+  row_names_gp = gpar(fontsize = 10)
+#   cell_fun = function(j, i, x, y, width, height, fill) {
+#     grid.text( s1[i, j], x, y, gp = gpar(fontsize = 10, col = "white"))
+#   }
+)
+
+pdf(file = "fig_1B.pdf")
+print(hm)
+dev.off()
+
+```
 
 #PBE analysis
 
@@ -96,7 +154,7 @@ gand<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="AN") %>%
   ggplot(aes(y=PBE0,x=POS)) +
   geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) + 
+  xlim(8.5, 8.6) +
   theme_cowplot(10) +
   theme(axis.title.y=element_blank(),
         axis.title.x=element_blank(),
@@ -107,7 +165,7 @@ gand<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="AN") %>%
   geom_hline(yintercept=0.4, color="red", linetype="dashed")+
   annotate("rect",xmin=8.542106, xmax=8.544078, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
-  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") 
+  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")
 
 
 #GRMZM2G481755(Chr5:195495289..195505503)
@@ -117,7 +175,7 @@ gswu_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="US") %>%
   geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) +
   xlim(195.45, 195.55) +
-  theme_cowplot(10) + 
+  theme_cowplot(10) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
@@ -128,11 +186,11 @@ gswu_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="US") %>%
   annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")   
 
 gmex_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="MH") %>%
-  ggplot(aes(y=PBE0,x=POS))+ 
+  ggplot(aes(y=PBE0,x=POS))+
   geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) +
   xlim(195.45, 195.55) +
-  theme_cowplot(10) + 
+  theme_cowplot(10) +
  theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
@@ -145,9 +203,9 @@ gmex_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="MH") %>%
 ggua_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="GH") %>%
   ggplot(aes(y=PBE0,x=POS))+
   geom_point(size=1, alpha = 0.7) +
-  ylim(-0.5,1.5) + 
+  ylim(-0.5,1.5) +
   xlim(195.45, 195.55) +
-  theme_cowplot(10) + 
+  theme_cowplot(10) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
@@ -170,7 +228,7 @@ gand_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="AN") %>%
   geom_hline(yintercept=0.4, color="red", linetype="dashed") +
   annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
-  annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") 
+  annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")
 
 
 
@@ -180,7 +238,7 @@ plot_grid(gswu_lpcat, gswu, gmex_lpcat, gmex, ggua_lpcat, ggua, gand_lpcat, gand
 ```
 
 
-#Zcn8 PBE 
+#Zcn8 PBE
 
 ```{r}
 
@@ -207,7 +265,7 @@ gmex<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="MH") %>%
   theme_cowplot(8) +
   #scale_x_continuous(
   #labels = scales::number_format(accuracy = 0.001)) +
-  ylab("PBE") + 
+  ylab("PBE") +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
@@ -241,7 +299,7 @@ gand<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="AN") %>%
   #labels = scales::number_format(accuracy = 0.001)) +
   ylab("PBE") +
   geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey") 
+  annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")
 ```
 
 
@@ -282,9 +340,9 @@ map + geom_point(aes(colour = ele_cont), size = ) +
 hilo_lipids <- read_csv("data/fig_1/hilo_panel_lipid.csv")
 
 # add elevation continent variable
-hilo_lipids %>% 
+hilo_lipids %>%
   mutate(ele_cont = ifelse(continent == "Mex" & elevation == "High", 1,
-                    ifelse(continent == "Mex" & elevation == "aLow", 2, 
+                    ifelse(continent == "Mex" & elevation == "aLow", 2,
                     ifelse(continent == "SA" & elevation == "High", 3, 4))))
 
 hilo_lipids$ele_cont <- paste(hilo_lipids$continent, hilo_lipids$elevation, sep = "_")
@@ -297,8 +355,8 @@ A <- hilo_lipids %>%
   scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
   coord_fixed(ratio = 1.2) +
   theme_cowplot(12) +
-  theme(legend.position="none") 
-  
+  theme(legend.position="none")
+
 
 
 B <- hilo_lipids %>%
@@ -310,9 +368,9 @@ B <- hilo_lipids %>%
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
   theme_cowplot(12) +
   coord_fixed(ratio = 1.25) +
-  xlab("Elevation") + 
+  xlab("Elevation") +
   ylab("log10(PC34:1/LPC18:1)") +
-  theme(legend.position="none") 
+  theme(legend.position="none")
 
 plot_grid(A, B, ncol = 2)
 ```
