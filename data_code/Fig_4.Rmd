@@ -1,5 +1,5 @@
 ---
-title: "fig4_teo_introgression"
+title: "fig5_teo_introgression"
 author: "rra"
 date: "5/4/2020"
 output: html_document
@@ -32,7 +32,7 @@ library(Hmisc)
 fd from palomeros and mushito
 
 ```{r}
-fd_chr3 <- read_csv("data/fig_4/fd_chr_3_pts.csv")
+fd_chr3 <- read_csv("data/fig_5/fd_chr_3_pts.csv")
 
 names(fd_chr3)[7] <- "fd"
 	

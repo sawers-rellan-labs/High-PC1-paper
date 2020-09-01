@@ -23,6 +23,7 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
+library(scales)
 ```
 
 
@@ -35,106 +36,212 @@ and<-fread("data/0largedata/Andes.allPBE.txt",header=T) %>% mutate(POP="AN",POS=
 swu<-fread("data/0largedata/SW_US.allPBE.txt",header=T) %>% mutate(POP="US",POS=POS/1E6)
 all_pops_pbe<-rbind(swu,mex,gua,and) %>% mutate(POP=factor(POP,levels=c("US","MH","GH","AN")))
 
-#GRMZM2G353444(Chr3:8.442106..8.444078)
-gswu<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="US") %>%
+#GRMZM2G353444(Chr3:8,542,106..8,544,078)
+gswu<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="US") %>%
   ggplot(aes(y=PBE0,x=POS))+
-  geom_point(size=2, alpha = 0.8) +
+  geom_point(size=1, alpha = 0.9) +
   ylim(-0.5,1.5) +
   xlim(8.5, 8.6) +
-  theme_cowplot()+
+  theme_cowplot(10) +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank()) +
   geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
+  annotate("rect",xmin=8.542106, xmax=8.544078, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")
 
-gmex<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="MH") %>%
-  ggplot(aes(y=PBE0,x=POS))+  
+gmex<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="MH") %>%
+  ggplot(aes(y=PBE0,x=POS))+
+  geom_point(size=1, alpha = 0.9) +
   ylim(-0.5,1.5) +
   xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
+  theme_cowplot(10) +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank()) +
   geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
+  annotate("rect",xmin=8.542106, xmax=8.544078, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")  
 
-ggua<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="GH") %>%
+ggua<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="GH") %>%
+  ggplot(aes(y=PBE0,x=POS))+
+  geom_point(size=1, alpha = 0.9) +
+  ylim(-0.5,1.5) +
+  xlim(8.5, 8.6) +
+  theme_cowplot(10) +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank()) +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  annotate("rect",xmin=8.542106, xmax=8.544078, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")  
+
+
+gand<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="AN") %>%
   ggplot(aes(y=PBE0,x=POS)) +
+  geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8)+
+  xlim(8.5, 8.6) + 
+  theme_cowplot(10) +
+  theme(axis.title.y=element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.y=element_blank()) +
+  #xlab("Mb") +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
   geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
-
-
-gand<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="AN") %>%
-  ggplot(aes(y=PBE0,x=POS)) +
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  #theme(axis.text.x=element_text(size=15),axis.title.x = element_text(size=16))+
-  xlab("Position (Mb)")+
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-bob=filter(all_pops_pbe,CHROM==3,POS>8.4 ,POS<8.6) %>% 
-  ggplot(aes(y=PBE0,x=POS,color=POP))+geom_point(size=2)+ theme(legend.position="bottom")+
-  scale_color_manual(values=c(wes_palette("Darjeeling1")[c(3,1)], wes_palette("Royal2")[3], "purple"),name="Populations:")
-
-#legend <- get_legend(bob)
-plot_grid(gswu,gmex,ggua,gand,ncol=1)
-#plot_grid(legend,pgrid,  ncol = 1, rel_heights = c(.1, 1))
-ggsave("GRMZM2G353444.pdf")
+  annotate("rect",xmin=8.542106, xmax=8.544078, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") 
 
 
 #GRMZM2G481755(Chr5:195495289..195505503)
 
-gswu_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="US") %>%
+gswu_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="US") %>%
   ggplot(aes(y=PBE0,x=POS))+
-  geom_point(size=2, alpha = 0.8) +
+  geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) +
   xlim(195.45, 195.55) +
-  theme_cowplot() +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+  theme_cowplot(10) + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  ylab("PBE") +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
+  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")   
 
-gmex_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="MH") %>%
-  ggplot(aes(y=PBE0,x=POS))+  
+gmex_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="MH") %>%
+  ggplot(aes(y=PBE0,x=POS))+ 
+  geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) +
   xlim(195.45, 195.55) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+  theme_cowplot(10) + 
+ theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  ylab("PBE") +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
+  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")   
 
-ggua_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="GH") %>%
+ggua_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="GH") %>%
   ggplot(aes(y=PBE0,x=POS))+
+  geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) + 
   xlim(195.45, 195.55) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+  theme_cowplot(10) + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  ylab("PBE") +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
+  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")   
 
 
-gand_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="AN") %>%
+gand_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="AN") %>%
   ggplot(aes(y=PBE0,x=POS)) +
-  geom_point(size=2, alpha = 0.8) +
+  geom_point(size=1, alpha = 0.7) +
   ylim(-0.5,1.5) +
   xlim(195.45, 195.55) +
-  theme_cowplot() +
-  #theme(axis.text.x=element_text(size=15),axis.title.x = element_text(size=16)) +
-  xlab("Position (Mb)") +
+  theme_cowplot(10) +
+  theme(axis.title.x=element_blank()) +
+  ylab("PBE") +
+  #xlab("Mb") +
   geom_hline(yintercept=0.4, color="red", linetype="dashed") +
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
+  annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
+  annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") 
 
-bob=filter(x,CHROM==5,POS>195.4,POS<195.6) %>% 
-  ggplot(aes(y=PBE0,x=POS,color=POP))+geom_point(size=2)+ theme(legend.position="bottom")+
-  scale_color_manual(values=c(wes_palette("Darjeeling1")[c(3,1)], wes_palette("Royal2")[3], "purple"),name="Populations:")
 
-#legend <- get_legend(bob)
-plot_grid(gswu, gswu_lpcat, gmex, gmex_lpcat, ggua, ggua_lpcat, gand, gand_lpcat, ncol = 2)
-#plot_grid(legend,pgrid,  ncol = 1, rel_heights = c(.1, 1))
-ggsave("GRMZM2G481755.pdf")
 
+plot_grid(gswu_lpcat, gswu, gmex_lpcat, gmex, ggua_lpcat, ggua, gand_lpcat, gand, ncol = 2)
+
+
+```
+
+
+#Zcn8 PBE 
+
+```{r}
+
+gswu<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="US") %>%
+  ggplot(aes(y=PBE0,x=POS))+
+  geom_point(size=2, alpha = 0.9) +
+  ylim(-0.5,1.5) +
+  xlim(123.02, 123.04) +
+  theme_cowplot(8) +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
+  ylab("PBE") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+
+gmex<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="MH") %>%
+  ggplot(aes(y=PBE0,x=POS))+
+  geom_point(size=2, alpha = 0.7) +
+  ylim(-0.5,1.5) +
+  xlim(123.02, 123.04) +
+  theme_cowplot(8) +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
+  ylab("PBE") + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+
+ggua<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="GH") %>%
+  ggplot(aes(y=PBE0,x=POS)) +
+  geom_point(size=2, alpha = 0.7) +
+  ylim(-0.5,1.5) +
+  xlim(123.02, 123.04) +
+  theme_cowplot(8) +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
+  ylab("PBE") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+
+
+gand<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="AN") %>%
+  ggplot(aes(y=PBE0,x=POS)) +
+  geom_point(size=2, alpha = 0.7) +
+  ylim(-0.5,1.5) +
+  xlim(123.02, 123.04) +
+  theme_cowplot(8) +
+  xlab("Mb") +
+  #scale_x_continuous(
+  #labels = scales::number_format(accuracy = 0.001)) +
+  ylab("PBE") +
+  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey") 
 ```
 
 
@@ -155,12 +262,12 @@ Plot map with location of accessions
 
 register_google(key = "AIzaSyC7ysJP7aVkxc-r1fIPskFkUtRiKGkzxCk")
 
-basemap <- get_map(location=c(lon = -85, lat = -5), zoom = 3, maptype = "hybrid", color='bw', source='google', scale = 4)
+basemap <- get_map(location=c(lon = -100, lat = 18), zoom = 5, maptype = "satellite", color = "bw", source='google')
 ggmap(basemap)
 
 map <- ggmap(basemap, extent='panel', base_layer=ggplot(hilo_panel, aes(x=Long, y=Lat))) #adds hilo panel info
 
-map + geom_point(aes(colour = ele_cont), size = 3) +
+map + geom_point(aes(colour = ele_cont), size = ) +
   scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
   theme(legend.position="none") +
   theme_cowplot()

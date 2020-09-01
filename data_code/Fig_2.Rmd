@@ -104,3 +104,22 @@ colm %>%
 	#ylim(0, 130)
 ```
 
+
+```{r}
+	colm %>%
+	filter(CHR == 1) %>%
+	#filter(BP > 253270000) %>%
+	#filter(BP < 253275000) %>%
+  filter(BP > 250270000) %>%
+	filter(BP < 260275000) %>%
+	filter(-log10(P) > 5) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 1) +
+	theme_cowplot(12) +
+	geom_segment(x = 253.331, xend = 253.333, y = 60, yend = 60, colour = "red", size = 12) +
+	#xlim(5379695, 5395010) +
+	ylim(0, 130)
+```
+
