@@ -113,19 +113,19 @@ gswu<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="US") %>%
   annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
   annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")
 
-gmex<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="MH") %>%
+gmex<-filter(all_pops_pbe,CHROM==3,POS>8.4 ,POS<8.81,POP=="MH") %>%
   ggplot(aes(y=PBE0,x=POS))+
   geom_point(size=1, alpha = 0.9) +
   ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
+  xlim(8.4, 8.8) +
   theme_cowplot(10) +
   #scale_x_continuous(
   #labels = scales::number_format(accuracy = 0.001)) +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.title.y=element_blank(),
-        axis.text.y=element_blank()) +
+  #theme(axis.title.x=element_blank(),
+        #axis.text.x=element_blank(),
+        #axis.ticks.x=element_blank(),
+        #axis.title.y=element_blank(),
+        #axis.text.y=element_blank()) +
   geom_hline(yintercept=0.4, color="red", linetype="dashed")+
   annotate("rect",xmin=8.542106, xmax=8.544078, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
@@ -246,45 +246,51 @@ gswu<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="US") %>%
   ggplot(aes(y=PBE0,x=POS))+
   geom_point(size=2, alpha = 0.9) +
   ylim(-0.5,1.5) +
-  xlim(123.02, 123.04) +
-  theme_cowplot(8) +
+  xlim(123.025, 123.04) +
+  theme_cowplot(10) +
   #scale_x_continuous(
   #labels = scales::number_format(accuracy = 0.001)) +
   ylab("PBE") +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
+  geom_vline(xintercept = 123.034514,col="red",lty=1) +
+  geom_vline(xintercept = 123.033420,col="blue",lty=1) +
   annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
 
 gmex<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="MH") %>%
   ggplot(aes(y=PBE0,x=POS))+
   geom_point(size=2, alpha = 0.7) +
   ylim(-0.5,1.5) +
-  xlim(123.02, 123.04) +
-  theme_cowplot(8) +
+  xlim(123.025, 123.04) +
+  theme_cowplot(10) +
   #scale_x_continuous(
   #labels = scales::number_format(accuracy = 0.001)) +
   ylab("PBE") +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
+   geom_vline(xintercept = 123.034514,col="red",lty=1) +
+  geom_vline(xintercept = 123.033420,col="blue",lty=1) +
   annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
 
 ggua<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="GH") %>%
   ggplot(aes(y=PBE0,x=POS)) +
   geom_point(size=2, alpha = 0.7) +
   ylim(-0.5,1.5) +
-  xlim(123.02, 123.04) +
-  theme_cowplot(8) +
+  xlim(123.025, 123.04) +
+  theme_cowplot(10) +
   #scale_x_continuous(
   #labels = scales::number_format(accuracy = 0.001)) +
   ylab("PBE") +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
+  geom_vline(xintercept = 123.034514,col="red",lty=1) +
+  geom_vline(xintercept = 123.033420,col="blue",lty=1) +
   annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
 
 
@@ -292,14 +298,18 @@ gand<-filter(all_pops_pbe,CHROM==8,POS>123.027 ,POS<123.037,POP=="AN") %>%
   ggplot(aes(y=PBE0,x=POS)) +
   geom_point(size=2, alpha = 0.7) +
   ylim(-0.5,1.5) +
-  xlim(123.02, 123.04) +
-  theme_cowplot(8) +
+  xlim(123.025, 123.04) +
+  theme_cowplot(10) +
   xlab("Mb") +
   #scale_x_continuous(
   #labels = scales::number_format(accuracy = 0.001)) +
   ylab("PBE") +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
+  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
+  geom_vline(xintercept = 123.034514,col="red",lty=1) +
+  geom_vline(xintercept = 123.033420,col="blue",lty=1) +
   annotate("rect",xmin=123.030387, xmax=123.032175, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")
+plot_grid(gswu, gmex, ggua, gand, ncol = 1)
+
 ```
 
 
@@ -347,6 +357,20 @@ hilo_lipids %>%
 
 hilo_lipids$ele_cont <- paste(hilo_lipids$continent, hilo_lipids$elevation, sep = "_")
 
+
+#plot correlations of PCs LPCs
+
+hilo_lipids %>%
+  filter (FIELD == "MT2016") %>%
+  #filter(PCs/LPCs > 5) %>%
+  ggplot(aes(x = log10(PCs), y = log10(LPCs), color = ele_cont)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
+  #coord_fixed(ratio = 1.2) +
+  theme_cowplot(12) +
+  #theme(legend.position="none")
+
+
 A <- hilo_lipids %>%
   filter (FIELD == "MT2016") %>%
   #filter(PCs/LPCs > 5) %>%
@@ -374,3 +398,36 @@ B <- hilo_lipids %>%
 
 plot_grid(A, B, ncol = 2)
 ```
+Using data from two fields
+
+```{r}
+A <- hilo_lipids %>%
+  #filter (FIELD == "MT2016") %>%
+  filter(PCs/LPCs > 5) %>%
+  ggplot(aes(x = log10(PCs/LPCs), y = log10(LPCs), color = ele_cont)) +
+  geom_point(alpha = 0.7, size = 3) +
+  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
+  coord_fixed(ratio = 1.2) +
+  theme_cowplot(12) +
+  facet_grid(cols = vars(FIELD))
+  theme(legend.position="none")
+
+
+
+B <- hilo_lipids %>%
+  #filter (FIELD == "MT2016") %>%
+  #filter(LPC_18_1 < 5e+05) %>%
+  ggplot(aes(x = ele_cont, y = log10(PC34_1_LPC18_1) , color = ele_cont)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme_cowplot(12) +
+  coord_fixed(ratio = 1.25) +
+  xlab("Elevation") +
+  ylab("log10(PC34:1/LPC18:1)") +
+  facet_grid(cols = vars(FIELD))
+  theme(legend.position="none")
+
+plot_grid(A, B, ncol = 2)
+```
+

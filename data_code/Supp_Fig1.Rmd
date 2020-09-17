@@ -1,211 +1,193 @@
 ---
-title: "Fig 1 Code"
+title: "Supplemental Figure 1"
+author: "Fausto Rodríguez Zapata"
+date: "5/27/2020"
 output: html_document
 ---
-```{r}
-library(tidyverse)
-library(data.table)
-library(cowplot)
-library(wesanderson)
-library(ggplot2)
-library(MASS) 
-library(qtl)
-library(lme4) 
-library(arm) 
-library(lsmeans) 
-library(pbkrtest)
-library(cowplot) 
-library(viridis)
-library(qtlcharts)
-library(readr)
-library(ggfortify)
-library(ggmap)
-library(maps)
-library(qtlcharts)
-library(Hmisc)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PBE resampling for SNPs in Glycerolipid pathway
+
+```{r} 
+
+library(dplyr)
+library(GenomicRanges)
+library(regioneR) 
+
+pvalue_string <- function(x, n = 10000){
+  if(x == 0){
+    paste("p <", formatC(1/n, format = "G", digits = 2))
+  } else{
+    paste("p =", formatC(x, format = "G", digits = 2))
+  }
+}
+
+datadir <- file.path("","Users","fvrodriguez","Projects","NCSU","05_PLA1")
+refdir <-  file.path("","ref","zea")
 ```
 
 
-#PBE analysis
+### Get the genome annotation 
+B73_RefGen_v3_Chr.bed 
+file with each chromosome start and end coordinates
+this is useful for checking the genome version of the markers
 
-```{r}
-mex<-fread("data/fig_1/MexHigh.allPBE.txt",header=T) %>% mutate(POP="MH",POS=POS/1E6)
-gua<-fread("data/fig_1/GuaHigh.allPBE.txt",header=T) %>% mutate(POP="GH",POS=POS/1E6)
-and<-fread("data/fig_1/Andes.allPBE.txt",header=T) %>% mutate(POP="AN",POS=POS/1E6)
-swu<-fread("data/fig_1/SW_US.allPBE.txt",header=T) %>% mutate(POP="US",POS=POS/1E6)
-all_pops_pbe<-rbind(swu,mex,gua,and) %>% mutate(POP=factor(POP,levels=c("US","MH","GH","AN")))
+```{r} 
+AGPv3 <- regioneR::toGRanges(file.path(refdir,"B73_RefGen_v3_Chr.bed"))
+seqlengths(AGPv3) <- width(AGPv3)
+genome(AGPv3 ) <- "AGPv3"
 
-#GRMZM2G353444(Chr3:8.442106..8.444078)
-gswu<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="US") %>%
-  ggplot(aes(y=PBE0,x=POS))+
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
+B73v3 <- rtracklayer::import(
+  file.path(refdir,"zea_mays.protein_coding_chr.gff"))
 
-gmex<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="MH") %>%
-  ggplot(aes(y=PBE0,x=POS))+  
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
-
-ggua<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="GH") %>%
-  ggplot(aes(y=PBE0,x=POS)) +
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8)+
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
-
-
-gand<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="AN") %>%
-  ggplot(aes(y=PBE0,x=POS)) +
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  #theme(axis.text.x=element_text(size=15),axis.title.x = element_text(size=16))+
-  xlab("Position (Mb)")+
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-bob=filter(all_pops_pbe,CHROM==3,POS>8.4 ,POS<8.6) %>% 
-  ggplot(aes(y=PBE0,x=POS,color=POP))+geom_point(size=2)+ theme(legend.position="bottom")+
-  scale_color_manual(values=c(wes_palette("Darjeeling1")[c(3,1)], wes_palette("Royal2")[3], "purple"),name="Populations:")
-
-#legend <- get_legend(bob)
-plot_grid(gswu,gmex,ggua,gand,ncol=1)
-#plot_grid(legend,pgrid,  ncol = 1, rel_heights = c(.1, 1))
-ggsave("GRMZM2G353444.pdf")
-
-
-#GRMZM2G481755(Chr5:195495289..195505503)
-
-gswu_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="US") %>%
-  ggplot(aes(y=PBE0,x=POS))+
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(195.45, 195.55) +
-  theme_cowplot() +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-gmex_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="MH") %>%
-  ggplot(aes(y=PBE0,x=POS))+  
-  ylim(-0.5,1.5) +
-  xlim(195.45, 195.55) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-ggua_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="GH") %>%
-  ggplot(aes(y=PBE0,x=POS))+
-  ylim(-0.5,1.5) + 
-  xlim(195.45, 195.55) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-
-gand_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="AN") %>%
-  ggplot(aes(y=PBE0,x=POS)) +
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(195.45, 195.55) +
-  theme_cowplot() +
-  #theme(axis.text.x=element_text(size=15),axis.title.x = element_text(size=16)) +
-  xlab("Position (Mb)") +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-bob=filter(x,CHROM==5,POS>195.4,POS<195.6) %>% 
-  ggplot(aes(y=PBE0,x=POS,color=POP))+geom_point(size=2)+ theme(legend.position="bottom")+
-  scale_color_manual(values=c(wes_palette("Darjeeling1")[c(3,1)], wes_palette("Royal2")[3], "purple"),name="Populations:")
-
-#legend <- get_legend(bob)
-plot_grid(gswu, gswu_lpcat, gmex, gmex_lpcat, ggua, ggua_lpcat, gand, gand_lpcat, ncol = 2)
-#plot_grid(legend,pgrid,  ncol = 1, rel_heights = c(.1, 1))
-ggsave("GRMZM2G481755.pdf")
-
+genes <- subset(B73v3, 
+                type == "gene" &
+                  biotype != "transposable_element" & 
+                  biotype != "pseudogene" &
+                  seqnames %in% 1:10) + 10000 # + 10Kb upstream and downstream
+nrow(mcols(genes))
 ```
 
+### Loading the test gene set and specifying SNP statistic files
 
-#HiLo panel analysis
+SNP PBE files are divided in different populations
 
-```{r}
-#file with hilo panel metadata
+```{r} 
+geneset <- read.csv(file.path(datadir,"glycerolipid_pathways.csv"))
 
-hilo_panel <- read_csv("data/fig_1/hilo_panel_info.csv")
+testgeneID <- as.character(geneset$geneID)
 
+testgenes <-  subset(genes, ID %in% testgeneID)
 
+ngene <- length(testgeneID)
+
+# some test genes are not in this genome annotation
+testgeneID[! testgeneID %in% genes$ID ] 
+
+pops <- colnames(geneset)[2:5]
+pbe_files <- c("SW_US.allPBE.txt",  "MexHigh.allPBE.txt",
+               "GuaHigh.allPBE.txt", "Andes.allPBE.txt")
 ```
 
-Plot map with location of accessions
+### Sampling and plot
 
-```{r}
-#register google_key
+```{r} 
+pdf(file = file.path("output","sample_PBE_nonredundant_genic.pdf"))
+par(mfrow=c(2,2))
 
-register_google(key = "AIzaSyC7ysJP7aVkxc-r1fIPskFkUtRiKGkzxCk")
-
-basemap <- get_map(location=c(lon = -85, lat = -5), zoom = 3, maptype = "hybrid", color='bw', source='google', scale = 4)
-ggmap(basemap)
-
-map <- ggmap(basemap, extent='panel', base_layer=ggplot(hilo_panel, aes(x=Long, y=Lat))) #adds hilo panel info
-
-map + geom_point(aes(colour = ele_cont), size = 3) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  theme(legend.position="none") +
-  theme_cowplot()
-
-
-
-```
-
-```{r}
-#file with hilo panel lipid data
-
-hilo_lipids <- read_csv("data/fig_1/hilo_panel_lipid.csv")
-
-# add elevation continent variable
-hilo_lipids %>% 
-  mutate(ele_cont = ifelse(continent == "Mex" & elevation == "High", 1,
-                    ifelse(continent == "Mex" & elevation == "aLow", 2, 
-                    ifelse(continent == "SA" & elevation == "High", 3, 4))))
-
-hilo_lipids$ele_cont <- paste(hilo_lipids$continent, hilo_lipids$elevation, sep = "_")
-
-A <- hilo_lipids %>%
-  filter (FIELD == "MT2016") %>%
-  #filter(PCs/LPCs > 5) %>%
-  ggplot(aes(x = log10(PCs/LPCs), y = log10(LPCs), color = ele_cont)) +
-  geom_point(alpha = 0.7, size = 3) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  coord_fixed(ratio = 1.2) +
-  theme_cowplot(12) +
-  theme(legend.position="none") 
+for(idx in 1:4){
+  # idx = 4
+  pop <- pops[idx]
+  pbe_in <- pbe_files[idx]
+  pbe <- read.delim(file.path(datadir,"PBE",pbe_in), header = TRUE)
+  head(pbe)
+  colnames(pbe)[1:2]<-c("CHR","BP")
+  colnames(pbe)[ncol(pbe)] <- "PBE"
   
+  SNP <- makeGRangesFromDataFrame(pbe,
+                                  keep.extra.columns=TRUE,
+                                  ignore.strand=TRUE,
+                                  seqinfo = seqinfo(AGPv3),
+                                  seqnames.field="CHR",
+                                  start.field="BP",
+                                  end.field="BP")
+  SNP$BP <- pbe$BP
+  SNP$CHR <- pbe$CHR
+  
+  # Find genic SNPs for background null distribution
+  
+  genes_olap <- findOverlaps(SNP,genes)
+  
+  in_genes <- queryHits(genes_olap) %>% unique()
+  
+  length(SNP$BP)
+  length(in_genes)
+  
+  # Find SNPs in test genes
+  
+  testgenes_olap <- findOverlaps(SNP, testgenes)
+  
+  testgenes_with_SNP <- subjectHits(testgenes_olap) %>% unique()
+  in_testgenes <- queryHits(testgenes_olap) %>% unique()
+  
+  length(testgenes_with_SNP)
+  length(in_testgenes)
+  
+  hits <- data.frame( 
+    CHR  = SNP$CHR[queryHits(testgenes_olap)],
+    BP   =  SNP$BP[queryHits(testgenes_olap)],
+    gene = testgenes$ID[subjectHits(testgenes_olap)])
+  
+  testgeneSNP <- hits %>% 
+    dplyr::inner_join(as.data.frame(SNP), by=c("CHR","BP")) %>% 
+    arrange(CHR,BP)  
+  testgeneSNP$gene %>% unique() %>% length() 
+  
+  # Resampling for estimating null distribution ________________________________
+  
+  # # Redundant sampling  as Li Wang 2019 ________________________________________
+  # # A particular SNP appears as many times as it has overlaps with the +-10 Kb
+  # # extended genes 
+  # 
+  # sampling <- "r"
+  # 
+  # test <- testgeneSNP$PBE
+  # 
+  # ## Genomic background, i.e. all SNPs genic and intergenic
+  # #  
+  # bg_name <- "genomic"
+  # bg <- SNP$PBE
+  # 
+  # # Genic SNPs background
+  # # bg_name <- "genic"
+  # # bg <- SNP$PBE[in_genes]
+  
+  # Non redundant sampling _______________________________________________________
+  # A particular SNP appears a single time in the test set
+  
+  sampling <- "nr"
+  
+  test <- SNP$PBE[in_testgenes]
 
+  
+  ## Genomic background, i.e. all SNPs genic and intergenic
+  #  
+  ##  bg_name <- "genomic"
+  ##  bg <- SNP$PBE
+  
+  # Genic SNPs background
+  bg_name <- "genic"
+  bg <- SNP$PBE[in_genes]
+  
+  # ____________________________________________________________________________
+  
+  n <- length(test)
+  test_mean <- mean(test)
+  
+  n_bg <- length(bg)
+  bg_mean <- mean(bg)
+  
+  # Null distribution
+  PBE <- replicate(10000, mean(sample(bg, n, replace=FALSE)))
+  
+  pvalue <- 1 - ecdf(PBE)(test_mean) 
+  
+  # Plot
+  #  quartz()
+  hist(PBE , breaks = 100, col = "black",
+       xlim = c(min(PBE,test_mean), max(PBE,test_mean)),
+       main = paste(pop,"Glycerolipid genes",
+                    pvalue_string(pvalue), "\n",
+                    "bg:",n_bg, bg_name, "SNPs\n",
+                    "test:", n, sampling, "SNPs",
+                    "from", length(testgenes_with_SNP), "genes"))
+  abline(v = bg_mean, col = "darkgreen",lwd = 2)
+  abline(v = test_mean, col = "red",lwd = 2)
+}
 
-B <- hilo_lipids %>%
-  filter (FIELD == "MT2016") %>%
-  #filter(LPC_18_1 < 5e+05) %>%
-  ggplot(aes(x = ele_cont, y = log10(PC34_1_LPC18_1) , color = ele_cont)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot(12) +
-  coord_fixed(ratio = 1.25) +
-  xlab("Elevation") + 
-  ylab("log10(PC34:1/LPC18:1)") +
-  theme(legend.position="none") 
-
-plot_grid(A, B, ncol = 2)
+dev.off()
 ```
+
