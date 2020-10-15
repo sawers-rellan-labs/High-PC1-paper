@@ -18,6 +18,8 @@
 \author[$\ddagger$]{Dan Gates}
 \author[$\S$]{Li Wang}
 \author[$\ast$]{Allison C Barnes}
+\author[$\dagger$]{Juan M Estévez-Palmas}
+\author[$\ast$]{Andi Kur}
 \author[$\S$]{Garrett M Janzen}
 \author[$\ddagger$]{Taylor Crow}
 \author[$\dagger$]{Rocío Aguilar-Rangel}
@@ -67,10 +69,7 @@ After domestication from lowland teosinte in the warm, humid Mexican southwest m
 
 \section{Introduction}
 
-\lettrine[lines=2]{\color{gray}M}aize (\textit{Zea mays spp. mays}) was domesticated in the tropical basin of the Balsas River (Guerrero, Mexico) around 10,000 years ago from the wild relative teosinte parviglumis (\textit{Zea mays spp. parviglumis}) \citep{Matsuoka2002-bg,Piperno2009-fj}). 
-After domestication, maize expanded throughout México, north into the US \citep{Da_Fonseca2015-zh} and south into Central America and South America (Wang et al., 2017) and has been adapted to a wide diversity of environments and today is grown in a wider geographical range than any other crop \citep{Hake2015-or}.  
-Maize has also adapted to a wide variety of uses, from the myriad culinary applications of local communities growing maize landraces particularly in Mexico \citep{Bellon2018-cm} to the diverse range of products (from ethanol to high fructose syrup) that are produced with modern hybrids in modern agroindustrial operations. 
-The genetic changes that lead to maize domestication \citep{Doebley1995-su,Doebley1997-oy, Wang2005-by, Clark2006-xh,Dorweiler1993-ik} and maize adaptation to a wider latitudinal range \citep{Liang2018-af, Guo2018-on, Coles2010-db, Huang2018-ga, Yang2013-lg, Salvi2007-ku, Wang2017-bc} provide a relatively good understanding of the genetic regions and mechanisms that shaped maize domestication and latitudinal expansion. 
+\lettrine[lines=2]{\color{gray}M}aize (\textit{Zea mays spp. mays}) was domesticated in the tropical basin of the Balsas River (Guerrero, Mexico) around 10,000 years ago from the wild relative teosinte parviglumis (\textit{Zea mays spp. parviglumis}) \citep{Matsuoka2002-bg,Piperno2009-fj}). After domestication, maize expanded throughout México, north into the US \citep{Da_Fonseca2015-zh} and south into Central America and South America (Wang et al., 2017) and has been adapted to a wide diversity of environments and today is grown in a wider geographical range than any other crop \citep{Hake2015-or}.  Maize has also adapted to a wide variety of uses, from the myriad culinary applications of local communities growing maize landraces particularly in Mexico \citep{Bellon2018-cm} to the diverse range of products (from ethanol to high fructose syrup) that are produced with modern hybrids in modern agroindustrial operations. The genetic changes that lead to maize domestication \citep{Doebley1995-su,Doebley1997-oy, Wang2005-by, Clark2006-xh,Dorweiler1993-ik} and maize adaptation to a wider latitudinal range \citep{Liang2018-af, Guo2018-on, Coles2010-db, Huang2018-ga, Yang2013-lg, Salvi2007-ku, Wang2017-bc} provide a relatively good understanding of the genetic regions and mechanisms that shaped maize domestication and latitudinal expansion. 
 However, the mechanisms involved in maize landrace local adaptation that enabled maize to adapt to such a diverse range of environmental conditions are still largely unknown. 
 
 In this paper, we posit that phospholipid pathways are under selection in and have an important role in maize adaptation to highlands.  
@@ -78,9 +77,6 @@ Our hypothesis is based on what we know about how plants respond to a number of 
 Phospholipid concentration increases \citep{Degenkolbe2012-wf} together with a reduction of glycerolipids with highly saturated fatty acids \citep{Welti2002-uk} are two of the strategies plants use to respond to cold temperatures \cite{Lynch1987-ln}. 
 These changes are supposed to help maintain the fluidity of plasma membranes at colder temperatures. On the other hand, plants adapted to low phosphorus conditions degrade phospholipids and increase the concentration of glycerolipids and sulpholipids (Lambers et al., 2012), particularly, in older leaves to free up phosphorus. 
 The highlands of Mexico, and particularly the Trans-Mexican volcanic belt are characterized volcanic soils with low phosphorus availability (Krasilnikov, P., Gutiérrez-Castorena, M.d.C., Ahrens, R.J., Cruz-Gaistardo, C.O., Sedov, S., Solleiro-Rebolledo, E, 2013). 
-In the regions where maize is grown in Mexico, there is a positive correlation between altitude and phosphorus retention (Zapata, 2018) due to the incresased likelihood of Andosols.
-As maize adapted to higher elevations with lower phosphorus availability and colder temperatures, phospholipid metabolism faced contrasting selective pressures. 
-
 Cold temperatures also affect maize development. Farmers can predict flowering dates using Growth Degree Units (GDU) as a measure  that takes into account the maximum and minimum diurnal temperatures. 
 Maize needs between 800 and 1400 GDU to reach maturity. 
 In Mexican highland conditions, growing degree days are usually around 5 GDU while in lowlands they are 15 GDU. % source? 
@@ -384,12 +380,7 @@ Pairwise $F_{ST}$ was calculated with the R function fst.each.snp.hudson (R pack
 $Q_{ST}$ values were considered significantly high or low if they were greater or less than than two standard deviations from the mean $F_{ST}$.
 
 
-
-
-
 \subsection{\textit{pcadapt} analysis of biological adaptation in Mexican landraces}
-
-We quantified teosinte \textit{mexicana} introgression in highland maize using data from \cite{Gonzalez-Segovia2019-jy}. Brie
 
 In order to conduct genome scans for signatures of adaptation we used the software pcadapt \citep{Luu2017-ws}.
 Pcadapt identifies adaptive loci by measuring how strongly loci are contributing to patterns of differentiation between major axes of genetic variation.
@@ -405,6 +396,8 @@ From this, we calculated the strength of association between each SNP and the fi
 \subsection{QTL analysis of glycerolipid levels}
 
 \subsection{Orr test of selection of phospholipid levels}
+
+\subsection{Expression analysis of \textit{Zmpla1.2} and \textit{Zmlpcat1} in B73, PT and B73xPT F1s in conditions simulating highland environments}
 
 \subsection{Teosinte \textit{mexicana} introgression in highland maize}
 To evaluate if the \textit{ZmPla1.2-PT} allele was the result of standing variation from teosinte \textit{parviglumis} or introgression from \textit{mexicana} we used Patterson's \textit{D} statistic and genome-wide $f_{d}$ to calculate ABBA-BABA patterns. 
@@ -424,25 +417,35 @@ We fit a similar model to the GWAS model used by Gates \textit{et al} \cite{Gate
 We implemented this model in the \textit{R} package \textit{GridLMM} \cite{GridLMM2019}. 
 We extracted effect sizes and covariances conditional on the REML variance component estimates and used these to calculate standard errors for the total \textit{ZmPla1.2} effect as a function of elevation. 
 To test whether the phenotypic effects of \textit{ZmPla1.2} on yield components could be explained as indirect effects via flowering time, we additionally re-fit each model using Days-To-Anthesis as a covariate with an independent effect in each trial.
+\subsection{Expression analysis of candidate genes and association with flowering traits in the 282 panel}
+We studied the 
+
+\subsection{Phosphorus analysis and phosphorus soil availability data}
+We analyzed P content in B73 and 5 Mexican  and 5 Peruvian highland landraces (Supplementary file 1) grown in control field conditions in the 2018 Puerto Vallarta, Mexico, Winter nursery. Samples were analyzed using ICP-MS according to \cite{Baxter2014-ch}. 
+Frequency of Andosol soils at different elevations was calculated using the soilP package \cite{Rodriguez-Zapata2018-vz}.
+Phosphorus content on the CAS9 \textit{ZmPla1.2} mutants grown in control field conditions in the 2020 Clayton, NC, Summer nursery was analyzed using ICP-OES at the North Carolina Department of Agriculture.   
 
 \subsection{CRISPR-CAS9 editing of ZmPla1.2 and analysis of the effect of pla1.2 mutant on flowering time}
 
 \subsection{Data Availability}
 
-At the end of the Materials and Methods section, include a statement on reagent and data availability. Please read the Data and Reagent Policy before writing the statement. Make sure to list the accession numbers or DOIs of any data you have placed in public repositories. List the file names and descriptions of any data you will upload as supplemental information. The statement should also include any applicable IRB numbers. You may include specifications for how to properly acknowledge or cite the data.
-
-For example: Strains are available upon request. File S1 contains detailed descriptions of all supplemental files. File S2 contains SNP ID numbers and locations. File S3 contains genotypes for each individual. Sequence data are available at GenBank and the accession numbers are listed in File S3. Gene expression data are available at GEO with the accession number: GDS1234. Code used to generate the simulated data is provided in file S4. 
-
 
 \section{Discussion}
 \label{sec:discusion}
+Lipids play an important role in adaptation to new environments. As key components of the membranes that maintain cell structure, the fluidity or rigidity a lipid adds to the membrane can be crucial for survival. It can be difficult to compare lipid changes across studies, as the time of day the sample is taken, intensity of stress applied, and initial growth environment of the plants can impact the outcome of the lipid analysis \cite{Kenchanmane_Raju2018-nz}. Despite these caveats, lipid changes in response to low temperature have been well studied. We observe similar trends between cold-acclimation-imposed lipid changes published in the literature and adaptation-imposed lipid changes in highlands maize. Highland maize shows an increase in PC and decrease of LPC. This trend is matched in Arabidopsis responding to cold acclimation. PC 36:5 and 36:6 increase during cold acclimation, while LPC 18:1 decreases \cite{Welti2002-uk}. PC 36:5 and 36:6 increasing during cold stress also occurs in sorghum \cite{Marla2017-ph}. 
+Outside of other Zea grasses, tripsacum is the closest related grass to maize \cite{Yang2013-lg}. Despite their evolutionary relationship, tripsacum is adapted to a much more temperate climate than maize. A recent study found that phospholipid metabolism genes showed accelerated evolution\cite{Yang2013-lg}. Futhermore, these genes were particularly concentrated in pathways connected to PC metabolism and synthesis. When exploring the lipid changes, they found that maize and sorghum, two relatively cold-sensitive species, displayed increases in desaturation in PC, while tripsacum, the relatively cold-tolerant species, displayed decreases in PC desaturation. The desaturation increase in total PC is matched in a separate sorghum chilling study, as well \cite{Marla2017-ph}. 
+
+Previous studies show that PLA1.2 in maize is fluctuating with circadian rhythm \cite{Khan2010-iv}. During light hours, PLA1.2 transcript increases, and during dark hours, it decreases. Changes in phospholipase expression being connected to the clock is not a new phenomenon. Lipids have long been known to fluctuate in response to time of day \cite{Browse1981-vt, Ekman2007-xe}. With specific fatty acids like 16:1, 16:2, and 18:0 highest at the end of the light cycle and 16:3 highest at the end of the dark cycle. Maatta et al 2012 reports that PC in Arabidopsis cycles in this manner \cite{Maatta2012-ip}. PC 34:3, 34:4, 36:5, and 36:6 are all higher at 11 hours into the dark period. Connecting this to the PLA1.2 expression from Khan 2010, it would be plausible that the lack of PLA1.2 would be one component allowing for an increase in PC during the dark. Continuing this trend, LPC 18:1 is also significantly higher at the end of the light period, when PLA1.2 expression is also the highest. 
+
+The increased levels of PC in highland maize may not solely impact membrane function and fluidity, but also may impact flowering time. Nakamura et al, 2014 showed that PC is intimately tied to flowering as the Arabidopsis protein Flowering locus T (FT) binds to PC in vitro \cite{Nakamura2014-qf}.  Transgenically increasing PC levels in the shoot apical meristem of Arabidopsis caused a faster flowering time, while lowering them caused flowering delays. The ortholog of FT in maize is ZCN8 \cite{Lazakis2011-nq}. ZCN8 underlies a major flowering time QTL and regulatory changes in ZCN8 through various SNPs have allowed maize to adapt its flowering time \cite{Guo2019-pn}. However, it is not yet known if ZCN8 also has the ability to bind to PC.
 
 \section{Acknowledgments}
 \label{sec:acknowledgments}
 
 \bibliography{bibliography}
 
-\newpage
+\newpage  
+
 
 \section*{Supplemental Tables and Figures}
 
