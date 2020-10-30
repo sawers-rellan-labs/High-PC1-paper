@@ -431,3 +431,106 @@ B <- hilo_lipids %>%
 plot_grid(A, B, ncol = 2)
 ```
 
+# Genetic constraint analysis
+
+
+```{r}
+library(dgconstraint)
+#devtools::load_all()
+library(dplyr)
+
+n <- 500
+r <- 1000
+
+Cran <- lapply(1:r, function(x){
+  m <- sample.int(2,n*4,replace = TRUE) -1 %>% matrix( nrow = n, ncol = 4)
+  colnames(m) <- c("US","MH","GH","AN")
+  data.frame( n = x, Cx = single_c_hyper(m[,"US"], m[,"MH"], na.rm = F))
+}) %>% dplyr::bind_rows()
+
+hist(Cran$Cx, main =paste("r = ", r))
+```
+
+```{r}
+outlier_file <- "SuppplementaryFile1.csv"
+pbe <- read.csv(outlier_file) %>%
+  tibble::column_to_rownames(var = "gene") %>%
+  dplyr::filter(!is.na(GH)) %>%
+  dplyr::select(US:AN) %>%
+  as.matrix()
+
+head(pbe)
+nrow(pbe)
+sum(is.na(pbe))
+cor(pbe)
+```
+
+```{r}
+single_c_hyper(pbe[,"US"], pbe[,"MH"], na.rm = F)
+```
+
+```{r}
+single_p_hyper(pbe[,"US"], pbe[,"MH"], na.rm = F)
+```
+
+```{r}
+
+single_c_hyper(pbe[,"MH"], pbe[,"GH"], na.rm = F)
+```
+
+
+```{r}
+single_p_hyper(pbe[,"MH"], pbe[,"GH"], na.rm = F)
+```
+
+
+```{r}
+single_c_hyper(pbe[,"US"], pbe[,"AN"], na.rm = F)
+```
+
+
+```{r}
+single_p_hyper(pbe[,"US"], pbe[,"AN"], na.rm = F)
+```
+
+
+```{r}
+single_c_hyper(pbe[,"MH"], pbe[,"AN"], na.rm = F)
+```
+
+
+```{r}
+single_p_hyper(pbe[,"MH"], pbe[,"AN"], na.rm = F)
+```
+```{r}
+single_c_hyper(pbe[,"GH"], pbe[,"AN"], na.rm = F)
+```
+
+```{r}
+single_p_hyper(pbe[,"GH"], pbe[,"AN"], na.rm = F)
+```
+
+```{r}
+pairwise_c_hyper(pbe, na.rm = F)
+```
+```{r}
+pairwise_c_chisq(pbe, na.rm = F)
+```
+```{r}
+allwise_p_chisq(pbe, num_permute = 10000)
+```
+```{r}
+allwise_p_chisq(pbe, num_permute = 10000)
+```
+
+```{r}
+pairwise_c_chisq(pbe[,colnames(pbe)!="AN"], na.rm = F)
+```
+
+```{r}
+allwise_p_chisq(pbe[,colnames(pbe)!="AN"], num_permute = 10000)
+```
+
+```{r}
+estimate_pa(pbe, ndigits = 4, show.plot = F, na.rm = F)
+```
