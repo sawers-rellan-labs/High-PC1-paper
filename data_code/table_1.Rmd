@@ -1,0 +1,75 @@
+---
+title: "Convergent Evolution and Genetic Constraint"
+author: "Fausto Rodriguez"
+date: "9/18/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dgconstraint)
+library(dplyr)
+
+single_c_hyper <- function (input1, input2, na.rm = F){
+
+  ax <- sum (input1, na.rm = na.rm)
+  ay <- sum (input2, na.rm = na.rm)
+  g0 <- as.numeric(length (input1))
+
+  sd_hyp <- sqrt((ax*ay)*(g0-ax)*(g0-ay)/(g0^2*(g0-1)))
+
+  exp_hyp <- ax * ay / g0
+
+  obs_hyp <- sum (input1 == 1 & input2 == 1, na.rm = na.rm)
+
+        if (sd_hyp != 0){
+          result <- (obs_hyp - exp_hyp) / sd_hyp
+        } else {
+          result <- 0
+          warning ('Pair of lineages has no shared adapted loci')
+        }
+
+  result
+
+}
+```
+
+```{r}
+outlier_file <- "Supplementary_File1.csv"
+pbe <- read.csv(outlier_file) %>%
+  tibble::column_to_rownames(var = "gene") %>%
+  dplyr::filter(!is.na(GH)) %>%
+  dplyr::select(US:AN) %>%
+  as.matrix()
+
+Ch <- lapply(1:ncomb, function(x){
+  pair <- comb[,x]
+  pop1 <- pair[1]
+  pop2 <- pair[2]
+  data.frame(
+    pop1 = pop1,
+    pop2 = pop2,
+    Ch = single_c_hyper(pbe[,pop1], pbe[,pop2], na.rm = F),
+    pCh = single_p_hyper(pbe[,pop1], pbe[,pop2], na.rm = F)
+  )
+}) %>% dplyr::bind_rows()
+
+write.csv(Ch, file = "Table1.csv")
+```
+
+```{r}
+#pairwise_c_hyper(pbe[,colnames(pbe)!="AN"], na.rm = F)
+pairwise_c_chisq(pbe[,colnames(pbe)!="AN"], na.rm = F)
+allwise_p_chisq(pbe[,colnames(pbe)!="AN"], num_permute = 10000)
+```
+
+```{r}
+pairwise_c_hyper(pbe, na.rm = F)
+pairwise_c_chisq(pbe, na.rm = F)
+allwise_p_chisq(pbe, num_permute = 10000)
+```
