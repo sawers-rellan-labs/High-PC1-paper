@@ -458,23 +458,112 @@ plot(dabest_try)
 Expression analysis of ZmPla1.2
 
 ```{r}
-exp_values <- read_csv("data/fig_3/ZmPLA1_exp.csv")
+exp_valuesPLA1 <- read_csv("data/fig_3/ZmPLA1_exp.csv")
 
-exp_values %>% 
+PLA1_exp_fig <- exp_valuesPLA1 %>% 
 	filter(tissue_key=="0") %>%
   #filter(line=="B73"|line=="PT") %>%
-  #filter(fertilizer_tx=="high") %>%
+  filter(fertilizer_tx=="high") %>%
 	ggplot(aes(x = temp_tx, y = ZmPla1.2, color = temp_tx)) +
   scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
-	geom_jitter(position=position_jitter(0.1), size = 2) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
                color = "black") +
   #ylim(0,8) +
-  ylab("ZmPla1.2 expression levels") +
-  xlab("Temperature conditions") +
-  theme_cowplot(13) +
-  facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  ylab("ZmPla1.2") +
+  #xlab("Temperature conditions") +
+  theme_cowplot(16) +
+  facet_grid(cols = vars(line)) +
   #coord_fixed(ratio = 0.9) +
-  theme(legend.position="none") 
+  theme(legend.position="none",
+        axis.text.x=element_blank(),
+        axis.title.x=element_blank()) 
+
+
 ```
+```{r}
+exp_valuesLPCAT <- read_csv("data/fig_3/ZmLPCAT1_exp.csv")
+
+LPCAT_exp_fig <- exp_valuesLPCAT %>% 
+	filter(tissue_key=="0") %>%
+  #filter(line=="B73"|line=="PT") %>%
+  filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = ZmLpcat1, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmLpcat1") +
+  xlab("Temperature conditions") +
+  theme_cowplot(16) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) 
+
+plot_grid(PLA1_exp_fig, LPCAT_exp_fig, ncol = 1)
+
+exp_valuesPLALPCAT <- read_csv("data/fig_3/ZmPla-Lpcat.csv")
+
+ZmPla1_exp <- exp_valuesPLALPCAT %>% 
+  filter(gene=="ZmPla1.2") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmPla1.2") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white")) 
+
+ZmLpcat_exp <- exp_valuesPLALPCAT %>% 
+  filter(gene=="ZmLpcat") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmLpcat1") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white")) 
+
+ratio_exp <- exp_valuesPLALPCAT %>% 
+  filter(gene=="Ratio") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmPla1.2/ZmLpcat1") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white")) 
+
+plot_grid(ZmPla1_exp, ZmLpcat_exp, ratio_exp, ncol = 1)
+
+```
+
+
 

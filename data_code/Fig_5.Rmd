@@ -5,19 +5,20 @@ date: "5/4/2020"
 output: html_document
 ---
 
+
 ```{r}
 library(tidyverse)
 library(data.table)
 library(cowplot)
 library(wesanderson)
 library(ggplot2)
-library(MASS) 
+library(MASS)
 library(qtl)
-library(lme4) 
-library(arm) 
-library(lsmeans) 
+library(lme4)
+library(arm)
+library(lsmeans)
 library(pbkrtest)
-library(cowplot) 
+library(cowplot)
 library(viridis)
 library(qtlcharts)
 library(readr)
@@ -26,33 +27,38 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
-
+library(ComplexHeatmap)
+library(data.table)
+library(GridLMM)
+library(grid)
+library(gridExtra)
 ```
 
-fd from palomeros and mushito
+
 
 ```{r}
-fd_chr3 <- read_csv("data/fig_4/fd_chr_3_pts.csv")
 
-names(fd_chr3)[7] <- "fd"
-	
-fd_chr3 %>% 
-	#filter(`Yes-No`=="S") %>%
-	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
-	scale_color_viridis() +
-	geom_segment(size = 2) +
-	ylim(0,1) +
-	geom_segment(x = 1000000, xend = 21000000, y = 0, yend = 0, colour = "black")
+load('data/fig_5/EffectsAllForRuben.Rimage')
 
-fd_chr3 %>% 
-	filter(POS > 750000) %>% 
-	filter(POS < 20000000) %>%
-	filter(`Yes-No`=="S") %>%
-	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
-	scale_color_viridis() +
-	geom_segment(size = 2) +
-	ylim(0,1) +
-	geom_vline(xintercept = 8542106, colour = "red", linetype="dotted", size = 1)
+plot3DA<-plot3DA+labs(x=NULL,y=NULL)+ggtitle('Days to anthesis')
 
+DAdata <- ggplot_build(plot3DA)
+DAdata <- DAdata$data[[1]]
+
+plot3PH<-plot3PH+labs(x=NULL,y=NULL)+ggtitle('Plant height')
+plot3ASI<-plot3ASI+labs(x=NULL,y=NULL)+ggtitle('Anthesis silking interval')
+plot3FW<-plot3FW+labs(x=NULL,y=NULL)+ggtitle('Field weight')
+plot3BCW<-plot3BCW+labs(x=NULL,y=NULL)+ggtitle('Bare cob weight')
+plot3GWH<-plot3GWH+labs(x=NULL,y=NULL)+ggtitle('Grain weight per hectare')
+plotG<-plot_grid(plot3DA,plot3PH,plot3ASI,plot3FW,plot3BCW,plot3GWH,nrow=2)
+y.grob <- textGrob("Effect of the highland allele", 
+                   gp=gpar(fontface="bold", col="black", fontsize=15), rot=90)
+x.grob <- textGrob("Elevation (m)", 
+                   gp=gpar(fontface="bold", col="black", fontsize=15))
+#add to plot
+Gplot<-grid.arrange(arrangeGrob(plotG, left = y.grob, bottom = x.grob))
+ggsave(Gplot,device = 'png',filename = 'EffectsForRuben.png',width=8,height=8,dpi=200)
 
 ```
+
+

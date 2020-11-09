@@ -1,0 +1,148 @@
+﻿gene,expression,samp,tissue_key,tissue,temp_tx,fertilizer_tx,line
+Ratio,0.189499896,GC73_P4_ILLSINHA37,0,V3_Leaf_tissue,control,high,F1
+Ratio,0.288414507,GC73_P4_ILLSINHA45,0,V3_Leaf_tissue,control,low,B73
+Ratio,0.333388592,GC72_P3_ILLSINHA7,0,V3_Leaf_tissue,control,low,F1
+Ratio,0.387447891,GC73_P5_ILLSINHA45,0,V3_Leaf_tissue,control,high,B73
+Ratio,0.402393726,GC73_P6_ILLSINHA8,0,V3_Leaf_tissue,control,low,B73
+Ratio,0.512835495,GC73_P5_ILLSINHA44,0,V3_Leaf_tissue,control,high,F1
+Ratio,0.542744999,GC73_P4_ILLSINHA39,0,V3_Leaf_tissue,control,high,B73
+Ratio,0.544565174,GC73_P4_ILLSINHA38,0,V3_Leaf_tissue,control,high,PT
+Ratio,0.571929432,GC72_P1_ILLSINHA95,0,V3_Leaf_tissue,cold,low,F1
+Ratio,0.592332718,GC73_P4_ILLSINHA43,0,V3_Leaf_tissue,control,low,F1
+Ratio,0.608455394,GC72_P1_ILLSINHA39,0,V3_Leaf_tissue,control,high,F1
+Ratio,0.609513579,GC73_P6_ILLSINHA1,0,V3_Leaf_tissue,control,high,F1
+Ratio,0.663214406,GC73_P6_ILLSINHA55,0,V3_Leaf_tissue,cold,high,PT
+Ratio,0.670873911,GC73_P5_ILLSINHA2,0,V3_Leaf_tissue,control,low,PT
+Ratio,0.685483068,GC72_P3_ILLSINHA9,0,V3_Leaf_tissue,control,low,B73
+Ratio,0.687494407,GC72_P1_ILLSINHA37,0,V3_Leaf_tissue,control,high,PT
+Ratio,0.699726051,GC72_P3_ILLSINHA1,0,V3_Leaf_tissue,control,high,B73
+Ratio,0.703685591,GC73_P6_ILLSINHA7,0,V3_Leaf_tissue,control,low,F1
+Ratio,0.705063409,GC72_P1_ILLSINHA89,0,V3_Leaf_tissue,cold,high,PT
+Ratio,0.722473108,GC72_P2_ILLSINHA53,0,V3_Leaf_tissue,cold,low,F1
+Ratio,0.724538025,GC72_P3_ILLSINHA59,0,V3_Leaf_tissue,cold,low,F1
+Ratio,0.729159478,GC73_P4_ILLSINHA95,0,V3_Leaf_tissue,cold,low,PT
+Ratio,0.730244919,GC72_P2_ILLSINHA52,0,V3_Leaf_tissue,cold,low,B73
+Ratio,0.756378644,GC72_P2_ILLSINHA45,0,V3_Leaf_tissue,control,high,B73
+Ratio,0.758952559,GC73_P5_ILLSINHA3,0,V3_Leaf_tissue,control,low,B73
+Ratio,0.764822748,GC72_P3_ILLSINHA54,0,V3_Leaf_tissue,cold,high,F1
+Ratio,0.769338856,GC72_P3_ILLSINHA8,0,V3_Leaf_tissue,control,low,PT
+Ratio,0.771149486,GC72_P1_ILLSINHA43,0,V3_Leaf_tissue,control,low,PT
+Ratio,0.792355008,GC72_P1_ILLSINHA94,0,V3_Leaf_tissue,cold,low,PT
+Ratio,0.795685422,GC72_P2_ILLSINHA43,0,V3_Leaf_tissue,control,high,PT
+Ratio,0.795789568,GC73_P4_ILLSINHA90,0,V3_Leaf_tissue,cold,high,B73
+Ratio,0.800625897,GC73_P6_ILLSINHA60,0,V3_Leaf_tissue,cold,low,B73
+Ratio,0.810550701,GC72_P3_ILLSINHA55,0,V3_Leaf_tissue,cold,high,PT
+Ratio,0.817035617,GC73_P5_ILLSINHA1,0,V3_Leaf_tissue,control,low,F1
+Ratio,0.817301345,GC72_P3_ILLSINHA53,0,V3_Leaf_tissue,cold,high,B73
+Ratio,0.829947564,GC73_P5_ILLSINHA53,0,V3_Leaf_tissue,cold,low,PT
+Ratio,0.870346383,GC72_P3_ILLSINHA61,0,V3_Leaf_tissue,cold,low,B73
+Ratio,0.878582299,GC73_P5_ILLSINHA52,0,V3_Leaf_tissue,cold,low,F1
+Ratio,0.879508019,GC73_P6_ILLSINHA9,0,V3_Leaf_tissue,control,low,PT
+Ratio,0.879948642,GC73_P6_ILLSINHA59,0,V3_Leaf_tissue,cold,low,F1
+Ratio,0.941565473,GC73_P4_ILLSINHA44,0,V3_Leaf_tissue,control,low,PT
+Ratio,0.971307663,GC73_P6_ILLSINHA3,0,V3_Leaf_tissue,control,high,PT
+Ratio,0.976446455,GC73_P5_ILLSINHA43,0,V3_Leaf_tissue,control,high,PT
+Ratio,1.015328253,GC72_P2_ILLSINHA54,0,V3_Leaf_tissue,cold,low,PT
+Ratio,1.027124599,GC73_P4_ILLSINHA94,0,V3_Leaf_tissue,cold,low,F1
+Ratio,1.031175472,GC73_P6_ILLSINHA61,0,V3_Leaf_tissue,cold,low,PT
+Ratio,1.03179322,GC72_P1_ILLSINHA90,0,V3_Leaf_tissue,cold,high,F1
+Ratio,1.110488295,GC73_P6_ILLSINHA53,0,V3_Leaf_tissue,cold,high,F1
+Ratio,1.171123698,GC73_P4_ILLSINHA96,0,V3_Leaf_tissue,cold,low,B73
+ZmLpcat,3.372972998,GC72_P2_ILLSINHA54,0,V3_Leaf_tissue,cold,low,PT
+ZmLpcat,4.821161136,GC73_P5_ILLSINHA43,0,V3_Leaf_tissue,control,high,PT
+ZmLpcat,4.846492801,GC72_P2_ILLSINHA45,0,V3_Leaf_tissue,control,high,B73
+ZmLpcat,5.031695928,GC73_P4_ILLSINHA94,0,V3_Leaf_tissue,cold,low,F1
+ZmLpcat,5.038409166,GC72_P1_ILLSINHA94,0,V3_Leaf_tissue,cold,low,PT
+ZmLpcat,5.098057262,GC72_P3_ILLSINHA59,0,V3_Leaf_tissue,cold,low,F1
+ZmLpcat,5.141537793,GC72_P3_ILLSINHA8,0,V3_Leaf_tissue,control,low,PT
+ZmLpcat,5.379499344,GC73_P4_ILLSINHA38,0,V3_Leaf_tissue,control,high,PT
+ZmLpcat,5.407016872,GC73_P6_ILLSINHA61,0,V3_Leaf_tissue,cold,low,PT
+ZmLpcat,5.555803743,GC73_P6_ILLSINHA3,0,V3_Leaf_tissue,control,high,PT
+ZmLpcat,5.559470778,GC73_P6_ILLSINHA9,0,V3_Leaf_tissue,control,low,PT
+ZmLpcat,5.583723068,GC72_P1_ILLSINHA43,0,V3_Leaf_tissue,control,low,PT
+ZmLpcat,5.65934699,GC72_P3_ILLSINHA9,0,V3_Leaf_tissue,control,low,B73
+ZmLpcat,5.733512104,GC73_P4_ILLSINHA43,0,V3_Leaf_tissue,control,low,F1
+ZmLpcat,5.736501029,GC73_P6_ILLSINHA1,0,V3_Leaf_tissue,control,high,F1
+ZmLpcat,5.752631294,GC73_P6_ILLSINHA59,0,V3_Leaf_tissue,cold,low,F1
+ZmLpcat,5.765537193,GC72_P3_ILLSINHA54,0,V3_Leaf_tissue,cold,high,F1
+ZmLpcat,5.772780469,GC72_P3_ILLSINHA7,0,V3_Leaf_tissue,control,low,F1
+ZmLpcat,5.7865943,GC73_P5_ILLSINHA53,0,V3_Leaf_tissue,cold,low,PT
+ZmLpcat,5.799267338,GC72_P1_ILLSINHA39,0,V3_Leaf_tissue,control,high,F1
+ZmLpcat,5.840675205,GC72_P1_ILLSINHA90,0,V3_Leaf_tissue,cold,high,F1
+ZmLpcat,5.924077385,GC73_P5_ILLSINHA2,0,V3_Leaf_tissue,control,low,PT
+ZmLpcat,5.939149167,GC72_P1_ILLSINHA37,0,V3_Leaf_tissue,control,high,PT
+ZmLpcat,6.003859979,GC73_P6_ILLSINHA60,0,V3_Leaf_tissue,cold,low,B73
+ZmLpcat,6.015455369,GC73_P4_ILLSINHA95,0,V3_Leaf_tissue,cold,low,PT
+ZmLpcat,6.043974089,GC73_P4_ILLSINHA96,0,V3_Leaf_tissue,cold,low,B73
+ZmLpcat,6.051415263,GC73_P6_ILLSINHA55,0,V3_Leaf_tissue,cold,high,PT
+ZmLpcat,6.059995517,GC72_P1_ILLSINHA89,0,V3_Leaf_tissue,cold,high,PT
+ZmLpcat,6.063158491,GC72_P2_ILLSINHA43,0,V3_Leaf_tissue,control,high,PT
+ZmLpcat,6.095178501,GC72_P3_ILLSINHA55,0,V3_Leaf_tissue,cold,high,PT
+ZmLpcat,6.104789043,GC72_P3_ILLSINHA53,0,V3_Leaf_tissue,cold,high,B73
+ZmLpcat,6.107913552,GC73_P4_ILLSINHA37,0,V3_Leaf_tissue,control,high,F1
+ZmLpcat,6.153559927,GC72_P1_ILLSINHA95,0,V3_Leaf_tissue,cold,low,F1
+ZmLpcat,6.170786662,GC73_P6_ILLSINHA53,0,V3_Leaf_tissue,cold,high,F1
+ZmLpcat,6.177255188,GC73_P4_ILLSINHA44,0,V3_Leaf_tissue,control,low,PT
+ZmLpcat,6.24263517,GC73_P4_ILLSINHA45,0,V3_Leaf_tissue,control,low,B73
+ZmLpcat,6.310001278,GC73_P5_ILLSINHA3,0,V3_Leaf_tissue,control,low,B73
+ZmLpcat,6.310948241,GC72_P2_ILLSINHA53,0,V3_Leaf_tissue,cold,low,F1
+ZmLpcat,6.333915819,GC72_P2_ILLSINHA52,0,V3_Leaf_tissue,cold,low,B73
+ZmLpcat,6.336270495,GC72_P3_ILLSINHA61,0,V3_Leaf_tissue,cold,low,B73
+ZmLpcat,6.360833889,GC73_P4_ILLSINHA39,0,V3_Leaf_tissue,control,high,B73
+ZmLpcat,6.47071148,GC73_P6_ILLSINHA8,0,V3_Leaf_tissue,control,low,B73
+ZmLpcat,6.483173214,GC73_P5_ILLSINHA1,0,V3_Leaf_tissue,control,low,F1
+ZmLpcat,6.514933305,GC73_P5_ILLSINHA52,0,V3_Leaf_tissue,cold,low,F1
+ZmLpcat,6.563865844,GC73_P5_ILLSINHA44,0,V3_Leaf_tissue,control,high,F1
+ZmLpcat,6.597683904,GC73_P5_ILLSINHA45,0,V3_Leaf_tissue,control,high,B73
+ZmLpcat,6.680899695,GC73_P6_ILLSINHA7,0,V3_Leaf_tissue,control,low,F1
+ZmLpcat,6.75285467,GC73_P4_ILLSINHA90,0,V3_Leaf_tissue,cold,high,B73
+ZmLpcat,7.061691185,GC72_P3_ILLSINHA1,0,V3_Leaf_tissue,control,high,B73
+ZmPla1.2,1.157448983,GC72_P4_ILLSINHA37,0,V3 Leaf tissue,control,high,F1
+ZmPla1.2,1.800466543,GC72_P4_ILLSINHA45,0,V3 Leaf tissue,control,low,B73
+ZmPla1.2,1.924579153,GC72_P3_ILLSINHA7,0,V3 Leaf tissue,control,low,F1
+ZmPla1.2,2.556258711,GC72_P5_ILLSINHA45,0,V3 Leaf tissue,control,high,B73
+ZmPla1.2,2.603773702,GC72_P6_ILLSINHA8,0,V3 Leaf tissue,control,low,B73
+ZmPla1.2,2.929487996,GC72_P4_ILLSINHA38,0,V3 Leaf tissue,control,high,PT
+ZmPla1.2,3.366183389,GC72_P5_ILLSINHA44,0,V3 Leaf tissue,control,high,F1
+ZmPla1.2,3.396146807,GC72_P4_ILLSINHA43,0,V3 Leaf tissue,control,low,F1
+ZmPla1.2,3.424674781,GC72_P2_ILLSINHA54,0,V3 Leaf tissue,cold,low,PT
+ZmPla1.2,3.452310782,GC72_P4_ILLSINHA39,0,V3 Leaf tissue,control,high,B73
+ZmPla1.2,3.496475273,GC72_P6_ILLSINHA1,0,V3 Leaf tissue,control,high,F1
+ZmPla1.2,3.519402032,GC72_P1_ILLSINHA95,0,V3 Leaf tissue,cold,low,F1
+ZmPla1.2,3.528595495,GC72_P1_ILLSINHA39,0,V3 Leaf tissue,control,high,F1
+ZmPla1.2,3.665783653,GC72_P2_ILLSINHA45,0,V3 Leaf tissue,control,high,B73
+ZmPla1.2,3.69373634,GC72_P3_ILLSINHA59,0,V3 Leaf tissue,cold,low,F1
+ZmPla1.2,3.879386537,GC72_P3_ILLSINHA9,0,V3 Leaf tissue,control,low,B73
+ZmPla1.2,3.955584803,GC72_P3_ILLSINHA8,0,V3 Leaf tissue,control,low,PT
+ZmPla1.2,3.974308965,GC72_P5_ILLSINHA2,0,V3 Leaf tissue,control,low,PT
+ZmPla1.2,3.992208737,GC72_P1_ILLSINHA94,0,V3 Leaf tissue,cold,low,PT
+ZmPla1.2,4.013385778,GC72_P6_ILLSINHA55,0,V3 Leaf tissue,cold,high,PT
+ZmPla1.2,4.083131837,GC72_P1_ILLSINHA37,0,V3 Leaf tissue,control,high,PT
+ZmPla1.2,4.272681096,GC72_P1_ILLSINHA89,0,V3 Leaf tissue,cold,high,PT
+ZmPla1.2,4.305885171,GC72_P1_ILLSINHA43,0,V3 Leaf tissue,control,low,PT
+ZmPla1.2,4.386226297,GC72_P4_ILLSINHA95,0,V3 Leaf tissue,cold,low,PT
+ZmPla1.2,4.409614001,GC72_P3_ILLSINHA54,0,V3 Leaf tissue,cold,high,F1
+ZmPla1.2,4.559490387,GC72_P2_ILLSINHA53,0,V3 Leaf tissue,cold,low,F1
+ZmPla1.2,4.625309844,GC72_P2_ILLSINHA52,0,V3 Leaf tissue,cold,low,B73
+ZmPla1.2,4.701252847,GC72_P6_ILLSINHA7,0,V3 Leaf tissue,control,low,F1
+ZmPla1.2,4.707605699,GC72_P5_ILLSINHA43,0,V3 Leaf tissue,control,high,PT
+ZmPla1.2,4.788991616,GC72_P5_ILLSINHA3,0,V3 Leaf tissue,control,low,B73
+ZmPla1.2,4.802569844,GC72_P5_ILLSINHA53,0,V3 Leaf tissue,cold,low,PT
+ZmPla1.2,4.806845783,GC72_P6_ILLSINHA60,0,V3 Leaf tissue,cold,low,B73
+ZmPla1.2,4.824366824,GC72_P2_ILLSINHA43,0,V3 Leaf tissue,control,high,PT
+ZmPla1.2,4.889599131,GC72_P6_ILLSINHA9,0,V3 Leaf tissue,control,low,PT
+ZmPla1.2,4.940451207,GC72_P3_ILLSINHA55,0,V3 Leaf tissue,cold,high,PT
+ZmPla1.2,4.941249289,GC72_P3_ILLSINHA1,0,V3 Leaf tissue,control,high,B73
+ZmPla1.2,4.989452298,GC72_P3_ILLSINHA53,0,V3 Leaf tissue,cold,high,B73
+ZmPla1.2,5.062020096,GC72_P6_ILLSINHA59,0,V3 Leaf tissue,cold,low,F1
+ZmPla1.2,5.168178665,GC72_P4_ILLSINHA94,0,V3 Leaf tissue,cold,low,F1
+ZmPla1.2,5.296983428,GC72_P5_ILLSINHA1,0,V3 Leaf tissue,control,low,F1
+ZmPla1.2,5.3738513,GC72_P4_ILLSINHA90,0,V3 Leaf tissue,cold,high,B73
+ZmPla1.2,5.396394747,GC72_P6_ILLSINHA2,0,V3 Leaf tissue,control,high,B73
+ZmPla1.2,5.514750109,GC72_P3_ILLSINHA61,0,V3 Leaf tissue,cold,low,B73
+ZmPla1.2,5.575583174,GC72_P6_ILLSINHA61,0,V3 Leaf tissue,cold,low,PT
+ZmPla1.2,5.723905079,GC72_P5_ILLSINHA52,0,V3 Leaf tissue,cold,low,F1
+ZmPla1.2,5.816290203,GC72_P4_ILLSINHA44,0,V3 Leaf tissue,control,low,PT
+ZmPla1.2,6.026369075,GC72_P1_ILLSINHA90,0,V3 Leaf tissue,cold,high,F1
+ZmPla1.2,6.852586357,GC72_P6_ILLSINHA53,0,V3 Leaf tissue,cold,high,F1
+ZmPla1.2,7.078241286,GC72_P4_ILLSINHA96,0,V3 Leaf tissue,cold,low,B73

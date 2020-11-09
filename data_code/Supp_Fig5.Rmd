@@ -78,15 +78,15 @@ PV18 ionomics
 ```{r}
 
 
-pv18_ionomics %>%
-  ggplot(aes(x = group, y = As75 , color = group)) +
+PVP31 <- pv18_ionomics %>%
+  ggplot(aes(x = group, y = P31 , color = group)) +
   geom_jitter(position=position_jitter(0.1), size = 2) +
   scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot(16) +
+  theme_cowplot(12) +
   xlab("Genotype") +
-  ylab("As75 (mg/Kg)") +
-  facet_grid(cols = vars(group))
+  ylab("P31 (mg/Kg)") +
+  theme(legend.position="none")
 
 pv18_ionomics %>%
   ggplot(aes(x = P31, y = As75 , color = group)) +
@@ -103,7 +103,7 @@ pv18_pca %>%
   autoplot(loadings = TRUE, loadings.label = TRUE,
          data = pv18_ionomics, colour = 'group') +
   scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
-  theme_cowplot(16)
+  theme_cowplot(12)
   
 
 
@@ -116,23 +116,25 @@ Field Ionomics
 ```{r}
 
 
-pla_ionomics %>%
+plaP31 <- pla_ionomics %>%
   ggplot(aes(x = Genotype, y = (P * 10000) , color = Genotype)) +
   geom_jitter(position=position_jitter(0.1), size = 2) +
   scale_color_manual(values=c("#1260ad", "#df1b23")) +
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot(16) +
+  theme_cowplot(12) +
   xlab("Genotype") +
-  ylab("P (mg/Kg)") 
+  ylab("P (mg/Kg)") +
+  theme(legend.position="none")
 
 ionomics_pca <- pla_ionomics[,c(3:14)]
 pca <- prcomp(ionomics_pca, scale = TRUE)
 
-pca %>% 
+pla_pca <- pca %>% 
   autoplot(loadings = FALSE, loadings.label = FALSE,
-         data = ionomics, colour = 'Genotype') +
+         data = pla_ionomics, colour = 'Genotype') +
   scale_color_manual(values=c("#1260ad", "#df1b23")) +
-  theme_cowplot(16)
+  theme_cowplot(12) +
+  theme(legend.position="none")
   
 
 
@@ -144,12 +146,20 @@ Andosol frequency with elevation
 ```{r}
 andosols <- read_csv("data/Supp_fig5/andosol_elevation_bins.csv")
 
-andosols %>%
-  ggplot(aes(x = Elevation, y = Andosol)) +
+andosol_ele <- andosols %>%
+  ggplot(aes(x = Elevation, y = Andosol*100)) +
   geom_point() +
   geom_smooth() +
-  theme_cowplot(16) +
-  ylab("Mean Andosol Probability") +
-  xlab("Elevation (masl)")
+  #coord_fixed(ratio = 1.3) +
+  theme_cowplot(12) +
+  ylab("Andosol freq") +
+  xlab("Elevation (masl)") +
+  theme(legend.position="none")
+```
+
+Putting it all together
+
+```{r}
+plot_grid(PVP31, andosol_ele, plaP31, pla_pca, ncol = 2, labels = "AUTO")
 ```
 
