@@ -23,7 +23,6 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
-library(ComplexHeatmap)
 ```
 
 #PBE resample P-value HeatMap
@@ -113,23 +112,23 @@ gswu<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="US") %>%
   annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
   annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")
 
-gmex<-filter(all_pops_pbe,CHROM==3,POS>8.4 ,POS<8.81,POP=="MH") %>%
+gmex<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="MH") %>%
   ggplot(aes(y=PBE0,x=POS))+
   geom_point(size=1, alpha = 0.9) +
   ylim(-0.5,1.5) +
-  xlim(8.4, 8.8) +
+  xlim(8.5, 8.6) +
   theme_cowplot(10) +
   #scale_x_continuous(
   #labels = scales::number_format(accuracy = 0.001)) +
-  #theme(axis.title.x=element_blank(),
-        #axis.text.x=element_blank(),
-        #axis.ticks.x=element_blank(),
-        #axis.title.y=element_blank(),
-        #axis.text.y=element_blank()) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank()) +
   geom_hline(yintercept=0.4, color="red", linetype="dashed")+
   annotate("rect",xmin=8.542106, xmax=8.544078, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=8.532106, xmax=8.542106, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
-  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")  
+  annotate("rect",xmin=8.544078, xmax=8.554078, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")   
 
 ggua<-filter(all_pops_pbe,CHROM==3,POS>8.49 ,POS<8.61,POP=="GH") %>%
   ggplot(aes(y=PBE0,x=POS))+
@@ -179,7 +178,7 @@ gswu_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="US") %>%
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  ylab("PBE") +
+  ylab("PBE SWUS") +
   geom_hline(yintercept=0.4, color="red", linetype="dashed") +
   annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
@@ -194,7 +193,7 @@ gmex_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="MH") %>%
  theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  ylab("PBE") +
+  ylab("PBE México Highlands") +
   geom_hline(yintercept=0.4, color="red", linetype="dashed") +
   annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
@@ -209,7 +208,7 @@ ggua_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="GH") %>%
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  ylab("PBE") +
+  ylab("PBE Guatemala Highlands") +
   geom_hline(yintercept=0.4, color="red", linetype="dashed") +
   annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
@@ -223,14 +222,15 @@ gand_lpcat <-filter(all_pops_pbe,CHROM==5,POS>195.4,POS<195.6,POP=="AN") %>%
   xlim(195.45, 195.55) +
   theme_cowplot(10) +
   theme(axis.title.x=element_blank()) +
-  ylab("PBE") +
+  ylab("PBE Andes") +
+  #scale_x_continuous(labels=scaleFUN) +
   #xlab("Mb") +
   geom_hline(yintercept=0.4, color="red", linetype="dashed") +
   annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.7,fill="grey") +
   annotate("rect",xmin=195.506, xmax=195.516, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey") +
   annotate("rect",xmin=195.485, xmax=195.495, ymin=-Inf, ymax=Inf,alpha=0.4,fill="grey")
 
-
+scaleFUN <- function(x) sprintf("%.1f", x)
 
 plot_grid(gswu_lpcat, gswu, gmex_lpcat, gmex, ggua_lpcat, ggua, gand_lpcat, gand, ncol = 2)
 
@@ -358,75 +358,66 @@ hilo_lipids %>%
 hilo_lipids$ele_cont <- paste(hilo_lipids$continent, hilo_lipids$elevation, sep = "_")
 
 
+write_csv(hilo_lipids, "data/fig_1/hilo_panel_lipid_modified.csv")
+
+mex_low <- hilo_lipids %>%
+  filter (FIELD == "MT2016") %>%
+  filter (elevation == "aLow") %>%
+  filter (continent == "Mex")  %>%
+  transmute(PC_LPC_Ratio = log10(PCs/LPCs))
+mex_high <- hilo_lipids %>%
+  filter (FIELD == "MT2016") %>%
+  filter (elevation == "High") %>%
+  filter (continent == "Mex") %>%
+  transmute(PC_LPC_Ratio = log10(PCs/LPCs))
+
+t.test(mex_low, mex_high)
+
+sa_low <- hilo_lipids %>%
+  filter (FIELD == "MT2016") %>%
+  filter (elevation == "aLow") %>%
+  filter (continent == "SA")  %>%
+  transmute(PC_LPC_Ratio = log10(PCs/LPCs))
+sa_high <- hilo_lipids %>%
+  filter (FIELD == "MT2016") %>%
+  filter (elevation == "High") %>%
+  filter (continent == "SA") %>%
+  transmute(PC_LPC_Ratio = log10(PCs/LPCs))
+
+t.test(sa_low, sa_high)
+
 #plot correlations of PCs LPCs
 
-hilo_lipids %>%
-  filter (FIELD == "MT2016") %>%
-  #filter(PCs/LPCs > 5) %>%
-  ggplot(aes(x = log10(PCs), y = log10(LPCs), color = ele_cont)) +
-  geom_point(alpha = 0.7, size = 3) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  #coord_fixed(ratio = 1.2) +
-  theme_cowplot(12) +
-  #theme(legend.position="none")
-
-
-A <- hilo_lipids %>%
-  filter (FIELD == "MT2016") %>%
-  #filter(PCs/LPCs > 5) %>%
-  ggplot(aes(x = log10(PCs/LPCs), y = log10(LPCs), color = ele_cont)) +
-  geom_point(alpha = 0.7, size = 3) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  coord_fixed(ratio = 1.2) +
-  theme_cowplot(12) +
-  theme(legend.position="none")
-
-
-
-B <- hilo_lipids %>%
-  filter (FIELD == "MT2016") %>%
-  #filter(LPC_18_1 < 5e+05) %>%
-  ggplot(aes(x = ele_cont, y = log10(PC34_1_LPC18_1) , color = ele_cont)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot(12) +
-  coord_fixed(ratio = 1.25) +
-  xlab("Elevation") +
-  ylab("log10(PC34:1/LPC18:1)") +
-  theme(legend.position="none")
-
-plot_grid(A, B, ncol = 2)
-```
-Using data from two fields
-
-```{r}
 A <- hilo_lipids %>%
   #filter (FIELD == "MT2016") %>%
   filter(PCs/LPCs > 5) %>%
-  ggplot(aes(x = log10(PCs/LPCs), y = log10(LPCs), color = ele_cont)) +
-  geom_point(alpha = 0.7, size = 3) +
+  ggplot(aes(x = log10(PCs/LPCs), y = log10(LPCs), color = ele_cont, fill = continent)) +
+  geom_point(alpha = 0.7, size = 3 ) +
   scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  coord_fixed(ratio = 1.2) +
+  #coord_fixed(ratio = 1.2) +
   theme_cowplot(12) +
-  facet_grid(cols = vars(FIELD))
+  #facet_grid(cols = vars(FIELD)) +
   theme(legend.position="none")
 
 
 
 B <- hilo_lipids %>%
   #filter (FIELD == "MT2016") %>%
-  #filter(LPC_18_1 < 5e+05) %>%
-  ggplot(aes(x = ele_cont, y = log10(PC34_1_LPC18_1) , color = ele_cont)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot(aes(x = ele_cont, y = log10(PC_LPC), colour = ele_cont)) +
+  geom_jitter(position=position_jitter(0.2)) +
   scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 2), geom="pointrange", color = "black") +
   theme_cowplot(12) +
-  coord_fixed(ratio = 1.25) +
-  xlab("Elevation") +
-  ylab("log10(PC34:1/LPC18:1)") +
-  facet_grid(cols = vars(FIELD))
-  theme(legend.position="none")
+  xlab("Landrace home elevation") +
+  ylab("log10(PCs/LPCs)") +
+  scale_x_discrete(labels=c("Mex_aLow" = "Lowland", "Mex_High" = "Highland",
+                              "SA_aLow" = "Lowland", "SA_High" = "Highland")) +
+  facet_grid(rows = vars(LOCATION), labeller = labeller(LOCATION = field.labs)) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
+
+field.labs <- c("Highland Field", "Lowland Field")
+names(field.labs) <- c("MT", "PV")
 
 plot_grid(A, B, ncol = 2)
 ```
