@@ -1,12 +1,12 @@
 % This class file is provided for authors submitting to the
-% Genetics Society of America's GENETICS Journal
+% bioRxiv
 %
-% Version: 1.9, 2019/12/10
+% Version: 0.1, 2018/03/07
 %
-% Produced by Overleaf (www.overleaf.com)
+
 %
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{gsajnl}[2019/12/10, v1.9]
+\ProvidesClass{rilabRxiv}[03/07/2018, v0.1]
 \AtEndOfClass{\RequirePackage{microtype}}
 
 % Options for element switching
@@ -22,10 +22,8 @@
 
 % April 16, 2016:
 % Line numbers
-% v1.8 April 12, 2018: make sure line numbers are 
-% displayed in outer margins of columns; so
-% remove "running" option somehow gets it right
-\RequirePackage[switch,pagewise]{lineno}
+\RequirePackage[running,switch]{lineno}
+\ifthenelse{\boolean{displaylineno}}{\AtBeginDocument{\linenumbers}}{}
 
 % Fonts and language
 \RequirePackage[utf8]{inputenc}
@@ -55,27 +53,23 @@
 \RequirePackage{enumitem} 
 \setlist[itemize]{noitemsep}
 
+% Choose article type
+\newcommand*{\articletype}[1]{%
+%  \RequirePackage{styles/#1} Possibility to add style file
+  }
 
 % Author and affiliation
 \RequirePackage{authblk}
 \setlength{\affilsep}{0.1em}
 \renewcommand\Authfont{\color{color0}\normalfont\sffamily\bfseries\fontsize{9}{13}\selectfont}
 \renewcommand\Affilfont{\color{color0}\normalfont\sffamily\fontsize{8}{10}\selectfont}
-% \makeatletter
 \renewcommand\AB@affilsepx{, \protect\Affilfont}
-% \makeatother
 \renewcommand\Authands{ and }
 
-% Choose article type
-\newcommand*{\articletype}[1]{%
-  \RequirePackage{styles/#1}}
-  
+
 % Copyright statement
 \RequirePackage{textcomp} % For copyright symbol styling
-\newcommand{\copyrightstatement}{Copyright \, \textcopyright\, \the\year{} by the Genetics Society of America}
-
-% v1.6: Remove copyright statement from PDF
-\AtBeginDocument{\setboolean{displaycopyright}{false}}
+\newcommand{\copyrightstatement}{Copyright \, \textcopyright\, \the\year{} by the authors}
 
 % Graphics, tables and other formatting
 \RequirePackage{graphicx,xcolor}
@@ -89,7 +83,7 @@
                 right=42pt,%
                 top=48pt,%
                 bottom=60pt,%
-                headheight=15pt,%
+                headheight=25pt,%
                 headsep=10pt,%
                 letterpaper,twoside]{geometry}%
 \RequirePackage[labelfont={bf,sf},%
@@ -104,12 +98,13 @@
 \definecolor{black50}{gray}{0.5} % 50% black for hrules
 \definecolor{color0}{RGB}{0,0,0} % Base color
 \definecolor{color1}{RGB}{59,90,198} % unused
+\definecolor{color2}{RGB}{189,38,53} % unused
 % color2 defined by the specific article type style file
 
 % Bibliography
 \usepackage{natbib} \bibpunct{(}{)}{;}{author-year}{}{,}
 \bibliographystyle{genetics}
-\addto{\captionsenglish}{\renewcommand{\refname}{Literature Cited}}
+\addto{\captionsenglish}{\renewcommand{\refname}{References}}
 \setlength{\bibsep}{0.0pt}
 
 % Table style
@@ -118,13 +113,11 @@
 \captionsetup[table]{position=below} % Reduce spacing below caption
 
 % Algorithm style
-% \makeatletter
 \newcommand\fs@coloruled{\def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@coloruled
   \def\@fs@pre{\kern2pt}%
   \def\@fs@post{\kern2pt{\color{color2}\hrule}\relax}%
   \def\@fs@mid{\kern2pt{\color{color2}\hrule}\kern2pt}%
   \let\@fs@iftopcapt\iftrue}
-% \makeatother
 
 \floatstyle{coloruled}
 \restylefloat{algorithm}
@@ -135,10 +128,9 @@
 \pagestyle{fancy}          % Enables the custom headers/footers
 
 \fancypagestyle{firststyle}{
-   \fancyhead[R]{{\watermarkfont PREPRINT |} \headerfont \articletypename}
-   % v1.6: Remove volume and month information
-%    \fancyfoot[R]{\footnotesize Genetics, Vol. XXX, XXXX–XXXX \hspace{1em} \monthyeardate\today \hspace{2em} \thepage\ }
-   \fancyfoot[R]{\footnotesize PREPRINT\hspace{2em}\thepage}
+   \fancyhead[R]{{\watermarkfont bio\textcolor{color2}{R}$\chi$iv}}
+   %\fancyhead[L]{\includegraphics[width=0.8cm]{cornkey.png}}
+   \fancyfoot[R]{\footnotesize bio\textcolor{color2}{R}$\chi$iv \hspace{1em} \monthyeardate\today \hspace{2em} \thepage\ }
 }
 
 % Headers
@@ -152,6 +144,10 @@
 \fancyfoot[RO]{\@runningtitle \hspace{2em} \thepage\ }
 % \makeatother
 \fancyfoot[LO,RE]{}
+\renewcommand{\headrulewidth}{0pt}% % No header rule
+\renewcommand{\footrulewidth}{0pt}% % No footer rule
+
+%\fancyfoot[LO,RE]{}
 \renewcommand{\headrulewidth}{0pt}% % No header rule
 \renewcommand{\footrulewidth}{0pt}% % No footer rule
 
@@ -207,13 +203,7 @@
 \newcommand{\keywordname}{KEYWORDS} % Defines the keywords heading name
 
 % Colored margin box
-\newcommand{\marginmark}{
-\begin{textblock}{2}(200,9.5) 
-\begin{tikzpicture}
-\fill[color=color2] (0,0) rectangle (1.2,0.25);
-\end{tikzpicture}
-\end{textblock}
-}
+\newcommand{\marginmark}{}
 
 \def\xabstract{abstract}
 \long\def\abstract#1\end#2{\def\two{#2}\ifx\two\xabstract
@@ -231,14 +221,12 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 \noindent
 {%
 \parbox{\dimexpr\linewidth}{%
-    %% v1.8: turn on line numbers
 	\ifthenelse{\boolean{displaylineno}}{\internallinenumbers}{}%
     {\absfont\bfseries ABSTRACT} \absfont \theabstract
 }%
 \vskip10pt%
 \noindent
 \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
- %% v1.8: turn on line numbers
 \ifthenelse{\boolean{displaylineno}}{\internallinenumbers}{}%
 {\keywordsfont\bfseries\keywordname}\hspace*{0.1em} \keywordsfont \@keywords%
 }%
@@ -249,19 +237,19 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 \renewcommand{\@maketitle}{\bgroup\setlength{\parindent}{0pt}
 \begin{flushright}
 {%
-\vskip76pt%
+\vskip30pt%
 {\raggedleft \titlefont \@title\par}%
 \vskip11pt
 {\raggedleft \@author\par}
-\vskip51pt%
+\vskip15pt%
 }%
 \end{flushright}\egroup
 {%
-{\color{black50}\rule{\linewidth}{0.5pt}}
+{\color{color2}\rule{\linewidth}{0.8pt}}
 \vskip12pt%
 \abscontent
 }%
-\vskip25pt%
+\vskip15pt%
 }%
 
 % Other packages
@@ -318,7 +306,6 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 \newcommand{\equalcontrib}[1]{\@authfootnote{#1}{These authors contributed equally to this work.}}
 
 \newcommand{\firstpagefootnote}{\blfootnote{\copyrightfont \ifthenelse{\boolean{displaycopyright}}{\copyrightstatement}{}\\%
-doi: 10.1534/genetics.XXX.XXXXXX \\%
 Manuscript compiled: \today%
 }}
 
@@ -331,3 +318,6 @@ Manuscript compiled: \today%
 \setlength{\TPHorizModule}{1mm}
 \setlength{\TPVertModule}{1mm}
 \textblockorigin{0mm}{0mm} % start everything near the top-left corner
+
+
+
