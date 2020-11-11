@@ -1,7 +1,7 @@
 ---
 title: "Fig 3 Code"
 output: html_document
-editor_options: 
+editor_options:
   chunk_output_type: inline
 ---
 ```{r}
@@ -10,13 +10,13 @@ library(data.table)
 library(cowplot)
 library(wesanderson)
 library(ggplot2)
-library(MASS) 
+library(MASS)
 library(qtl)
-library(lme4) 
-library(arm) 
-library(lsmeans) 
+library(lme4)
+library(arm)
+library(lsmeans)
 library(pbkrtest)
-library(cowplot) 
+library(cowplot)
 library(viridis)
 library(qtlcharts)
 library(readr)
@@ -41,10 +41,10 @@ traits <- colnames(data)
 for (i in 3:57) {
 #fit mixed model taking into account the three replicate blocks in each of the fields
 mix = lmer(data[,i] ~ MUM_GEN + (1|BLOCK_FIELD),data=data, na.action=na.exclude)
-#sjp.lmer(mix, type="re") #plots the random effects as deviations from the main effect 
+#sjp.lmer(mix, type="re") #plots the random effects as deviations from the main effect
 #Extract Breeding Values
 bv <- lsmeans(mix, specs = ~ MUM_GEN)
-bv <- summary(bv) 
+bv <- summary(bv)
 bv=bv[,1:2]
 bv[,2]=round(bv[,2])
 colnames(bv)[1]="RIL"
@@ -96,7 +96,7 @@ cut.off <- summary(perm, alpha=0.05)[1]
 abline(h=cut.off,col="red",lty=2) #5% cut off for hk
 }
 
-#find markers 
+#find markers
 
 
 lpc_markerchr3 <- bayesint(out.hk, 3, 0.95, expandtomarkers=TRUE)
@@ -216,7 +216,7 @@ A1 <- data_cross %>%
   ggtitle("qPC32:1/LPC18:1-3@8.5") +
   theme(legend.position = "none") +
   theme(plot.title = element_text(size=11))
-        
+
 
 A2 <- data_cross %>%
   filter(S3_8542287 != "NA") %>%
@@ -446,12 +446,12 @@ plot_grid(A1, A2, A3, A4, A5, A6, B1, B2, B3, B4, B5, B6, C1, C2, C3, C4, C5, PC
 
 dabest_try <- data_cross %>%
   filter(S3_8542287 != "NA") %>%
-  dabest(S3_8542287, LPCs, 
+  dabest(S3_8542287, LPCs,
          idx = c("AA", "BB"),
          paired = FALSE)
 
 plot(dabest_try)
- 
+
 
 ```
 
@@ -460,14 +460,14 @@ Expression analysis of ZmPla1.2
 ```{r}
 exp_valuesPLA1 <- read_csv("data/fig_3/ZmPLA1_exp.csv")
 
-PLA1_exp_fig <- exp_valuesPLA1 %>% 
+PLA1_exp_fig <- exp_valuesPLA1 %>%
 	filter(tissue_key=="0") %>%
   #filter(line=="B73"|line=="PT") %>%
   filter(fertilizer_tx=="high") %>%
 	ggplot(aes(x = temp_tx, y = ZmPla1.2, color = temp_tx)) +
   scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
 	geom_jitter(position=position_jitter(0.1), size = 3) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black") +
   #ylim(0,8) +
   ylab("ZmPla1.2") +
@@ -477,21 +477,21 @@ PLA1_exp_fig <- exp_valuesPLA1 %>%
   #coord_fixed(ratio = 0.9) +
   theme(legend.position="none",
         axis.text.x=element_blank(),
-        axis.title.x=element_blank()) 
+        axis.title.x=element_blank())
 
 
 ```
 ```{r}
 exp_valuesLPCAT <- read_csv("data/fig_3/ZmLPCAT1_exp.csv")
 
-LPCAT_exp_fig <- exp_valuesLPCAT %>% 
+LPCAT_exp_fig <- exp_valuesLPCAT %>%
 	filter(tissue_key=="0") %>%
   #filter(line=="B73"|line=="PT") %>%
   filter(fertilizer_tx=="high") %>%
 	ggplot(aes(x = temp_tx, y = ZmLpcat1, color = temp_tx)) +
   scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
 	geom_jitter(position=position_jitter(0.1), size = 3) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black") +
   #ylim(0,8) +
   ylab("ZmLpcat1") +
@@ -501,19 +501,19 @@ LPCAT_exp_fig <- exp_valuesLPCAT %>%
   #coord_fixed(ratio = 0.9) +
   theme(legend.position="none",
         strip.background = element_blank(),
-        strip.text.x = element_blank()) 
+        strip.text.x = element_blank())
 
 plot_grid(PLA1_exp_fig, LPCAT_exp_fig, ncol = 1)
 
 exp_valuesPLALPCAT <- read_csv("data/fig_3/ZmPla-Lpcat.csv")
 
-ZmPla1_exp <- exp_valuesPLALPCAT %>% 
+ZmPla1_exp <- exp_valuesPLALPCAT %>%
   filter(gene=="ZmPla1.2") %>%
   #filter(fertilizer_tx=="high") %>%
 	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
   scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
 	geom_jitter(position=position_jitter(0.1), size = 3) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black") +
   #ylim(0,8) +
   ylab("ZmPla1.2") +
@@ -523,15 +523,15 @@ ZmPla1_exp <- exp_valuesPLALPCAT %>%
   facet_grid(cols = vars(line)) +
   #coord_fixed(ratio = 0.9) +
   theme(legend.position="none",
-        strip.background = element_rect(colour="white", fill="white")) 
+        strip.background = element_rect(colour="white", fill="white"))
 
-ZmLpcat_exp <- exp_valuesPLALPCAT %>% 
+ZmLpcat_exp <- exp_valuesPLALPCAT %>%
   filter(gene=="ZmLpcat") %>%
   #filter(fertilizer_tx=="high") %>%
 	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
   scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
 	geom_jitter(position=position_jitter(0.1), size = 3) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black") +
   #ylim(0,8) +
   ylab("ZmLpcat1") +
@@ -541,15 +541,15 @@ ZmLpcat_exp <- exp_valuesPLALPCAT %>%
   facet_grid(cols = vars(line)) +
   #coord_fixed(ratio = 0.9) +
   theme(legend.position="none",
-        strip.background = element_rect(colour="white", fill="white")) 
+        strip.background = element_rect(colour="white", fill="white"))
 
-ratio_exp <- exp_valuesPLALPCAT %>% 
+ratio_exp <- exp_valuesPLALPCAT %>%
   filter(gene=="Ratio") %>%
   #filter(fertilizer_tx=="high") %>%
 	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
   scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
 	geom_jitter(position=position_jitter(0.1), size = 3) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", 
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black") +
   #ylim(0,8) +
   ylab("ZmPla1.2/ZmLpcat1") +
@@ -559,11 +559,207 @@ ratio_exp <- exp_valuesPLALPCAT %>%
   facet_grid(cols = vars(line)) +
   #coord_fixed(ratio = 0.9) +
   theme(legend.position="none",
-        strip.background = element_rect(colour="white", fill="white")) 
+        strip.background = element_rect(colour="white", fill="white"))
 
 plot_grid(ZmPla1_exp, ZmLpcat_exp, ratio_exp, ncol = 1)
 
 ```
 
+Haplotype Network plot
+
+```
+library(dplyr)
+library(vcfR)
+library(pegas)
 
 
+traits <- read.table("/Volumes/GoogleDrive/My\ Drive/repos/soilP/inst/notebooks/P_traits.txt", header = TRUE)
+
+extdata <-"/Volumes/GoogleDrive/My\ Drive/repos/soilP/inst/extdata"
+
+accn_file <- paste(extdata,"germinate_SeeD_GWAS_GBS_4022.tab", sep = "/")
+
+accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
+
+SEED_GWAS_GID <- read.table(file = file.path(extdata, "SEED_GWAS_GID.tab"),
+                            header = TRUE, quote = "",sep ="\t")
+
+# There are one or more GWAS seed identifier per general identifier in the table
+
+GWAS_ID <- read.table(file = paste(extdata, "GWAS_ID.tab", sep = "/"), quote = "",sep ="\t")
+GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
+
+colnames(GWAS_ID)[1] <-"sample_id"
+
+GWAS_ID <- GWAS_ID %>%
+  dplyr::select(sample_id,taxa) %>%
+  inner_join(SEED_GWAS_GID)
+
+GWAS_ID %>%
+  inner_join(accn_info,by = c(accn_GID = "general_identifier")) %>%
+  #dplyr::filter(countries_country_code3=="MEX") %>%
+  dplyr::select(taxa,country="countries_country_code3", collnumb)
+
+mex <- accn_info %>%
+  dplyr::filter(!is.na(locations_longitude) & !is.na(locations_longitude)) %>%
+  dplyr::filter(countries_country_code3 =="MEX") %>%
+  dplyr::select(accn_GID  ="general_identifier",collnumb, lon ="locations_longitude",
+                lat="locations_latitude", country = "countries_country_code3")
+
+assoc <- mex %>%
+  inner_join(GWAS_ID) %>% dplyr::select(taxa,collnumb) %>%
+  inner_join(traits) %>%
+  arrange(locations_elevation) %>%
+  group_by(locations_elevation)
+
+# Select just Mexican accessions genotype or Teosintes not georeferenced
+
+vcf_file <-  "/Users/fvrodriguez/Projects/NCSU/05_PLA1/zmpla12_merged_het0_AGPv3_phased.vcf"
+
+vcf <- vcfR::read.vcfR(vcf_file)
+ncol(vcf@gt) - 1
+
+is_mexican <- colnames(vcf@gt) %in% c("FORMAT",assoc$taxa)
+is_teosinte <- grepl("TIL.*|Teo",colnames(vcf@gt), perl = TRUE)
+
+vcf <-vcf[,is_mexican | is_teosinte ]
+ncol(vcf@gt) - 1
+
+# 916 mexican  out of  1379 initial
+dna <- vcfR2DNAbin(vcf)
+as.alignment(dna)
+h <- haplotype(dna, what="label")
+
+
+haptab <- stack(setNames(attr(h, "index"), rownames(h))) %>%
+  dplyr::mutate(h = as.numeric(ind)) %>%
+  dplyr::select(h, label =ind, dnaid= values)
+
+sumhap <- haptab %>%
+  dplyr::group_by(h,label) %>%
+  dplyr::summarise(count= length(h))  %>%
+  dplyr::arrange(-count) %>% ungroup() %>%
+  dplyr::mutate(countrank = row_number()) %>%
+  dplyr::mutate(cumcount = cumsum(count)) %>%
+  dplyr::mutate(cumfreq  = cumcount/sum(count)) %>%
+  dplyr::mutate(is_major = cumfreq < 0.9) %>%
+  as.data.frame()
+
+majorhid <- sumhap$h[sumhap$is_major]
+majordnaid  <- haptab$dnaid[haptab$h %in% majorhid ]
+
+majordna <- dna[majordnaid,]
+nrow(dna)/2
+nrow(majordna)/2
+
+
+h <- haplotype(majordna)
+
+check_mexicana <- function(x,h,dna) {
+  h_names <- rownames(dna)[attr(h,"index")[[x]]]
+  if(any(grepl("TIL08|TIL25",h_names))) {x} else {NULL}
+}
+
+
+hapind <- stack(setNames(attr(h, "index"), rownames(h))) %>%
+  dplyr::mutate(h = as.numeric(ind)) %>%
+  dplyr::select(h, label =ind, dnaid = values) %>%
+  dplyr::mutate(seqname = rownames(majordna)[dnaid]) %>%
+  dplyr::mutate(seq = as.alignment(majordna)$seq) %>%
+  dplyr::mutate(taxa = gsub("_.*","",seqname,perl = TRUE)) %>%
+  dplyr::left_join(assoc) %>%
+  dplyr::mutate(is_mexicana    = grepl("TIL08|TIL25", taxa, perl = TRUE)) %>%
+  dplyr::mutate(is_parviglumis = grepl("TIL|Teo", taxa, perl = TRUE) & !is_mexicana)
+
+table(cut(hapind$locations_elevation, breaks = c(0,1000,2000,4000)), right = TRUE)
+
+hapind$ele_class <- cut(
+  hapind$locations_elevation, breaks = c(0,1000,2000,4000),
+  labels = c("low","mid","high"))
+
+
+hapind$ele_bin <- cut(
+  hapind$locations_elevation, breaks = seq(0, 3100, by= 100),
+  labels = seq(50, 3100, by= 100)) %>%
+  as.character() %>%
+  as.integer()
+
+hap_ele <- hapind %>% dplyr::group_by(ele_bin) %>% dplyr::select(taxa, label) %>%
+  dplyr::summarise(
+                II = sum(label=="II")/length(taxa),
+                III = sum(label=="III")/length(taxa),
+                VI = sum(label=="VI")/length(taxa),
+                n = length(taxa)) %>%
+                 dplyr::rename( Elevation ="ele_bin") %>%
+                dplyr::filter( n >10) %>%
+                tidyr::pivot_longer(cols = c("II","III","VI"),
+                                             values_to = "Frequency",
+                                             names_to = "Haplotype")
+
+quartz()
+hap_ele %>% dplyr::filter(Haplotype == "VI") %>%
+  ggpubr::ggscatter(  x = "Elevation", y = "Frequency",color = "#88CCEE", add = "loess", conf.int = TRUE) +
+  ggplot2::ggtitle("Haplotype VI") +
+  ggplot2::theme(legend.title = ggplot2::element_blank())
+
+
+high_limit <- 2000
+low_limit <- 1000
+
+ hapind %>%
+  dplyr::filter(locations_elevation >= high_limit | locations_elevation <= low_limit ) %>%
+  dplyr::select(h:label, is_mexicana) %>% nrow()
+
+ hapind %>%
+   dplyr::filter(is_mexicana)
+
+ hapind %>%
+   dplyr::filter(is_parviglumis)
+
+
+hapind$pop <- hapind$ele_class
+hapind$pop <- factor(hapind$pop, levels = c("low","mid","high"))
+
+# hapind$pop[hapind$is_parviglumis] <- "parviglumis"    
+# hapind$pop[hapind$is_mexicana] <- "mexicana"  
+
+# hapind$pop <- factor(hapind$pop,
+#                      levels = c("mexicana","parviglumis","low","high"))
+#pal <- c("#FFFFFF","#DDDDDD","#CC6677","#88CCEE")
+
+pie_tab <- with(hapind, table(hap=label, pop=pop))
+
+net <- pegas::haploNet(h)
+
+
+pal <- c("#CC6677","#BCDCAD", "#88CCEE")
+
+
+
+p <- plot(net, legend = FALSE,
+     size=attr(net, "freq")/50,
+     scale.ratio = 2, cex = 0.,
+     pie= pie_tab,
+     col = "white",
+     bg=pal,
+     show.mutation = 2,threshold =0 )
+
+pdf(file="hapnetwork.pdf")
+
+plot(net, legend = FALSE,
+     labels = FALSE,
+     size=attr(net, "freq")/50,
+     scale.ratio = 2, cex = 0.,
+     pie= pie_tab,
+     col = "white",
+     bg=pal,
+     show.mutation = 2,threshold =0, )
+size.adjust <- c(0.8, 0.6,0.7, 1.5,1.5,0.6,1,1.2,1.5)
+angle.adjust <- c(2*pi/3,2*pi/3,2*pi/3,-pi/2, pi/2, 2*pi/3, -pi/3, -pi/2, 0)
+text(p$xx + cos(angle.adjust)*p$size*size.adjust ,
+     p$yy + sin(angle.adjust)*p$size*size.adjust ,
+     labels = p$labels, srt = 90)
+legend(-25,30, box.lty = 0, colnames(pie_tab), fill=pal,  title = "Population by Elevation", ncol =3)
+dev.off()
+
+```
