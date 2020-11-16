@@ -1,0 +1,142 @@
+---
+title: "fig6_fitness_effects"
+author: "rra"
+date: "5/4/2020"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(cowplot)
+library(wesanderson)
+library(ggplot2)
+library(MASS)
+library(qtl)
+library(lme4)
+library(arm)
+library(lsmeans)
+library(pbkrtest)
+library(cowplot)
+library(viridis)
+library(qtlcharts)
+library(readr)
+library(ggfortify)
+library(ggmap)
+library(maps)
+library(qtlcharts)
+library(Hmisc)
+library(data.table)
+library(GridLMM)
+library(grid)
+library(gridExtra)
+```
+
+
+
+```{r}
+
+load('data/fig_6/EffectsAllForRuben.Rimage')
+
+DAdata <- ggplot_build(plot3DA)
+DA <- DAdata$plot[[1]]
+PHdata <- ggplot_build(plot3PH)
+PH <- PHdata$plot[[1]]
+ASIdata <- ggplot_build(plot3ASI)
+ASI<- ASIdata$plot[[1]]
+FWdata <- ggplot_build(plot3FW)
+FW<- FWdata$plot[[1]]
+BCWdata <- ggplot_build(plot3BCW)
+BCW <- BCWdata$plot[[1]]
+GWHdata <- ggplot_build(plot3GWH)
+GWH<- BCWdata$plot[[1]]
+
+
+
+DA_fig <- DA %>%
+  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
+  geom_line() +
+  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
+  labs(x=NULL, y=NULL) +
+  theme_cowplot(10) +
+  ggtitle('Days to Anthesis') +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.title = element_text(size=10)) +
+  theme(legend.position = "none") 
+
+PH_fig <- PH %>%
+  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
+  geom_line() +
+  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
+  labs(x=NULL, y=NULL) +
+  theme_cowplot(10) +
+  ggtitle('Plant Height') +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.title = element_text(size=10)) +
+  theme(legend.position = "none")  
+
+ASI_fig <- ASI %>%
+  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
+  geom_line() +
+  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
+  labs(x=NULL, y=NULL) +
+  theme_cowplot(10) +
+  ggtitle('ASI') +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.title = element_text(size=10)) +
+  theme(legend.position = "none")  
+
+FW_fig <- FW %>%
+  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
+  geom_line() +
+  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
+  labs(x=NULL, y=NULL) +
+  theme_cowplot(10) +
+  ggtitle('Fresh Ear Weight') +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.title = element_text(size=10)) +
+  theme(legend.position = "none") 
+
+BCW_fig <- BCW %>%
+  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
+  geom_line() +
+  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
+  labs(x=NULL, y=NULL) +
+  theme_cowplot(10) +
+  ggtitle('Cob Weight') +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.title = element_text(size=10)) +
+  theme(legend.position = "none")   
+
+GWH_fig <- FW %>%
+  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
+  geom_line() +
+  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
+  labs(x=NULL, y=NULL) +
+  theme_cowplot(10) +
+  ggtitle('Grain Weight/ha') +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.title = element_text(size=10)) +
+  theme(legend.position = "none")  
+
+plotG <- plot_grid(DA_fig, PH_fig, ASI_fig, FW_fig, BCW_fig, GWH_fig, align = "v", nrow=2)
+
+y.grob <- textGrob("Effect of the highland allele", 
+                   gp=gpar( col="black", fontsize=12), rot=90)
+x.grob <- textGrob("Elevation (km)", 
+                   gp=gpar( col="black", fontsize=12))
+#add to plot
+Gplot<-grid.arrange(arrangeGrob(plotG, left = y.grob, bottom = x.grob))
+
+#ggsave(Gplot,device = 'png',filename = 'EffectsForRuben.png',width=8,height=8,dpi=200)
+
+```
+
+

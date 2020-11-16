@@ -1,5 +1,5 @@
 ---
-title: "fig5_teo_introgression"
+title: "fig4_enzyme_info"
 author: "rra"
 date: "5/4/2020"
 output: html_document
@@ -32,174 +32,86 @@ library(pegas)
 fd from palomeros and mushito
 
 ```{r}
-fd_chr3 <- read_csv("data/fig_5/fd_chr_3_pts.csv")
+ril_data <- read_csv("data/fig_4/data_RILS_all.csv")
 
-names(fd_chr3)[7] <- "fd"
-	
-fd_chr3 %>% 
-	#filter(`Yes-No`=="S") %>%
-	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
-	scale_color_viridis() +
-	geom_segment(size = 2) +
-	ylim(0,1) +
-	geom_segment(x = 1000000, xend = 21000000, y = 0, yend = 0, colour = "black")
-
-fd_chr3 %>% 
-	filter(POS > 750000) %>% 
-	filter(POS < 20000000) %>%
-	filter(`Yes-No`=="S") %>%
-	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
-	scale_color_viridis() +
-	geom_segment(size = 2) +
-	ylim(0,1) +
-	geom_vline(xintercept = 8542106, colour = "red", linetype="dotted", size = 1)
-
-
+ril_data %>%
+  #filter(GENOTYPE =="LANMLR17B042"| GENOTYPE =="LANMLR17B023"
+  #       | GENOTYPE =="LANMLR17B035"| GENOTYPE =="LANMLR17B152"
+  #       | GENOTYPE =="LANMLR17B021"| GENOTYPE =="LANMLR17B122") %>%
+    filter(GENOTYPE =="LANMLR17B042"| GENOTYPE =="LANMLR17B023") %>%
+  #filter(GENOTYPE =="LANMLR17B042") %>%
+	ggplot(aes(x =GENOTYPE, y = log10(PCs/LPCs), color = geno_pla)) +
+  geom_jitter(position=position_jitter(0.1), size = 4) +
+  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme(legend.position="none") +
+  facet_grid(rows = vars(GENOTYPE)) +
+  theme_cowplot()
 ```
-
-# Haplotype Network
+F1 expression data
 
 ```{r}
-# Getting georeferenced data
-accn_file <- file.path('data','fig_2','germinate_SEED_GWAS_GBS_4022.tab')
-accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
-nrow(accn_info)
-
-SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
-                            header = TRUE, quote = "",sep ="\t")
-
-# There are one or more GWAS seed identifiers per general identifier in the table
-
-GWAS_ID <- read.table(file = file.path('data','fig_2',"GWAS_ID.tab"), quote = "",sep ="\t")
-GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
-
-colnames(GWAS_ID)[1] <-"sample_id"
-
-GWAS_ID <- GWAS_ID %>% 
-  dplyr::select(sample_id,taxa) %>%
-  inner_join(SEED_GWAS_GID)
-
-mex <- accn_info %>% 
-  dplyr::filter(!is.na(locations_longitude) & !is.na(locations_longitude)) %>%
-  dplyr::filter(countries_country_code3 =="MEX") %>% # use the geolocator to retrieve this info
-  dplyr::select(accn_GID  ="general_identifier",collnumb, lon ="locations_longitude",
-                lat="locations_latitude",  ele="locations_elevation", country = "countries_country_code3") 
-
-# Selecting just Mexican accessions (SEEDs) 
-assoc <- mex %>% 
-  dplyr::inner_join(GWAS_ID) %>% dplyr::select(taxa,collnumb) %>%
-  dplyr::inner_join(traits) %>% 
-  dplyr::arrange(locations_elevation) %>%
-  dplyr::group_by(locations_elevation)
-
-# Using a combination of tassel and shell cmds I:
-# Merged SEEDs data with HapMap, which required:
-# Download data from hapmap 282 set in AGPV2 for ZmPLA1.2
-# Merge with SEDDs data for ZmPLA1.2 that is in AGPv2
-# Liftover to AGPV3
-# Filter heterozygote accessions out
-# In order to use the Haplotype network plotting function
-# I had to add phasing replacing '/' with '|' in the genotypes
-# From 56 initial variants found in SEEDs down to 11 sites
 
 
-vcf_file <-  file.path('data','fig_4', 'zmpla12_merged_het0_AGPv3_phased.vcf')
+exp_valuesPLALPCAT <- read_csv("data/fig_4/ZmPla-Lpcat.csv")
 
-vcf <- vcfR::read.vcfR(vcf_file) 
-ncol(vcf@gt) - 1
+ZmPla1_exp <- exp_valuesPLALPCAT %>%
+  filter(gene=="ZmPla1.2") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmPla1.2") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
 
-is_mexican <- colnames(vcf@gt) %in% c("FORMAT",assoc$taxa) 
-is_teosinte <- grepl("TIL.*|Teo",colnames(vcf@gt), perl = TRUE)
+ZmLpcat_exp <- exp_valuesPLALPCAT %>%
+  filter(gene=="ZmLpcat") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmLpcat1") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
 
-vcf <-vcf[,is_mexican | is_teosinte ]
-ncol(vcf@gt) - 1
+ratio_exp <- exp_valuesPLALPCAT %>%
+  filter(gene=="Ratio") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmPla1.2/ZmLpcat1") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
 
-# 916 mexican  out of  1379 initial
-dna <- vcfR::vcfR2DNAbin(vcf)
-h <- haplotype(dna, what="label")
-
-
-haptab <- stack(setNames(attr(h, "index"), rownames(h))) %>%
-  dplyr::mutate(h = as.numeric(ind)) %>%
-  dplyr::select(h, label =ind, dnaid= values)
-
-sumhap <- haptab %>% 
-  dplyr::group_by(h,label) %>%
-  dplyr::summarise(count= length(h))  %>%
-  dplyr::arrange(-count) %>% ungroup() %>%
-  dplyr::mutate(countrank = row_number()) %>%
-  dplyr::mutate(cumcount = cumsum(count)) %>% 
-  dplyr::mutate(cumfreq  = cumcount/sum(count)) %>% 
-  dplyr::mutate(is_major = cumfreq < 0.9) %>%  # haplotypes covering 90% of the population fro the plot
-  as.data.frame()
-
-majorhid <- sumhap$h[sumhap$is_major]
-majordnaid  <- haptab$dnaid[haptab$h %in% majorhid ]
-
-majordna <- dna[majordnaid,]
-
-h <- haplotype(majordna) # Here we get the sequences as haplotypes for plotting
-
-check_mexicana <- function(x,h,dna) {
-  h_names <- rownames(dna)[attr(h,"index")[[x]]]
-  if(any(grepl("TIL08|TIL25",h_names))) {x} else {NULL}
-}
-
-
-hapind <- stack(setNames(attr(h, "index"), rownames(h))) %>% 
-  dplyr::mutate(h = as.numeric(ind)) %>%
-  dplyr::select(h, label =ind, dnaid = values) %>%
-  dplyr::mutate(seqname = rownames(majordna)[dnaid]) %>%
-  dplyr::mutate(seq = as.alignment(majordna)$seq) %>%
-  dplyr::mutate(taxa = gsub("_.*","",seqname,perl = TRUE)) %>%
-  dplyr::left_join(assoc) %>%
-  dplyr::mutate(is_mexicana    = grepl("TIL08|TIL25", taxa, perl = TRUE)) %>%
-  dplyr::mutate(is_parviglumis = grepl("TIL|Teo", taxa, perl = TRUE) & !is_mexicana) 
-
-
-hapind$ele_class <- cut(
-  hapind$locations_elevation, breaks = c(0,1000,2000,4000), 
-  labels = c("low","mid","high"))
-
-hapind$pop <- hapind$ele_class 
-hapind$pop <- factor(hapind$pop, levels = c("low","mid","high"))
-
-pie_tab <- with(hapind, table(hap=label, pop=pop))
-
-net <- pegas::haploNet(h)
-
-pal <- c("#CC6677","#BCDCAD", "#88CCEE")
-
-
-# Preliminary plot just for getting layout coordinates
-p <- plot(net, legend = FALSE,
-     size=attr(net, "freq")/50, 
-     scale.ratio = 2, cex = 0., 
-     pie= pie_tab,
-     col = "white",
-     bg=pal,
-     show.mutation = 2,threshold =0 )
-
-# Parameters for adjusting pie labels (manually):
-size.adjust <- c(0.8, 0.6,0.7, 1.5,1.5,0.6,1,1.2,1.5)
-angle.adjust <- -c(pi/3,pi/3,pi/3,-pi/2, pi/2, pi/3, -pi/3, -pi/2,pi)
-
-# Final plot
-pdf(file.path('output',"fig_1B.pdf"))
-plot(net, legend = FALSE,
-     labels = FALSE,
-     size=attr(net, "freq")/50, 
-     scale.ratio = 2, cex = 0., 
-     pie= pie_tab,
-     bg=pal,
-     show.mutation = 2,threshold =0, )
-# Adjusting pie labels
-text(p$xx + cos(angle.adjust)*p$size*size.adjust , 
-     p$yy + sin(angle.adjust)*p$size*size.adjust ,
-     labels = p$labels, srt = 90)
-legend(-25,30, box.lty = 0, colnames(pie_tab), fill=pal,
-       title = "Population by Elevation", ncol =3)
-dev.off()
+plot_grid(ZmPla1_exp, ZmLpcat_exp, ratio_exp, ncol = 1)
 
 ```
+
+
 
