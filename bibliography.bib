@@ -4129,6 +4129,196 @@ abstract = {Summary Plants respond to abiotic stress through a variety of physio
 year = {2017}
 }
 
+
+@ARTICLE{Pfeifer2014-bg,
+  title    = "{PopGenome}: an efficient Swiss army knife for population genomic
+              analyses in {R}",
+  author   = "Pfeifer, Bastian and Wittelsb{\"u}rger, Ulrich and Ramos-Onsins,
+              Sebastian E and Lercher, Martin J",
+  abstract = "Although many computer programs can perform population genetics
+              calculations, they are typically limited in the analyses and data
+              input formats they offer; few applications can process the large
+              data sets produced by whole-genome resequencing projects.
+              Furthermore, there is no coherent framework for the easy
+              integration of new statistics into existing pipelines, hindering
+              the development and application of new population genetics and
+              genomics approaches. Here, we present PopGenome, a population
+              genomics package for the R software environment (a de facto
+              standard for statistical analyses). PopGenome can efficiently
+              process genome-scale data as well as large sets of individual
+              loci. It reads DNA alignments and single-nucleotide polymorphism
+              (SNP) data sets in most common formats, including those used by
+              the HapMap, 1000 human genomes, and 1001 Arabidopsis genomes
+              projects. PopGenome also reads associated annotation files in GFF
+              format, enabling users to easily define regions or classify SNPs
+              based on their annotation; all analyses can also be applied to
+              sliding windows. PopGenome offers a wide range of diverse
+              population genetics analyses, including neutrality tests as well
+              as statistics for population differentiation, linkage
+              disequilibrium, and recombination. PopGenome is linked to
+              Hudson's MS and Ewing's MSMS programs to assess statistical
+              significance based on coalescent simulations. PopGenome's
+              integration in R facilitates effortless and reproducible
+              downstream analyses as well as the production of
+              publication-quality graphics. Developers can easily incorporate
+              new analyses methods into the PopGenome framework. PopGenome and
+              R are freely available from CRAN (http://cran.r-project.org/) for
+              all major operating systems under the GNU General Public License.",
+  journal  = "Molecular biology and evolution",
+  volume   =  31,
+  number   =  7,
+  pages    = "1929-1936",
+  month    =  jul,
+  year     =  2014,
+  url      = "http://dx.doi.org/10.1093/molbev/msu136",
+  keywords = "population genomics; single-nucleotide polymorphisms; software",
+  language = "en"
+}
+
+
+@ARTICLE{Li2016-ut,
+  title    = "Identification of 14-3-3 Proteins {Phosphopeptide-Binding}
+              Specificity Using an {Affinity-Based} Computational Approach",
+  author   = "Li, Zhao and Tang, Jijun and Guo, Fei",
+  abstract = "The 14-3-3 proteins are a highly conserved family of homodimeric
+              and heterodimeric molecules, expressed in all eukaryotic cells.
+              In human cells, this family consists of seven distinct but highly
+              homologous 14-3-3 isoforms. 14-3-3$\sigma$ is the only isoform
+              directly linked to cancer in epithelial cells, which is regulated
+              by major tumor suppressor genes. For each 14-3-3 isoform, we have
+              1,000 peptide motifs with experimental binding affinity values.
+              In this paper, we present a novel method for identifying peptide
+              motifs binding to 14-3-3$\sigma$ isoform. First, we propose a
+              sampling criteria to build a predictor for each new peptide
+              sequence. Then, we select nine physicochemical properties of
+              amino acids to describe each peptide motif. We also use
+              auto-cross covariance to extract correlative properties of amino
+              acids in any two positions. Finally, we consider elastic net to
+              predict affinity values of peptide motifs, based on ridge
+              regression and least absolute shrinkage and selection operator
+              (LASSO). Our method tests on the 1,000 known peptide motifs
+              binding to seven 14-3-3 isoforms. On the 14-3-3$\sigma$ isoform,
+              our method has overall pearson-product-moment correlation
+              coefficient (PCC) and root mean squared error (RMSE) values of
+              0.84 and 252.31 for N-terminal sublibrary, and 0.77 and 269.13
+              for C-terminal sublibrary. We predict affinity values of 16,000
+              peptide sequences and relative binding ability across six
+              permutated positions similar with experimental values. We
+              identify phosphopeptides that preferentially bind to
+              14-3-3$\sigma$ over other isoforms. Several positions on peptide
+              motifs are in the same amino acid category with experimental
+              substrate specificity of phosphopeptides binding to
+              14-3-3$\sigma$. Our method is fast and reliable and is a general
+              computational method that can be used in peptide-protein binding
+              identification in proteomics research.",
+  journal  = "PloS one",
+  volume   =  11,
+  number   =  2,
+  pages    = "e0147467",
+  month    =  feb,
+  year     =  2016,
+  url      = "http://dx.doi.org/10.1371/journal.pone.0147467",
+  language = "en"
+}
+
+
+@ARTICLE{Eddy2011-pd,
+  title    = "Accelerated Profile {HMM} Searches",
+  author   = "Eddy, Sean R",
+  abstract = "Profile hidden Markov models (profile HMMs) and probabilistic
+              inference methods have made important contributions to the theory
+              of sequence database homology search. However, practical use of
+              profile HMM methods has been hindered by the computational
+              expense of existing software implementations. Here I describe an
+              acceleration heuristic for profile HMMs, the ``multiple segment
+              Viterbi'' (MSV) algorithm. The MSV algorithm computes an optimal
+              sum of multiple ungapped local alignment segments using a striped
+              vector-parallel approach previously described for fast
+              Smith/Waterman alignment. MSV scores follow the same statistical
+              distribution as gapped optimal local alignment scores, allowing
+              rapid evaluation of significance of an MSV score and thus
+              facilitating its use as a heuristic filter. I also describe a
+              20-fold acceleration of the standard profile HMM Forward/Backward
+              algorithms using a method I call ``sparse rescaling''. These
+              methods are assembled in a pipeline in which high-scoring MSV
+              hits are passed on for reanalysis with the full HMM
+              Forward/Backward algorithm. This accelerated pipeline is
+              implemented in the freely available HMMER3 software package.
+              Performance benchmarks show that the use of the heuristic MSV
+              filter sacrifices negligible sensitivity compared to
+              unaccelerated profile HMM searches. HMMER3 is substantially more
+              sensitive and 100- to 1000-fold faster than HMMER2. HMMER3 is now
+              about as fast as BLAST for protein searches.",
+  journal  = "PLoS computational biology",
+  volume   =  7,
+  number   =  10,
+  pages    = "e1002195",
+  month    =  oct,
+  year     =  2011,
+  url      = "http://dx.doi.org/10.1371/journal.pcbi.1002195",
+  language = "en"
+}
+
+@ARTICLE{Cimen2020-dm,
+  title   = "Building a {tRNA} thermometer to estimate microbial adaptation to temperature",
+  author  = "Cimen, Emre and Jensen, Sarah E and Buckler, Edward S",
+  journal = "Nucleic Acids Research",
+  year    =  2020,
+  url     = "http://dx.doi.org/10.1093/nar/gkaa1030"
+}
+
+
+@ARTICLE{El-Gebali2019-pw,
+  title    = "The Pfam protein families database in 2019",
+  author   = "El-Gebali, Sara and Mistry, Jaina and Bateman, Alex and Eddy,
+              Sean R and Luciani, Aur{\'e}lien and Potter, Simon C and Qureshi,
+              Matloob and Richardson, Lorna J and Salazar, Gustavo A and Smart,
+              Alfredo and Sonnhammer, Erik L L and Hirsh, Layla and Paladin,
+              Lisanna and Piovesan, Damiano and Tosatto, Silvio C E and Finn,
+              Robert D",
+  abstract = "The last few years have witnessed significant changes in Pfam
+              (https://pfam.xfam.org). The number of families has grown
+              substantially to a total of 17,929 in release 32.0. New additions
+              have been coupled with efforts to improve existing families,
+              including refinement of domain boundaries, their classification
+              into Pfam clans, as well as their functional annotation. We
+              recently began to collaborate with the RepeatsDB resource to
+              improve the definition of tandem repeat families within Pfam. We
+              carried out a significant comparison to the structural
+              classification database, namely the Evolutionary Classification
+              of Protein Domains (ECOD) that led to the creation of 825 new
+              families based on their set of uncharacterized families (EUFs).
+              Furthermore, we also connected Pfam entries to the Sequence
+              Ontology (SO) through mapping of the Pfam type definitions to SO
+              terms. Since Pfam has many community contributors, we recently
+              enabled the linking between authorship of all Pfam entries with
+              the corresponding authors' ORCID identifiers. This effectively
+              permits authors to claim credit for their Pfam curation and link
+              them to their ORCID record.",
+  journal  = "Nucleic acids research",
+  volume   =  47,
+  number   = "D1",
+  pages    = "D427-D432",
+  month    =  jan,
+  year     =  2019,
+  url      = "http://dx.doi.org/10.1093/nar/gky995",
+  language = "en"
+}
+
+
+@MISC{Potter2018-tk,
+  title   = "{HMMER} web server: 2018 update",
+  author  = "Potter, Simon C and Luciani, Aur{\'e}lien and Eddy, Sean R and
+             Park, Youngmi and Lopez, Rodrigo and Finn, Robert D",
+  journal = "Nucleic Acids Research",
+  volume  =  46,
+  number  = "W1",
+  pages   = "W200-W204",
+  year    =  2018,
+  url     = "http://dx.doi.org/10.1093/nar/gky448"
+}
+
+
 @ARTICLE{Petersen2012-ii,
   title       = "{On the hypothesis-free testing of metabolite ratios in
                  genome-wide and metabolome-wide association studies.}",
