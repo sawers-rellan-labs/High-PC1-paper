@@ -6,6 +6,7 @@ output: html_document
 ---
 
 ```{r}
+rm(list = ls())
 library(tidyverse)
 library(data.table)
 library(cowplot)
@@ -29,7 +30,6 @@ library(Hmisc)
 library(pegas)
 ```
 
-fd from palomeros and mushito
 
 ```{r}
 ril_data <- read_csv("data/fig_4/data_RILS_all.csv")

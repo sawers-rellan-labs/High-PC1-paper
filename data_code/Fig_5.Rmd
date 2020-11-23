@@ -39,11 +39,13 @@ names(fd_chr3)[7] <- "fd"
 	
 fd_chr3 %>% 
 	#filter(`Yes-No`=="S") %>%
-	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
+	ggplot(aes(x = start/10e5, xend = end/10e5, y = fd, yend = fd, colour = fd)) +
 	scale_color_viridis() +
 	geom_segment(size = 2) +
 	ylim(0,1) +
-	geom_segment(x = 1000000, xend = 21000000, y = 0, yend = 0, colour = "black")
+  xlab("Chr 3 Mb") +
+	geom_segment(x = 1000000, xend = 21000000, y = 0, yend = 0, colour = "black") +
+  theme_cowplot(14)
 
 fd_chr3 %>% 
 	filter(POS > 750000) %>% 
@@ -53,7 +55,8 @@ fd_chr3 %>%
 	scale_color_viridis() +
 	geom_segment(size = 2) +
 	ylim(0,1) +
-	geom_vline(xintercept = 8542106, colour = "red", linetype="dotted", size = 1)
+	geom_vline(xintercept = 8542106, colour = "red", linetype="dotted", size = 1) +
+  theme_cowplot(14)
 
 
 ```

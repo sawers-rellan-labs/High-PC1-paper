@@ -61,7 +61,7 @@ DA_fig <- DA %>%
   scale_fill_manual(values=c("#9816E9", "#67E916")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
-  theme_cowplot(10) +
+  theme_cowplot(12) +
   ggtitle('Days to Anthesis') +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.title = element_text(size=10)) +
@@ -73,7 +73,7 @@ PH_fig <- PH %>%
   scale_fill_manual(values=c("#9816E9", "#67E916")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
-  theme_cowplot(10) +
+  theme_cowplot(12) +
   ggtitle('Plant Height') +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.title = element_text(size=10)) +
@@ -85,7 +85,7 @@ ASI_fig <- ASI %>%
   scale_fill_manual(values=c("#9816E9", "#67E916")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
-  theme_cowplot(10) +
+  theme_cowplot(12) +
   ggtitle('ASI') +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.title = element_text(size=10)) +
@@ -97,7 +97,7 @@ FW_fig <- FW %>%
   scale_fill_manual(values=c("#9816E9", "#67E916")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
-  theme_cowplot(10) +
+  theme_cowplot(12) +
   ggtitle('Fresh Ear Weight') +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.title = element_text(size=10)) +
@@ -109,7 +109,7 @@ BCW_fig <- BCW %>%
   scale_fill_manual(values=c("#9816E9", "#67E916")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
-  theme_cowplot(10) +
+  theme_cowplot(12) +
   ggtitle('Cob Weight') +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.title = element_text(size=10)) +
@@ -121,7 +121,7 @@ GWH_fig <- FW %>%
   scale_fill_manual(values=c("#9816E9", "#67E916")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
-  theme_cowplot(10) +
+  theme_cowplot(12) +
   ggtitle('Grain Weight/ha') +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.title = element_text(size=10)) +
