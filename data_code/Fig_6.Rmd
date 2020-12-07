@@ -139,5 +139,92 @@ Gplot<-grid.arrange(arrangeGrob(plotG, left = y.grob, bottom = x.grob))
 #ggsave(Gplot,device = 'png',filename = 'EffectsForRuben.png',width=8,height=8,dpi=200)
 
 ```
+PLA Mutant analysis
+```{r}
+pla <- read_csv("data/fig_6/pla_crispr_ft.csv")
+
+pla %>% 
+  filter(genotype == "mut" | genotype == "wt") %>%
+  #filter(DTA < 66) %>%
+  ggplot(aes(x = genotype, y = DTA, color = genotype)) +
+  geom_jitter(position=position_jitter(0.1), size = 1) +
+  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820", "#14ade8")) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme_cowplot() +
+  #facet_grid(cols = vars(Cas9))
+  #theme(legend.position="none") 
+  
+pla_std <- standardize(pla)
+
+pla_dta_neg <- pla_std %>%
+  filter(PLA == "Negative") 
+
+pla_dta_pos <- pla_std %>%
+  filter(PLA == "Positive") 
+
+cohens_d(pla_dta_pos$DTA, pla_dta_neg$DTA)
+hedges_g(pla_dta_pos$DTA, pla_dta_neg$DTA)
+glass_delta(pla_dta_pos$DTA, pla_dta_neg$DTA)
+
+interpret_d(d = 0.308, rules = "gignac2016")
+
+
+
+
+#dabestr analysis
+
+#create ASI variable
+
+pla <- pla %>%
+  mutate(ASI = DTS - DTA)
+
+
+unpaired_DTS <- pla %>%
+  filter(genotype == "mut" | genotype == "wt") %>%
+  filter(!is.na(DTS)) %>%
+  dabest(genotype, DTS,
+         idx = list(c("wt", "mut")),
+         paired = FALSE) %>%
+  mean_diff()
+
+effect_size_dts <- plot(unpaired_DTS, axes.title.fontsize = 14,
+     palette = c(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")),
+     rawplot.ylabel = "",
+     effsize.ylabel = "",
+     rawplot.markersize = 2)
+
+unpaired_DTA <- pla %>%
+  filter(genotype == "mut" | genotype == "wt") %>%
+  filter(!is.na(DTA)) %>%
+  dabest(genotype, DTA,
+         idx = list(c("wt", "mut")),
+         paired = FALSE) %>%
+  mean_diff()
+
+effect_size_dta <- plot(unpaired_DTA, axes.title.fontsize = 14,
+     palette = c(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")),
+     rawplot.ylabel = "",
+     effsize.ylabel = "",
+     rawplot.markersize = 2)
+
+unpaired_ASI <- pla %>%
+  filter(genotype == "mut" | genotype == "wt") %>%
+  filter(!is.na(ASI)) %>%
+  dabest(genotype, ASI,
+         idx = list(c("wt", "mut")),
+         paired = FALSE) %>%
+  mean_diff()
+
+effect_size_ASI <- plot(unpaired_ASI, axes.title.fontsize = 14,
+     palette = c(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")),
+     rawplot.ylabel = "",
+     effsize.ylabel = "",
+     rawplot.markersize = 1,
+     rawplot.groupwidth = 0.2)
+    
+ plot_grid(effect_size_dts, effect_size_dta, effect_size_ASI, ncol = 3)    
+     
+```
+```
 
 
