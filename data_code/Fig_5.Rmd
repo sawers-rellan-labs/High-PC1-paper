@@ -207,3 +207,663 @@ dev.off()
 
 ```
 
+## PLA1.2 282 exprresion vs Flowering time
+
+```{r}
+library(dplyr)
+library(tibble)
+library(ggplot2)
+library(tidyselect)
+library(ggpubr)
+library(ape)
+library(phytools)
+
+data_dir <- "../data/fig_5"
+
+# Make phenotype table #########################################################
+# Summer - winter data Hung et al 2012
+
+# https://datacommons.cyverse.org/browse/iplant/home/shared/panzea/phenotypes/Hung_etal_2012_PNAS_data-120523.zip
+gddtf <- read.csv("Dataset_S2.Photoperiod_paper_data_supplement_line_BLUPs.csv") %>%
+  dplyr::filter(pop==27) %>%
+  dplyr::select( Taxa = geno_code, gdd_anth_long, gdd_anth_short,gdd_anth_photo_resp
+                 , gdd_silk_long, gdd_silk_short, gdd_silk_photo_resp)
+
+tissue_file <- list.files(pattern = "TASSEL.*Dups.txt") # This dataset is huge add to .gitignorre
+tissue <-  gsub(".*and_Altnames_","",tissue_file)
+tissue <-  gsub("_.*","",tissue)
+names(tissue_file) <- tissue
+tissue  <- c(tissue[c(1,2,4,5,3)], NA,tissue[c(6,7)])
+
+
+RNA <-read.table(file=tissue_file["GShoot"], skip =2, header = TRUE)
+RNA$Taxa <- gsub("282set_","",RNA$Taxa)
+
+DTF_RNA <- gddtf %>%
+  dplyr::inner_join(RNA) %>%
+  dplyr::select(Taxa, gdd_anth_long, gdd_anth_short, gdd_anth_photo_resp, gdd_silk_long, gdd_silk_short, gdd_silk_photo_resp,everything())
+
+colnames(DTF_RNA) <- gsub("gdd_","",colnames(DTF_RNA))
+
+# hapmap data from Panzea AGPv3 282 set genotypes for GRMZM2G353444 cds
+
+hmp <- file.path(data_dir,'GRMZM2G353444_AGPV3_282.hapmap.hmp.txt')
+
+tree <- read.tree("282_til_pt_german.aln tree.newick")
+class(tree)
+
+tree$tip.label
+quartz()
+plotTree(tree)
+nodelabels()
+
+PT_lineage <- extract.clade(tree, 317)
+B73_lineage <- extract.clade(tree, 336)
+PT_lineage$tip.label
+
+quartz()
+plotTree(B73_lineage)
+
+quartz()
+plotTree(PT_lineage)
+
+gt <- read.table(hmp, skip =1)
+
+con <- file(hmp)
+first_line <- readLines(con,n=1)
+close(con)
+
+h <- strsplit(first_line,"\t") %>% unlist
+
+h <- gsub("#|282set_","", h) 
+h %>%  length()
+colnames(gt)  <- h 
+
+pla12_lpcat <- DTF_RNA %>%
+  dplyr::select(Taxa, anth_long, anth_short,
+                anth_photo_resp, silk_long, 
+                silk_short, silk_photo_resp,GRMZM2G353444,GRMZM2G481755)
+gtm <- gt %>% 
+  dplyr::filter(grepl("/",alleles) ) %>%
+  dplyr::select(-(alleles:QCcode)) %>% t()
+colnames( gtm) <- paste0("S",gtm[1,])
+gtm <- gtm[-1,]
+gtm <-  cbind(rownames(gtm),gtm)
+colnames(gtm)[1] <- "Taxa"
+as.data.frame(gtm)
+
+# adding lineage inforrmation
+clade_RNA_FT <- as.data.frame(gtm) %>% left_join(pla12_lpcat)
+
+clade_RNA_FT$lineage <- NULL
+clade_RNA_FT$lineage[clade_RNA_FT$Taxa %in% PT_lineage$tip.label] <- "PT"
+clade_RNA_FT$lineage[clade_RNA_FT$Taxa %in% B73_lineage$tip.label] <- "B73"
+
+#------------------------------------------------------------------
+
+toplot <- clade_RNA_FT %>%
+  dplyr::filter(!is.na(lineage)) 
+
+p1 <- toplot  %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_long)
+  ) +
+  xlab("ZmPLA1.2") +
+  ylab("Long Days DTA (gdd)") +
+  labs(color = "Lineage") + 
+  ggplot2::geom_point(aes( group = lineage,
+                           color = lineage))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor(label.sep = "\n",label.x.npc = 0.75,label.y.npc = 0.1)  +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+  ggpubr::theme_pubr(legend = "none") 
+
+
+# Marginal densities along x axis
+
+xdens <- ggboxplot(toplot, "lineage", "GRMZM2G353444",
+                   color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens  <- ggboxplot(toplot, "lineage", "anth_long",
+                    color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5) 
+
+p12 <- cowplot::insert_xaxis_grob(p1, xdens, grid::unit(.2, "null"), position = "top")
+p13 <- cowplot::insert_yaxis_grob(p12, ydens, grid::unit(.2, "null"), position = "right")
+
+p2 <- toplot  %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_short)
+  ) +
+  xlab("ZmPLA1.2") +
+  ylab("Short Days DTA (gdd)") +
+  ggplot2::geom_point(aes( group = lineage,
+                           color = lineage))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor(label.sep = "\n",label.x.npc = 0.75,label.y.npc = 0.1)  +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+  ggpubr::theme_pubr(legend="none") 
+
+# Marginal densities along x axis
+xdens <- ggboxplot(toplot, "lineage", "GRMZM2G353444",
+                   color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+ydens  <- ggboxplot(toplot, "lineage", "anth_short",
+                    color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5)
+
+p22 <- cowplot::insert_xaxis_grob(p2, xdens, grid::unit(.2, "null"), position = "top")
+
+p23 <- cowplot::insert_yaxis_grob(p22, ydens, grid::unit(.2, "null"), position = "right")
+
+
+quartz(height= 1.5*4.72, width =1.5*2.3)
+ggpubr::ggarrange(cowplot::ggdraw(p13),cowplot::ggdraw(p23),
+                  ncol = 1,
+                  common.legend = TRUE,
+                  align = "hv")
+
+#------------------------------------------------------------------
+toplot <- clade_RNA_FT %>%
+  dplyr::filter(!is.na(S3_8543470)) %>%
+  dplyr::filter(!S3_8543470 == "N") 
+
+p1 <- toplot  %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_long)
+  ) +
+  xlab("ZmPLA1.2") +
+  ylab("Long Days DTA (gdd)") +
+  ggplot2::geom_point(aes( group = S3_8543470,
+                           color = S3_8543470))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor()  +
+ scale_color_manual(values = c("#1260ad", "#df1b23","#68ac57")) +
+  ggpubr::theme_pubr(legend = "none") 
+
+
+# Marginal densities along x axis
+
+xdens <- ggboxplot(toplot, "S3_8543470", "GRMZM2G353444",
+                   color = "S3_8543470",  palette = c("#df1b23","#1260ad","#68ac57"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens  <- ggboxplot(toplot, "S3_8543470", "anth_long",
+                    color = "S3_8543470",  palette = c("#df1b23","#1260ad", "#68ac57"), alpha = 0.5) 
+
+p12 <- cowplot::insert_xaxis_grob(p1, xdens, grid::unit(.2, "null"), position = "top")
+p13 <- cowplot::insert_yaxis_grob(p12, ydens, grid::unit(.2, "null"), position = "right")
+
+p2 <- toplot %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_short)
+  ) +
+  ggplot2::xlab("ZmPLA1.2") +
+  ggplot2::ylab("Short Days DTA (gdd)") +
+  ggplot2::labs(color = "S3_8543470") + 
+  ggplot2::geom_point(aes( group = S3_8543470,
+                           color = S3_8543470))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor() +
+  scale_color_manual(values = c("#1260ad", "#df1b23","#68ac57")) +
+  ggpubr::theme_pubr(legend = "none") 
+
+# Marginal densities along x axis
+xdens <- ggboxplot(toplot, "S3_8543470", "GRMZM2G353444",
+                   color = "S3_8543470",  palette = c("#df1b23","#1260ad", "#68ac57"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+ydens  <- ggboxplot(toplot, "S3_8543470", "anth_short",
+                    color = "S3_8543470",  palette = c("#df1b23","#1260ad", "#68ac57"), alpha = 0.5)
+
+p22 <- cowplot::insert_xaxis_grob(p2, xdens, grid::unit(.2, "null"), position = "top")
+
+p23 <- cowplot::insert_yaxis_grob(p22, ydens, grid::unit(.2, "null"), position = "right")
+
+
+ggpubr::ggarrange(cowplot::ggdraw(p13),cowplot::ggdraw(p23),
+                  legend ="none",
+                  nrow = 2,
+                  common.legend = TRUE,
+                  widths = c(1, 1.4))
+
+```
+
+
+## Aminoacid mutation effect on bacterial OGT.
+
+```{r}
+
+```
+#!/usr/bin/env Rscript
+#############################################
+## Use the kmeans clustering output file 
+## to run GWAS on the phospholipase C domain,
+## PF01764.
+#############################################
+
+################################ Libraries ################################
+# To use the temp_prot conda R environment, rather than local environment:
+# From: https://github.com/conda-forge/r-base-feedstock/issues/37
+# Comment out lines 12-18 to prioritize your local R environment instead of the conda environment.
+prioritize_conda <- function(lib_tree){
+  cpath <-  grep('conda', lib_tree, value=TRUE, ignore.case=TRUE)
+  ifelse(length(cpath) == 0, return(lib_tree), return(rev(c(lib_tree, cpath))))
+}
+
+new_tree <- prioritize_conda(lib_tree=.libPaths())
+.libPaths(new_tree)
+
+library(MASS)
+library(tictoc)
+library(rio)
+library(dplyr)
+library(ggplot2)
+################################ Functions ################################
+
+subset_domain <- function(hydrophobicity_input, 
+                          hydrophilicity_input, 
+                          hbond_input,
+                          scv_input,
+                          polarity_input,
+                          polarizability_input,
+                          sasa_input,
+                          scni_input,
+                          mass_input,
+                          allowed_gap_proportion, 
+                          required_domain_proportion) 
+{
+  # Subsets domain datasets into a subset of the original positions based on input filtering conditions
+  # Requires three PC inputs and gap proportion and domain presence proportion values ]
+  #     allowed_gap_proportion = number of sequences that can have a gap at the given position for the position to be kept
+  #     required_domain_proportion = minimum proportion of the sequence length that must be amino acids (to remove unusually short sequences)
+  #     condition = optional parameter that will subset the input dataset based on some function 
+  # Writes three filtered alignments to the global enviornment, named "PC1_filtered_all", "PC2_filtered_all", and "PC3_filtered_all"
+  # Also removes any invariant columns from alignment
+  
+  info_cols <- hydrophobicity_input[, 1:4]
+  domain_cols <- hydrophobicity_input[, 6:ncol(hydrophobicity_input)]
+  
+  kept_cols_df <- domain_cols[, which(apply(domain_cols, 2, function(x) {
+    length(which(is.na(x)))/length(x) <= allowed_gap_proportion}))]
+  
+  kept_rows_df <- kept_cols_df[which(apply(domain_cols, 1, function(x) {
+    length(which(is.na(x)))/length(x) <= required_domain_proportion})), ]
+  kept_rows_list <- which(apply(domain_cols, 1, function(x) {
+    length(which(is.na(x)))/length(x) <= required_domain_proportion}))
+  
+  kept_rows_df[is.na(kept_rows_df)] <- 0
+  not_invariant <- which(apply(kept_rows_df, 2, var) != 0)
+  
+  for (PC_input_type in list("hydrophobicity_input", "hydrophilicity_input", "hbond_input", "scv_input", "polarity_input", "polarizability_input", "sasa_input", "scni_input", "mass_input")) {
+    df <- get(PC_input_type)
+    
+    info <- df[kept_rows_list, 1:4]
+    domain_dat <- df[, 6:ncol(df)]
+    
+    filtered_df <- domain_dat[kept_rows_list, not_invariant]
+    filtered_df[is.na(filtered_df)] <- 0
+    
+    filtered_df_full <- data.frame(cbind(info, filtered_df), stringsAsFactors = F)
+    assign(paste0(strsplit(PC_input_type, '_')[[1]][1], "_filtered"), filtered_df_full, .GlobalEnv)
+  }
+}
+
+rand_index <- function (group1, group2) {
+  # Rand index function copied from fossil package, which can't be loaded in conda environment
+  x <- abs(sapply(group1, function(x) x - group1))
+  x[x > 1] <- 1
+  y <- abs(sapply(group2, function(x) x - group2))
+  y[y > 1] <- 1
+  sg <- sum(abs(x - y))/2
+  bc <- choose(dim(x)[1], 2)
+  ri <- 1 - sg/bc
+  return(ri)
+}
+
+select_best_k <- function(filtered_domain_seq) {
+  # Determine optimal k clusters for domain, assign each observation to a cluster
+  k_list = c(2:12) 
+  k_stability = NULL
+  clusterset <- list()
+  for (k_clusters in k_list) {
+    print(k_clusters)
+    set.seed(1)
+    clusterset[[1]] <- kmeans(domain_sequence, k_clusters)
+    
+    for (seed_val in 2:10) {
+      set.seed(seed_val)
+      clusterset[[seed_val]] <- kmeans(domain_sequence, k_clusters)
+      rand <- rand_index(clusterset[[1]][["cluster"]], clusterset[[seed_val]][["cluster"]])
+      comparison <- data.frame(k_Clusters=k_clusters,
+                               Seed=seed_val,
+                               RandIndex=rand)
+      k_stability <- rbind(k_stability, comparison)
+    }
+  }
+  
+  # Summarize stats in k_stability table, select smallest k with max mean rand index, 
+  k_stability_means <- k_stability %>% group_by(k_Clusters) %>% summarize(RandIndexMeans = mean(RandIndex))
+  
+  # Find maximum mean rand index, then look for others within ~0.1 of the max but with smaller number of clusters
+  # The best k is the smallest clustering value that produces stable results
+  max_rand <- unique(k_stability_means[k_stability_means$RandIndexMeans == max(k_stability_means$RandIndexMeans), 2])
+  for (i in nrow(k_stability_means):1) {
+    if (max_rand - 0.01 < k_stability_means[i, 2]) {
+      selected_k <- i + 1
+    }
+  }
+  return(selected_k)
+}
+
+calc_domain_pcs <- function(combined_domain_subset, OGT_data, n_returned_pcs) {
+  domain_pca <- prcomp(combined_domain_subset, center = FALSE, scale. = FALSE)
+  domain_pcs <- as.data.frame(domain_pca$x)
+  domain_pcs_info <- cbind(OGT_data, domain_pcs[, 1:n_returned_pcs])
+  
+  eigs <- domain_pca$sdev^2
+  print("Cumulative variance explained:")
+  print(cumsum(eigs[1:n_returned_pcs])/sum(eigs))
+  var_exp <- cumsum(eigs[1:n_returned_pcs])/sum(eigs)
+  
+  return(list(PCinfo=domain_pcs_info, PCvariance=var_exp))
+}
+
+calc_log_likelihood = function(Y=Y, hydrophobicity=NULL, hydrophilicity=NULL, hbond=NULL, scv=NULL, polarity=NULL, 
+                               polarizability=NULL, sasa=NULL, scni=NULL, mass=NULL, PCs=NULL) {
+  # Function to calculate the log likelihood of a given linear model
+  n_samples = length(Y)
+  if (is.null(hydrophobicity)) {
+    x = as.matrix(cbind(matrix(1, nrow = n_samples, ncol = 1), PCs))
+  } else {
+    x = as.matrix(cbind(matrix(1, nrow = n_samples, ncol = 1), hydrophobicity, hydrophilicity, hbond, scv, polarity, polarizability, sasa, scni, mass, PCs))
+  }
+  y = as.matrix(Y)
+  
+  MLE = (ginv(t(x) %*% x)) %*% (t(x) %*% y)
+  yhat = x %*% MLE # calculate predicted y values
+  var_hat <- sum((y - yhat)^2)/(n_samples - 1) # calculate the variance estimate
+  
+  log_likelihood <- -((n_samples/2)*log(2*pi*var_hat)) - ((1/(2*var_hat))*sum((y-(yhat))^2)) # calculate the log likelihood
+  # log likelihood code verified at: http://web.pdx.edu/~joel8/resources/ConceptualPresentationResources/MLE_examples_final1.pdf
+  return(list(MLE_values=MLE, Likelihood=log_likelihood))
+}
+
+
+calc_LRT_pvals <- function(log_likelihood_null, log_likelihood_alt, df) {
+  # Function that compares two possible models and returns the pvalues for a likelihood ratio test between the two
+  # the degree of freedom for this test will be the difference in the number of parameters between the null and alternative
+  LRT <- 2*log_likelihood_alt - 2*log_likelihood_null #likelihood ratio test statistic
+  pval <- pchisq(LRT, df, lower.tail = F) # calculate chi-square p-value
+  return(pval)
+}
+
+run_gwas_AAchemistry <- function(Y, hydrophobicity, hydrophilicity, hbond, scv, polarity, polarizability, sasa, scni, mass, PCs=NULL) {
+  # Y = B0 + X1B1 + X2B2 + X3B3 + PCs + e, 
+  # where X1,2,3 are columns from the recoded alignment matrices and PCs are from kmer distance matrix
+  logl_alt <- NULL
+  pvalues <- NULL
+  col_names <- NULL
+  allMLE_values <- NULL
+  for(j in 1:dim(hydrophobicity)[2]){
+    logl_alt_col <- calc_log_likelihood(Y=Y, hydrophobicity=hydrophobicity[,j], hydrophilicity=hydrophilicity[,j], 
+                                        hbond=hbond[,j], scv=scv[,j], polarity=polarity[,j], polarizability=polarizability[,j], 
+                                        sasa=sasa[,j], scni=scni[,j], mass=mass[,j], PCs=PCs)
+    
+    MLE_values <- data.frame(t(logl_alt_col$MLE_values))
+    colnames(MLE_values) <- c("Intercept", "Hydrophobicity", "Hydrophilicity", "Hbond", "SCV", "Polarity", 
+                              "Polarizability", "SASA", "SCNI", "Mass", "PC1", "PC2")
+    MLE_values$ColNumber <- as.character(j)
+    allMLE_values <- data.frame(rbind(allMLE_values, MLE_values))
+    
+    logl_alt_col_val <- as.numeric(logl_alt_col$Likelihood)
+    logl_alt <- cbind(logl_alt, logl_alt_col_val)
+    
+    logl_null <- calc_log_likelihood(Y=Y, hydrophobicity=NULL, hydrophilicity=NULL, hbond=NULL, scv=NULL, polarity=NULL, polarizability=NULL, sasa=NULL, scni=NULL, mass=NULL, PCs=PCs)
+    logl_null_val <- as.numeric(logl_null$Likelihood)
+    
+    pval_col <- calc_LRT_pvals(logl_null_val, logl_alt_col_val, df=9)
+    pvalues <- cbind(pvalues, pval_col)
+    col_names <- cbind(col_names, colnames(hydrophobicity[j]))
+  }
+  
+  pval <- as.data.frame(t(pvalues))
+  pval$log10p = -log10(pval[,1])
+  pval$position = c(1:nrow(pval))
+  pval$col_names = as.character(t(col_names))
+  colnames(pval) = c("pvalues", "log10p", "Position", "OriginalAlignmentCol")
+  
+  return(list(pvalues=pval, MLEvalues=allMLE_values))
+}
+
+
+################################ Run full model ################################
+setwd('../data/recoded_domain_files/')
+seed_list <- c(1)
+MLE_all <- NULL
+Pvalues_all <- NULL
+PC_variances <- NULL
+
+domain = "PF01764"
+print(domain)
+
+tic("Reading domain file for each amino acid feature")
+# Reads in the pfam amino acid chemistry domain. Will throw error if the working directory doesn't contain correct files
+aa_features <- c('hydrophobicity', 'hydrophilicity', 'hbond', 'scv', 'polarity', 'polarizability', 'sasa', 'scni', 'mass')
+
+for (feature in aa_features) {
+  infile <- import(paste0(domain, '_hmmalign_', feature, '_aln.csv'), na.strings = '+', stringsAsFactors = F, header = F)
+  has_ogt <- infile[!is.na(infile$V3), ]
+  assign(paste0(feature, '_complete'), has_ogt, .GlobalEnv)
+  rm(has_ogt)
+  rm(infile)
+}
+toc()
+
+
+tic("Subset chemistry-recoded domain")
+# Filters domain alignment to remove columns and rows that are mostly gap characters
+subset_domain(hydrophobicity_input=hydrophobicity_complete,
+              hydrophilicity_input=hydrophilicity_complete,
+              hbond_input=hbond_complete,
+              scv_input=scv_complete,
+              polarity_input=polarity_complete,
+              polarizability_input=polarizability_complete,
+              sasa_input=sasa_complete,
+              scni_input=scni_complete,
+              mass_input=mass_complete,
+              allowed_gap_proportion=0.4,
+              required_domain_proportion=0.95)
+toc()
+
+
+tic("Choosing best k and assigning clusters")
+# Cluster domain into k groups, 1 < k <= 12, that reflect domain sequence similarity
+# Use Rand Index comparison to select the optimal number of clusters and group domain
+domain_sequence <- cbind(hydrophobicity_filtered[, 5:ncol(hydrophobicity_filtered)],
+                            hydrophilicity_filtered[, 5:ncol(hydrophilicity_filtered)],
+                            hbond_filtered[, 5:ncol(hbond_filtered)],
+                            scv_filtered[, 5:ncol(scv_filtered)],
+                            polarity_filtered[, 5:ncol(polarity_filtered)],
+                            polarizability_filtered[, 5:ncol(polarizability_filtered)],
+                            sasa_filtered[, 5:ncol(sasa_filtered)],
+                            scni_filtered[, 5:ncol(scni_filtered)],
+                            mass_filtered[, 5:ncol(mass_filtered)])
+
+selected_k <- select_best_k(filtered_domain_seq=domain_sequence)
+
+set.seed(1)
+cluster_set <- kmeans(domain_sequence, selected_k, iter.max = 100, nstart = 100)
+domain_sequence <- cbind(hydrophobicity_filtered[,c(1:4)], domain_sequence)
+domain_sequence$AssignedCluster <- data.frame(cluster_set$cluster)
+for (feature in aa_features) {
+  feature_filt <- get(paste0(feature, '_filtered'))
+  feature_filt$AssignedCluster <- data.frame(cluster_set$cluster)
+  assign(paste0(feature, '_filtered'), as.data.frame(feature_filt), .GlobalEnv)
+  rm(list = paste0(feature, "_complete"))
+}
+toc()
+
+tic("Running GWAS for each cluster")
+# Calculate PCs on the sequence of each cluster to account for population structure
+# Use these PCs and the filtered amino acid chemistry files to associate sites with OGT
+for (i in 1:selected_k) {
+  # Subset to the correct cluster
+  domain_cluster <- domain_sequence[domain_sequence$AssignedCluster == i, 5:(ncol(domain_sequence)-1)]
+  
+  # Calculate PCs
+  pc_results <- calc_domain_pcs(combined_domain_subset = domain_cluster,
+                                OGT_data = domain_cluster[,1:4],
+                                n_returned_pcs = 2)
+  domain_PCs <- pc_results$PCinfo
+  
+  variances <- data.frame(Domain=domain,
+                          ClusterID=i,
+                          PC1CumVarExp=pc_results$PCvariance[[1]],
+                          PC2CumVarExp=pc_results$PCvariance[[2]])
+  PC_variances <- data.frame(rbind(PC_variances, variances), stringsAsFactors = F)
+  
+  n_obs <- length(which(hydrophobicity_filtered$AssignedCluster == i)) # There will be the same n for all chemical property files
+
+  for (feature in aa_features) {
+    feature_filt <- get(paste0(feature, '_filtered'))
+    feature_df <- feature_filt[feature_filt$AssignedCluster == i, ]
+    assign(feature, as.data.frame(feature_df), .GlobalEnv)
+  }
+  
+  # Run GWAS
+  gwas_results <- run_gwas_AAchemistry(Y = hydrophobicity[, 3],
+                                        hydrophobicity = hydrophobicity[, 5:(ncol(hydrophobicity)-1)],
+                                        hydrophilicity = hydrophilicity[, 5:(ncol(hydrophilicity)-1)],
+                                        hbond = hbond[, 5:(ncol(hbond)-1)],
+                                        scv =  scv[, 5:(ncol(scv)-1)],
+                                        polarity = polarity[, 5:(ncol(polarity)-1)],
+                                        polarizability = polarizability[, 5:(ncol(polarizability)-1)],
+                                        sasa = sasa[, 5:(ncol(sasa)-1)],
+                                        scni = scni[, 5:(ncol(scni)-1)],
+                                        mass = mass[, 5:(ncol(mass)-1)],
+                                        PCs = domain_PCs[, 5:ncol(domain_PCs)])
+  
+  gwas_pvalues_i <- data.frame(gwas_results$pvalues)
+  gwas_pvalues_i$Domain <- domain
+  gwas_pvalues_i$ClusterID <- i
+  
+  gwas_mle_i <- data.frame(gwas_results$MLEvalues)
+  gwas_mle_i$Domain <- domain
+  gwas_mle_i$ClusterID <- i
+  
+  # Append results to data frame
+  MLE_all <- data.frame(rbind(MLE_all, gwas_mle_i), stringsAsFactors = F)
+  Pvalues_all <- data.frame(rbind(Pvalues_all, gwas_pvalues_i), stringsAsFactors = F)
+  toc()
+} 
+
+tic('Calculating sites that pass FDR threshold')
+# Determine significant sites using 10% FDR significance threshold 
+fdr10_significance = NULL
+domain_clusters <- unique(Pvalues_all[Pvalues_all$Domain == domain, "ClusterID"])
+
+for (cluster in domain_clusters) {
+  pval_results <- Pvalues_all[Pvalues_all$Domain == domain & Pvalues_all$ClusterID == cluster, ]
+  
+  pval_results$rank <- rank(pval_results$pvalues)
+  pval_results$corr_p <- 0.1*(pval_results$rank/nrow(pval_results))
+  n_sigFDR <- length(which(pval_results$pvalues < pval_results$corr_p))
+  sigFDR <- which(pval_results$pvalues < pval_results$corr_p)
+  
+  site_significance = data.frame(Domain=domain,
+                                 ClusterID=cluster,
+                                 n_sig=n_sigFDR,
+                                 n_totalSites=nrow(pval_results))
+  
+  fdr10_significance <- data.frame(rbind(fdr10_significance, site_significance), stringsAsFactors = F) 
+}
+toc()
+
+
+################################ Plot results ################################
+# Only cluster 2 has significant sites associated with OGT. Subset to domain observations in this group.
+sig_sites_grp2 <- Pvalues_all[Pvalues_all$ClusterID == 2, ]
+sig_sites_grp2 <- sig_sites_grp2[sigFDR, ]
+
+# The nonsynonymous site in B73/PT is position 55 in the alignment (position 60 in  alignment file w/ info columns)
+cluster_assignments <- hydrophilicity_filtered[, c('V2', 'AssignedCluster')]
+colnames(cluster_assignments) <- c("ProteinInfo", 'AssignedCluster')
+
+original_seq <- import(paste0(domain, '_hmmalign_originalSeq_aln.csv'), na.strings = '+', stringsAsFactors = F, header = F)
+zm_change <- original_seq[, c('V1', 'V2', 'V3', 'V4', 'V5', 'V60')]
+colnames(zm_change) <- c("Species", 'ProteinInfo', 'OGT', 'PhyloDomain', 'Seq', 'Pos60')
+
+zm_change_grp <- zm_change %>%
+  dplyr::inner_join(cluster_assignments, 
+                    by = c("ProteinInfo" = "ProteinInfo")) %>%
+  dplyr::filter(AssignedCluster == 2  & !is.na(Pos60)) %>%
+  dplyr::mutate(Pos60 = forcats::fct_reorder(Pos60, OGT,.fun = mean)) %>%
+  dplyr::arrange(OGT)
+
+
+pal <- rep("grey75", length(levels(zm_change_grp$Pos60)))
+names(pal) <- levels(zm_change_grp$Pos60)
+pal["I"] <- "#df1b23"
+pal["V"] <- "#1260ad"
+
+quartz(width=2*3.28, height=2*2.24)
+
+zm_change_grp %>% 
+  ggplot(aes( x = Pos60, 
+              y = OGT, 
+              color = Pos60)) +
+  ggplot2::geom_jitter(position=position_jitter(0.2)) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), col ="black") +
+  #ylim(NA,50)+
+  ylab("Bacterial OGT") +
+    xlab("Amino Acid") +
+  ggplot2::scale_color_manual(values=pal)+
+  ggpubr::theme_pubr(legend ="none", base_size=15)
+table(zm_change_grp$Pos60[zm_change_grp$Pos60 %in% c("V","I")])
+
+zm_change_grp %>% 
+  dplyr::group_by(Pos60) %>%
+  dplyr::summarise(sd = sd(OGT,na.rm = TRUE), 
+                   CV = 100*sd(OGT, na.rm = TRUE)/mean(OGT,na.rm =TRUE))
+
+# Plot all amino acids at the site vs. OGT
+all_aa_plt <- ggplot(zm_change_grp, aes(x = Pos60, y = OGT, fill = Pos60)) +
+  geom_boxplot() +
+  theme_bw(base_size = 14) +
+  xlab("Amino Acid") +
+  ylab('Bacteria OGT') +
+  theme(legend.title = element_blank()) 
+
+# Analysis of observations with only I or V at that site
+# t-test of I and V amino acids
+iv_aa <- zm_change_grp[!is.na(zm_change_grp$Pos60) & !is.na(zm_change_grp$OGT), ]
+iv_aa <- iv_aa[iv_aa$Pos60 == 'I' | iv_aa$Pos60 == 'V', ]
+bartlett.test(OGT ~ Pos60, data = iv_aa) # Fails test of homogeneity of variances - needs to use Welch's t-test
+t.test(OGT ~ Pos60, data = iv_aa, alternative = "two.sided", var.equal = FALSE)
+
+iv_aa_plt <- ggplot(iv_aa, aes(x = Pos60, y = OGT, fill = Pos60)) +
+  geom_boxplot() +
+  theme_bw(base_size = 14) +
+  xlab("Amino Acid") +
+  ylab('Bacteria OGT') +
+  theme(legend.title = element_blank())
+quartz()
+pdf('../../figures/OGTplt_IV.pdf', )
+iv_aa_plt
+dev.off()
+
+pdf('../../figures/OGTplt_allAA.pdf', )
+all_aa_plt
+dev.off()
+```

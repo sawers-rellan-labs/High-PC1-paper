@@ -4,659 +4,626 @@ output: html_document
 editor_options:
   chunk_output_type: inline
 ---
-```{r}
-rm(list = ls())
-library(tidyverse)
-library(data.table)
-library(cowplot)
-library(wesanderson)
-library(ggplot2)
-library(MASS)
-library(qtl)
-library(lme4)
-library(arm)
-library(lsmeans)
-library(pbkrtest)
-library(cowplot)
-library(viridis)
-library(qtlcharts)
-library(readr)
-library(ggfortify)
-library(ggmap)
-library(maps)
-library(qtlcharts)
-library(Hmisc)
-library(dabestr)
-```
 
+# Annotated LOD profile
 
 ```{r}
-
-data <- read.csv("data/fig_3/metepec_lipids.csv")
-
-#estimate breeding values
-
-traits <- colnames(data)
-#traits 72 to 140 hold LIPID values
-
-for (i in 3:57) {
-#fit mixed model taking into account the three replicate blocks in each of the fields
-mix = lmer(data[,i] ~ MUM_GEN + (1|BLOCK_FIELD),data=data, na.action=na.exclude)
-#sjp.lmer(mix, type="re") #plots the random effects as deviations from the main effect
-#Extract Breeding Values
-bv <- lsmeans(mix, specs = ~ MUM_GEN)
-bv <- summary(bv)
-bv=bv[,1:2]
-bv[,2]=round(bv[,2])
-colnames(bv)[1]="RIL"
-colnames(bv)[2]=traits[i]
-
-}
-
-#calculate average values per RIL
-
-data_avg <- data %>%
-  group_by(data$RILS) %>%
-  summarise_at(vars(-RILS), funs(mean(., na.rm=TRUE)))
-
-write_csv(data_avg,"data/fig_3/data_avg.csv")
-#read cross object
-
-
-cross <- read.cross(format="csv",file="data/fig_3/cross_object_metepec.csv", genotypes=c("AA","AB","BB"), alleles=c("B73","PT"), crosstype = "riself")
-
-summary(cross)
-plotMap(cross)
-head(cross$pheno)
-
-data_cross <- read_csv("data/fig_3/cross_object_metepec.csv")
-
-data_cross <- data_cross[3:54,]
-
-geno.image(cross)
-
-
-```
-
-
-
-```{r}
-cross <- calc.genoprob(cross, step=1)
-
-#We now perform single QTL analysis for each trait using Haley-Knott regression
-
-#LPCs QTL
-
-for (i in 3:12){
-trait=colnames(cross$pheno)[i]
-out.hk <- scanone(cross,pheno.col=i,method="hk")
-plot(out.hk, col=c("black"), lwd = 0.7, main=trait) #all plots on same scale
-#Estimate LOD cut-off using permutation; add 5% cut off to plots
-perm <- scanone(cross, pheno.col=i, n.perm=1000, method="hk")
-cut.off <- summary(perm, alpha=0.05)[1]
-abline(h=cut.off,col="red",lty=2) #5% cut off for hk
-}
-
-#find markers
-
-
-lpc_markerchr3 <- bayesint(out.hk, 3, 0.95, expandtomarkers=TRUE)
-lpc_markerchr7 <- bayesint(out.hk, 2, 0.95, expandtomarkers=TRUE)
-
-find.marker(cross, chr=2, pos= 7)
-find.marker(cross, chr=7, pos= 124)
-
-#plot QTLs
-
-out.hk %>%
-  filter(chr == 4) %>%
-  ggplot(aes(x = pos, y = lod)) +
-  geom_line(aes(color = "blue")) +
-  geom_hline(yintercept = cut.off,col="red",lty=2)  +
-  ylim(0, 15) +
-  geom_rug(sides="b")
-
-#Effect plots
-
-effect_plot_lpc_chr3 <- data_cross %>%
-  #filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = LPCs/10E6, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot() +
-  ylab("LPCs") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qLPCs3@8.5") +
-  theme(legend.position = "none")
-
-
-effect_plot_lpc_chr7 <- data_cross %>%
-  #filter(S7_161685599 != "NA") %>%
-  ggplot(aes(x = S7_161685599, y = LPCs/10E6, colour = S7_161685599)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot() +
-  ylab("LPCs") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qLPCs7@162") +
-  theme(legend.position = "none")
-
-
-#epistasis plots LPCs
-
-epistasis_chr3_B73_LPCs <- data_cross %>%
-  filter(S3_8542287 == "AA" & S7_161685599 == "AA" | S7_161685599 == "BB") %>%
-  ggplot(aes(x = S7_161685599, y =  LPCs/10E6, colour = S7_161685599)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot() +
-  ylab("LPCs") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("3@8.54Mb_B73") +
-  theme(legend.position = "none")
-
-epistasis_chr3_PT_LPCs <- data_cross %>%
-  filter(S3_8542287 == "BB" & S7_161685599 == "AA" | S7_161685599 == "BB") %>%
-  ggplot(aes(x = S7_161685599, y =  LPCs/10E6, colour = S7_161685599)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot() +
-  ylab("LPCs") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("3@8.54Mb_PT") +
-  theme(legend.position = "none")
-
-
-#Effect Plots PCs
-
-PCs <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PCs/10E6, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PCs") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPCs3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-PCs_LPCs <- data_cross %>%
-  #filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PCs_LPCs, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot() +
-  ylab("PCs/LPCs") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPCs/LPCs3@8.5") +
-  theme(legend.position = "none")
-
-A1 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC32_1.LPC_18_1, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC32:1/LPC18:1") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC32:1/LPC18:1-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-
-A2 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC34_1.LPC_18_1, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:1/LPC18:1") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:1/LPC18:1-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-A3 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC36_1.LPC_18_1, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC36:1/LPC18:1") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC36:1/LPC18:1-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-A4 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC36_2.LPC_18_1, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC36:1/LPC18:1") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC36:1/LPC18:1-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-A5 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC32_1.LPC_18_2, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC32:1/LPC18:2") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC32:1/LPC18:2-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-A6 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC34_1.LPC_18_2, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:1/LPC18:2") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:1/LPC18:2-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-B1 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC36_1.LPC_18_2, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC36:1/LPC18:2") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC36:1/LPC18:2-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-B2 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC36_2.LPC_18_2, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC36:2/LPC18:2") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC36:2/LPC18:2-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-B3 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC_34_4/LPC_18_1, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:4/LPC18:1") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:4/LPC18:1-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-B4 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC_34_4/LPC_18_2, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:4/LPC18:2") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:4/LPC18:2-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-B5 <- data_cross %>%
-  filter(S5_204089927 != "NA") %>%
-  ggplot(aes(x = S5_204089927, y = PC_34_1/10E5, colour = S5_204089927)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:1") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:1-5@204") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-B6 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC_34_2/10E5, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:2/10E5") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:2-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-C1 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC_34_3/10E5, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:3/10E5") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:3-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-C2 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC_34_4/10E3, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC34:4/10E3") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC34:4-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-C3 <- data_cross %>%
-  filter(S5_204089927 != "NA") %>%
-  ggplot(aes(x = S5_204089927, y = PC36_1/10E4, colour = S5_204089927)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC36:1") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC36:1-5@204") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-C4 <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  ggplot(aes(x = S3_8542287, y = PC_36_5_A/10E5, colour = S3_8542287)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(11) +
-  ylab("PC36:5A/10E5") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC36:5A-3@8.5") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-C5 <- data_cross %>%
-  filter(S2_2677779 != "NA") %>%
-  ggplot(aes(x = S2_2677779, y = PC_36_4_A/10E5, colour = S2_2677779)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  #ylim(0,2e+05) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme(legend.position="none") +
-  theme_cowplot(9) +
-  ylab("PC36:4A/10E5") +
-  theme(axis.title.x=element_blank()) +
-  ggtitle("qPC36:4A-2@2.6") +
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(size=11))
-
-plot_grid(A1, A2, A3, A4, A5, A6, B1, B2, B3, B4, B5, B6, C1, C2, C3, C4, C5, PCs, ncol=6)
-
-dabest_try <- data_cross %>%
-  filter(S3_8542287 != "NA") %>%
-  dabest(S3_8542287, LPCs,
-         idx = c("AA", "BB"),
-         paired = FALSE)
-
-plot(dabest_try)
-
-
-```
-
-
-
-
-Haplotype Network plot
-
-```{r}
-
-
-
 library(dplyr)
-library(vcfR)
-library(pegas)
+library(qtl)
+library(GenomicRanges)
+library(ggbio)
+library(igraph)
+library(qtl)
+source("detect_peaks.R")
+
+##### QTL analysis ##########################################################
+n_threads <- 5
+n_perm <- 1000
+seed <- 1234567890
+set.seed(seed)
+data_dir <- "../data/fig_3"
+geno_file  <- file.path(data_dir, "B73xPT_AGPv3_genotype.csv")
+pheno_file <- file.path(data_dir, "B73xPT_combined_phenotype.csv")
+
+cross <- read.cross(
+  format = "csvs",  file = geno_file,
+  na.strings = c("-",NA),
+  phefile = pheno_file,
+  genotypes = c("A","B")) %>%
+  convert2riself() %>%
+  jittermap() %>%
+  calc.genoprob( step = 1)
+
+# Select phenotypes with up to 50% missing data ###############################
+# missing phenotypes will generate errors
+
+nind <- nind(cross)
+nphe <- nphe(cross)
+
+missing <- colSums(is.na(cross$pheno))
+missing_thresh <- 0.5
+
+pheno_col <- which( missing < missing_thresh * nind + 4) # this form comes from the readcross warning
+                                                         # RILs with genotype but no phenotype
+pheno_col <- pheno_col[-1]
 
 
-traits <- read.table("/Volumes/GoogleDrive/My\ Drive/repos/soilP/inst/notebooks/P_traits.txt", header = TRUE)
-
-extdata <-"/Volumes/GoogleDrive/My\ Drive/repos/soilP/inst/extdata"
-
-accn_file <- paste(extdata,"germinate_SeeD_GWAS_GBS_4022.tab", sep = "/")
-
-accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
-
-SEED_GWAS_GID <- read.table(file = file.path(extdata, "SEED_GWAS_GID.tab"),
-                            header = TRUE, quote = "",sep ="\t")
-
-# There are one or more GWAS seed identifier per general identifier in the table
-
-GWAS_ID <- read.table(file = paste(extdata, "GWAS_ID.tab", sep = "/"), quote = "",sep ="\t")
-GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
-
-colnames(GWAS_ID)[1] <-"sample_id"
-
-GWAS_ID <- GWAS_ID %>%
-  dplyr::select(sample_id,taxa) %>%
-  inner_join(SEED_GWAS_GID)
-
-GWAS_ID %>%
-  inner_join(accn_info,by = c(accn_GID = "general_identifier")) %>%
-  #dplyr::filter(countries_country_code3=="MEX") %>%
-  dplyr::select(taxa,country="countries_country_code3", collnumb)
-
-mex <- accn_info %>%
-  dplyr::filter(!is.na(locations_longitude) & !is.na(locations_longitude)) %>%
-  dplyr::filter(countries_country_code3 =="MEX") %>%
-  dplyr::select(accn_GID  ="general_identifier",collnumb, lon ="locations_longitude",
-                lat="locations_latitude", country = "countries_country_code3")
-
-assoc <- mex %>%
-  inner_join(GWAS_ID) %>% dplyr::select(taxa,collnumb) %>%
-  inner_join(traits) %>%
-  arrange(locations_elevation) %>%
-  group_by(locations_elevation)
-
-# Select just Mexican accessions genotype or Teosintes not georeferenced
-
-vcf_file <-  "/Users/fvrodriguez/Projects/NCSU/05_PLA1/zmpla12_merged_het0_AGPv3_phased.vcf"
-
-vcf <- vcfR::read.vcfR(vcf_file)
-ncol(vcf@gt) - 1
-
-is_mexican <- colnames(vcf@gt) %in% c("FORMAT",assoc$taxa)
-is_teosinte <- grepl("TIL.*|Teo",colnames(vcf@gt), perl = TRUE)
-
-vcf <-vcf[,is_mexican | is_teosinte ]
-ncol(vcf@gt) - 1
-
-# 916 mexican  out of  1379 initial
-dna <- vcfR2DNAbin(vcf)
-as.alignment(dna)
-h <- haplotype(dna, what="label")
+single_scan <- scanone(cross, pheno.col = pheno_col, method = "hk")
+perms <- scanone(cross, pheno.col = pheno_col,
+                 n.perm = n_perm, method = "hk", n.cluster = n_threads)
 
 
-haptab <- stack(setNames(attr(h, "index"), rownames(h))) %>%
-  dplyr::mutate(h = as.numeric(ind)) %>%
-  dplyr::select(h, label =ind, dnaid= values)
+peaks <- get_peak_table(perms = perms, single_scan = single_scan)
 
-sumhap <- haptab %>%
-  dplyr::group_by(h,label) %>%
-  dplyr::summarise(count= length(h))  %>%
-  dplyr::arrange(-count) %>% ungroup() %>%
-  dplyr::mutate(countrank = row_number()) %>%
-  dplyr::mutate(cumcount = cumsum(count)) %>%
-  dplyr::mutate(cumfreq  = cumcount/sum(count)) %>%
-  dplyr::mutate(is_major = cumfreq < 0.9) %>%
-  as.data.frame()
+refined_peaks <- refine_peaks(peaks, perms = perms, single_scan = single_scan) %>%
+  select(trait,lod,thresh_adj,thresh, everything()) %>%
+  arrange(-lod) %>% tibble() %>%
+  print(n = 150)
 
-majorhid <- sumhap$h[sumhap$is_major]
-majordnaid  <- haptab$dnaid[haptab$h %in% majorhid ]
+new_peaks  <- refined_peaks[refined_peaks$lod > refined_peaks$thresh_adj,]
 
-majordna <- dna[majordnaid,]
-nrow(dna)/2
-nrow(majordna)/2
+##### Output Profile ##########################################################
 
+p1 <- single_scan  %>%
+  dplyr::select( chr,pos, LPCs, PCs,PCs.LPCs) %>%
+  tidyr::pivot_longer(cols = c("LPCs", "PCs","PCs.LPCs"),
+                      names_to = "trait",values_to = "LOD") %>%
+  dplyr::mutate(trait = factor(trait, levels = c( "PCs","LPCs", "PCs.LPCs"))) %>%
+  ggplot2::ggplot() +
+  ggplot2::geom_line(aes(x = pos, y = LOD, col = trait))+
+  ggplot2::xlab("Chromosome") +
+  ggplot2::ylab("LOD") +
+  ggplot2::geom_hline(aes(yintercept = LPCs_thresh), col = pal[1], lty =2)+
+  ggplot2::facet_wrap(.~ as.factor(chr) ,
+                      scales = "free_x",
+                      strip.position = "bottom",
+                      ncol = 10)  +
+  ggplot2::geom_rug(aes(x = pos),sides="b", size =0.01) +
+  ggpubr::theme_classic2(base_size = 18) +
+  ggplot2::theme(legend.position = "none",
+                 strip.background = ggplot2::element_blank(),
+                  strip.placement = "outside",
+                  axis.text.x = ggplot2::element_text(size =8, angle = 90))
 
-h <- haplotype(majordna)
-
-check_mexicana <- function(x,h,dna) {
-  h_names <- rownames(dna)[attr(h,"index")[[x]]]
-  if(any(grepl("TIL08|TIL25",h_names))) {x} else {NULL}
-}
-
-
-hapind <- stack(setNames(attr(h, "index"), rownames(h))) %>%
-  dplyr::mutate(h = as.numeric(ind)) %>%
-  dplyr::select(h, label =ind, dnaid = values) %>%
-  dplyr::mutate(seqname = rownames(majordna)[dnaid]) %>%
-  dplyr::mutate(seq = as.alignment(majordna)$seq) %>%
-  dplyr::mutate(taxa = gsub("_.*","",seqname,perl = TRUE)) %>%
-  dplyr::left_join(assoc) %>%
-  dplyr::mutate(is_mexicana    = grepl("TIL08|TIL25", taxa, perl = TRUE)) %>%
-  dplyr::mutate(is_parviglumis = grepl("TIL|Teo", taxa, perl = TRUE) & !is_mexicana)
-
-table(cut(hapind$locations_elevation, breaks = c(0,1000,2000,4000)), right = TRUE)
-
-hapind$ele_class <- cut(
-  hapind$locations_elevation, breaks = c(0,1000,2000,4000),
-  labels = c("low","mid","high"))
+pla12_pos <- pull.map(cross = cross)[[3]]["S3_8542287"]
 
 
-hapind$ele_bin <- cut(
-  hapind$locations_elevation, breaks = seq(0, 3100, by= 100),
-  labels = seq(50, 3100, by= 100)) %>%
-  as.character() %>%
-  as.integer()
+p2 <- single_scan  %>%
+  dplyr::filter(chr==3) %>%
+  dplyr::select( chr,pos, LPCs, PCs,PCs.LPCs) %>%
+  tidyr::pivot_longer(cols = c("LPCs", "PCs","PCs.LPCs"),
+                      names_to = "trait",values_to = "LOD") %>%
+  dplyr::mutate(trait = factor(trait, levels = c( "PCs","LPCs", "PCs.LPCs"))) %>%
+  ggplot2::ggplot() +
+  ggplot2::geom_line(aes(x = pos, y = LOD, col = trait))+
+  ggplot2::xlab("Position cM") +
+  ggplot2::ylab("") +
+  ggplot2::geom_hline(aes(yintercept = LPCs_thresh), col = pal[1], lty =2)+
+  ggplot2::geom_vline(aes(xintercept = pla12_pos), col = "red") +
+  ggplot2::geom_rug(aes(x = pos),sides="b", size =0.1) +
+  ggpubr::theme_classic2() +
+  ggplot2::theme( plot.margin = unit(c(0,0,0,0), "lines"),
+                  legend.position = "none")
 
-hap_ele <- hapind %>% dplyr::group_by(ele_bin) %>% dplyr::select(taxa, label) %>%
-  dplyr::summarise(
-                II = sum(label=="II")/length(taxa),
-                III = sum(label=="III")/length(taxa),
-                VI = sum(label=="VI")/length(taxa),
-                n = length(taxa)) %>%
-                 dplyr::rename( Elevation ="ele_bin") %>%
-                dplyr::filter( n >10) %>%
-                tidyr::pivot_longer(cols = c("II","III","VI"),
-                                             values_to = "Frequency",
-                                             names_to = "Haplotype")
-
-quartz()
-hap_ele %>% dplyr::filter(Haplotype == "VI") %>%
-  ggpubr::ggscatter(  x = "Elevation", y = "Frequency",color = "#88CCEE", add = "loess", conf.int = TRUE) +
-  ggplot2::ggtitle("Haplotype VI") +
-  ggplot2::theme(legend.title = ggplot2::element_blank())
+plot.with.inset <-
+  cowplot::ggdraw() +
+  cowplot::draw_plot(p1) +
+  cowplot::draw_plot(p2, x = 0.3, y = .45, width = .68, height = .45)
 
 
-high_limit <- 2000
-low_limit <- 1000
+png(file = "Figure3A.png", height = 616, width = 1168)
 
- hapind %>%
-  dplyr::filter(locations_elevation >= high_limit | locations_elevation <= low_limit ) %>%
-  dplyr::select(h:label, is_mexicana) %>% nrow()
+# quartz(height = 2*3.08, width = 2*5.84)
 
- hapind %>%
-   dplyr::filter(is_mexicana)
+print(plot.with.inset)
+ 
+grid::grid.text(expression(italic("ZmPla1.2")),
+                just = "left", x = 0.475, y = 0.92)
+grid::grid.text(expression(italic("qPCs/LPCs")),
+                just = "left", x = 0.525, y = 0.85)
+grid::grid.text(expression(italic("qLPCs")),
+                just = "left",  x = 0.54, y = 0.675)
+grid::grid.text(expression(italic("qPCs")),
+                just = "left", x = 0.55, y = 0.63)
 
- hapind %>%
-   dplyr::filter(is_parviglumis)
+grid::grid.lines(x = unit(c(0.512, 0.523), "npc"),
+                 y = unit(c(0.85, 0.85), "npc"),
+                 gp = grid::gpar(col= pal[3]))
 
+grid::grid.lines(x = unit(c(0.51, 0.538), "npc"),
+                 y = unit(c(0.656, 0.675), "npc"),
+                 gp = grid::gpar(col= pal[2]))
 
-hapind$pop <- hapind$ele_class
-hapind$pop <- factor(hapind$pop, levels = c("low","mid","high"))
+grid::grid.lines(x = unit(c(0.515, 0.548), "npc"),
+                 y = unit(c(0.60, 0.63), "npc"),
+                 gp = grid::gpar(col= pal[1]))
 
-# hapind$pop[hapind$is_parviglumis] <- "parviglumis"    
-# hapind$pop[hapind$is_mexicana] <- "mexicana"  
-
-# hapind$pop <- factor(hapind$pop,
-#                      levels = c("mexicana","parviglumis","low","high"))
-#pal <- c("#FFFFFF","#DDDDDD","#CC6677","#88CCEE")
-
-pie_tab <- with(hapind, table(hap=label, pop=pop))
-
-net <- pegas::haploNet(h)
-
-
-pal <- c("#CC6677","#BCDCAD", "#88CCEE")
-
-
-
-p <- plot(net, legend = FALSE,
-     size=attr(net, "freq")/50,
-     scale.ratio = 2, cex = 0.,
-     pie= pie_tab,
-     col = "white",
-     bg=pal,
-     show.mutation = 2,threshold =0 )
-
-pdf(file="hapnetwork.pdf")
-
-plot(net, legend = FALSE,
-     labels = FALSE,
-     size=attr(net, "freq")/50,
-     scale.ratio = 2, cex = 0.,
-     pie= pie_tab,
-     col = "white",
-     bg=pal,
-     show.mutation = 2,threshold =0, )
-size.adjust <- c(0.8, 0.6,0.7, 1.5,1.5,0.6,1,1.2,1.5)
-angle.adjust <- c(2*pi/3,2*pi/3,2*pi/3,-pi/2, pi/2, 2*pi/3, -pi/3, -pi/2, 0)
-text(p$xx + cos(angle.adjust)*p$size*size.adjust ,
-     p$yy + sin(angle.adjust)*p$size*size.adjust ,
-     labels = p$labels, srt = 90)
-legend(-25,30, box.lty = 0, colnames(pie_tab), fill=pal,  title = "Population by Elevation", ncol =3)
+grid::grid.lines(x = unit(c(0.255, 0.36), "npc"),
+                 y = unit(c(0.215, 0.49), "npc"),
+                 gp = grid::gpar(fill="black"),
+                 arrow = grid::arrow(length = unit(0.1, "inches"),
+                                     ends="last", type="closed"))
+grid::grid.lines(x = unit(c(0.33, 0.95), "npc"),
+                 y = unit(c(0.215, 0.49), "npc"),
+                 gp = grid::gpar(fill="black"),
+                 arrow = grid::arrow(length = unit(0.1, "inches"),
+                                     ends="last", type="closed"))
 dev.off()
+```
+
+## Effect Sizes.
+
+```{r}
+base_size <- 13
+
+metabolite <- read.csv("pla_phyt_20.csv") %>%
+  dplyr::mutate(geno = gsub("hom","mut", geno)) %>%
+  dplyr::mutate(geno = gsub("wt","wt", geno)) %>%
+  dplyr::rename(genotype = geno)
+
+
+metabolite$PC_LPC <- metabolite$PCs/metabolite$LPCs
+```
+
+## Normalized per species
+
+```{r}
+pct_thresh <- 100
+
+PCs_paired <-  PCs %>%
+  dplyr::group_by(genotype,species) %>%
+  dplyr::summarise(signal = mean(signal, na.rm =TRUE), signalZ = mean(signalZ, na.rm =TRUE)) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(genotype) %>%
+  dplyr::filter(!is.na(signal)) %>%
+  dplyr::mutate(pct= prop.table(signal)*100) %>%
+  dplyr::arrange(-pct) %>%
+  dplyr::mutate(cum_pct = cumsum(pct)) %>%
+  dplyr::filter(cum_pct <=  pct_thresh) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(species) %>%
+  dplyr::mutate( n = length(genotype)) %>%
+  dplyr::filter( n > 1)
+
+PCs_paired$label <- ""
+PCs_paired$empty_label <- ""
+PCs_paired$label[PCs_paired$genotype == "wt"] <- PCs_paired$species[PCs_paired$genotype == "mut"]
+PCs_paired$empty_label[PCs_paired$genotype == "wt"] <- " "
+
+
+PC_wilcox <- PCs_paired %>%
+  dplyr::ungroup() %>%
+  rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "less")  %>%
+  rstatix::add_xy_position(fun = "max", x = "geno")
+
+
+
+LPCs_paired <- LPCs %>%
+  dplyr::group_by(genotype,species) %>%
+  dplyr::summarise(signal = mean(signal, na.rm =TRUE), signalZ = mean(signalZ, na.rm =TRUE)) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(genotype) %>%
+  dplyr::filter(!is.na(signal)) %>%
+  dplyr::mutate(pct= prop.table(signal)*100) %>%
+  dplyr::arrange(-pct) %>%
+  dplyr::mutate(cum_pct = cumsum(pct)) %>%
+  dplyr::filter(cum_pct <=  pct_thresh) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(species) %>%
+  dplyr::mutate( n = length(genotype)) %>%
+  dplyr::filter( n > 1)
+
+
+LPCs_paired$label <- ""
+LPCs_paired$empty_label <- ""
+LPCs_paired$label[LPCs_paired$genotype == "wt"] <- LPCs_paired$species[LPCs_paired$genotype == "mut"]
+LPCs_paired$empty_label[LPCs_paired$genotype == "wt"] <- " "
+
+LPC_wilcox <- LPCs_paired %>%
+  dplyr::ungroup() %>%
+  rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "greater")  %>%
+  rstatix::add_xy_position(fun = "max", x = "geno")
+```
+
+# Now with the RILs 
+```{r}
+cross <- read.cross(
+  format = "csvs",  file = "B73xPT_AGPv3_genotype.csv",
+  na.strings = c("-",NA),
+  phefile = "B73xPT_combined_phenotype.csv",
+  genotypes = c("A","B")) %>%
+  convert2riself() %>%
+  jittermap() %>%
+  calc.genoprob( step = 1)
+
+pheno <- read.csv("B73xPT_combined_phenotype.csv") %>%
+    dplyr::group_by(id)
+
+cross$pheno$id
+
+S3_8542287 <-factor(pull.geno(cross,3)[, "S3_8542287"])
+levels(S3_8542287) <-  c("B73", "PT")
+to_plot <- dplyr::inner_join(
+  data.frame( id = cross$pheno$id,
+              genotype = S3_8542287),
+  pheno
+)
+
+
+p031 <- metabolite %>%
+  dplyr::filter(genotype %in% c("mut","wt")) %>%
+  dplyr::mutate(genotype = factor(genotype, levels =  c("wt","mut"))) %>%
+  ggplot2::ggplot(aes(x = genotype, y = PCs %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  # ggplot2::ggtitle("B104 CRISPR") +
+  ggplot2::ylab("PCs") +
+  ggplot2::xlab("Genotype") +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+p131 <- metabolite %>%
+  dplyr::filter(genotype %in% c("mut","wt")) %>%
+  dplyr::mutate(genotype = factor(genotype, levels =  c("wt","mut"))) %>%
+  ggplot2::ggplot(aes(x = genotype, y = LPCs  %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  # ggplot2::ggtitle("B104 CRISPR") +
+  ggplot2::ylab("LPCs") +
+  ggplot2::xlab("Genotype") +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
+    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+p032 <- to_plot %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = PCs %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  ggplot2::ylab("PCs") +
+  ggplot2::xlab("Genotype") +
+  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
+    ggpubr::theme_pubr(legend ="none", base_size=base_size)+
+  ggplot2::theme(axis.title.x=element_blank())
+
+
+p132 <- to_plot %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = LPCs %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  ggplot2::ylab("LPCs") +
+  ggplot2::xlab("Genotype") +
+  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
+    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+
+p310 <- metabolite %>%
+  dplyr::filter(genotype %in% c("mut","wt")) %>%
+  dplyr::mutate(genotype = factor(genotype, levels =  c("wt","mut"))) %>%
+  ggplot2::ggplot(aes(x = genotype, y = PC_LPC %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  # ggplot2::ggtitle("B104 CRISPR") +
+  ggplot2::ylab("PCs/LPCs") +
+  ggplot2::xlab("Genotype") +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
+    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+p320 <- to_plot %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = PCs.LPCs %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  ggplot2::ylab("PCs/LPCs") +
+  ggplot2::xlab("Genotype") +
+  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
+    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+
+PCs <- to_plot %>%
+  dplyr::select(id, genotype, starts_with("PC_") & !matches("LPC") & !matches("\\.")) %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  tidyr::pivot_longer(cols = starts_with("PC_"),
+                      names_to = "species", values_to = "signal"
+  ) %>%
+  dplyr::group_by(species) %>%
+  dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
+                log10 = log10(signal) %>% as.vector(),
+                log10Z = scale(log10(signal)) %>% as.vector()) %>%
+  dplyr::ungroup()
+
+LPCs <- to_plot %>%
+  dplyr::select(id, genotype, starts_with("LPC_") & !matches("\\.")) %>%
+  dplyr::filter(!is.na(genotype))  %>%
+  tidyr::pivot_longer(
+    cols = starts_with("LPC_"),
+    names_to = "species", values_to = "signal"
+  ) %>%
+  dplyr::group_by(species) %>%
+  dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
+                log10 = log10(signal) %>% as.vector(),
+                log10Z = scale(log10(signal)) %>% as.vector()) %>%
+  dplyr::ungroup()
 
 ```
+
+### Effect by species 
+
+```{r}
+### CRISPR data first  
+CRISPR <- read.csv("pla_phyt_20.csv") %>%
+  dplyr::mutate(geno = gsub("hom","mut", geno)) %>%
+  # dplyr::mutate(geno = gsub("wt","AA", geno)) %>%
+  dplyr::rename(genotype = geno)
+sort(colnames(CRISPR))
+
+CRISPR$PC_LPC <- CRISPR$PCs/CRISPR$LPCs
+
+CRISPR <- CRISPR %>%
+  dplyr::filter(genotype %in% c("wt","mut"))  %>%
+  dplyr::mutate(genotype = factor(genotype, levels =  c("wt","mut")))
+
+
+CRISPR_norm <- rbind(
+  CRISPR %>%
+    dplyr::select(sample_id, genotype, starts_with("PC.")) %>%
+    tidyr::pivot_longer(cols = starts_with("PC."),
+                        names_to = "species", values_to = "signal"
+    ) %>%
+    dplyr::group_by(species) %>%
+    dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
+                  log10 = log10(signal) %>% as.vector(),
+                  log10Z = scale(log10(signal)) %>% as.vector(),
+                  pop = "CRISPR/CAS9",
+                  trait = "PCs") %>%
+    dplyr::ungroup(),
+  
+  CRISPR %>%
+    dplyr::select(sample_id, genotype, starts_with("LPC.")) %>%
+    tidyr::pivot_longer(
+      cols = starts_with("LPC."),
+      names_to = "species", values_to = "signal"
+    ) %>%
+    dplyr::group_by(species) %>%
+    dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
+                  log10 = log10(signal) %>% as.vector(),
+                  log10Z = scale(log10(signal)) %>% as.vector(),
+                  pop = "CRISPR/CAS9",
+                  trait = "LPCs")  %>%
+    dplyr::ungroup()
+)
+```
+
+# Now with the RILs
+
+
+```{r}
+cross <- read.cross(
+  format = "csvs",  file = "B73xPT_AGPv3_genotype.csv",
+  na.strings = c("-",NA),
+  phefile = "B73xPT_combined_phenotype.csv",
+  genotypes = c("A","B")) %>%
+  convert2riself() %>%
+  jittermap() %>%
+  calc.genoprob( step = 1)
+
+pheno <- read.csv("B73xPT_combined_phenotype.csv") %>%
+  dplyr::group_by(id)
+
+
+S3_8542287 <-factor(pull.geno(cross,3)[, "S3_8542287"])
+levels(S3_8542287) <-  c("B73", "PT")
+
+RILs <- dplyr::inner_join(
+  data.frame( id = cross$pheno$id,
+              genotype = S3_8542287),
+  pheno
+)
+
+RILs$PC_LPC  <- log10(to_plot$PCs.LPCs)
+
+
+RILs_norm <-rbind(
+  RILs %>%
+    dplyr::select(sample_id = id, genotype, starts_with("PC_") & !matches("LPC") & !matches("\\.")) %>%
+    dplyr::filter(!is.na(genotype)) %>%
+    tidyr::pivot_longer(cols = starts_with("PC_"),
+                        names_to = "species", values_to = "signal"
+    ) %>%
+    dplyr::group_by(species) %>%
+    dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
+                  log10 = log10(signal) %>% as.vector(),
+                  log10Z = scale(log10(signal)) %>% as.vector(),
+                  pop = "RILs",
+                  trait = "PCs")  %>%
+    dplyr::ungroup(),
+  
+  RILs %>%
+    dplyr::select(sample_id = id, genotype, starts_with("LPC_") & !matches("\\.")) %>%
+    dplyr::filter(!is.na(genotype))  %>%
+    tidyr::pivot_longer(
+      cols = starts_with("LPC_"),
+      names_to = "species", values_to = "signal"
+    ) %>%
+    dplyr::group_by(species) %>%
+    dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
+                  log10 = log10(signal) %>% as.vector(),
+                  log10Z = scale(log10(signal)) %>% as.vector(),
+                  pop = "RILs",
+                  trait = "LPCs")  %>%
+    dplyr::ungroup()
+)
+
+
+paired <-  rbind(CRISPR_norm, RILs_norm) %>%
+  dplyr::group_by(pop,trait,genotype,species) %>%
+  dplyr::summarise(signal = mean(signal, na.rm =TRUE),
+                   signalZ = mean(signalZ, na.rm =TRUE)) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(pop,genotype) %>%
+  dplyr::filter(!is.na(signal)) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(species) %>%
+  dplyr::arrange(species,genotype) %>%
+  dplyr::mutate( n = length(genotype)) %>%
+  dplyr::filter( n == 2) %>%
+  dplyr::mutate( sign = sign(signal[2] - signal[1])) %>% print(n=60)
+
+
+paired$label <- ""
+paired$empty_label <- ""
+# paired$label[paired$genotype == "wt"] <- paired$species[paired$genotype == "mut"]
+
+paired$label[paired$species == "PC..36.2." & paired$genotype == "wt"] <- "PC 36:2"
+paired$label[paired$species == "LPC..18.2." & paired$genotype == "wt"] <- "LPC 18:2"
+
+paired$label[paired$species == "PC_36_2" & paired$genotype == "B73"] <- "PC 36:2"
+paired$label[paired$species == "LPC_18_2" & paired$genotype == "B73"] <- "LPC 18:2"
+# paired$label[paired$genotype == "B73"] <- paired$species[paired$genotype == "PT"]
+
+paired$empty_label[paired$genotype == "wt"] <- " "
+paired$empty_label[paired$genotype == "B73"] <- " "
+
+paired$trait <- factor(paired$trait, levels = c("PCs","LPCs"))
+paired$pop <- factor(paired$pop, levels = c("RILs","CRISPR/CAS9"))
+
+
+y_pos <- paired %>%
+  dplyr::filter(pop == "RILs")  %>%
+  dplyr::group_by(pop, trait) %>% 
+  rstatix::get_y_position(signalZ ~ genotype) %>%
+  dplyr::pull(y.position)
+y_pos[2] <- y_pos[2] + 0.23  
+
+wilcox_1 <- rbind(
+  paired %>%
+    dplyr::filter(pop == "RILs", trait == "PCs")  %>%
+    dplyr::group_by(pop, trait) %>%
+    rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "less")%>%
+    rstatix::add_xy_position(x = "genotype"),
+  paired %>%
+    dplyr::filter(pop == "RILs", trait == "LPCs")  %>%
+    dplyr::group_by(pop, trait) %>%
+    rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "greater")%>%
+    rstatix::add_xy_position(x = "genotype")
+) %>% 
+  rstatix::adjust_pvalue(method = "BH") %>%
+  rstatix::add_significance()  %>%
+  dplyr::mutate( p_raw = p, p = p.adj,
+                 pval_fmt = format.pval(p.adj, digits = 2)) %>%
+  dplyr::mutate(y.position = y_pos)
+as.data.frame(wilcox_1)
+levels(paired$pop)
+?labeller
+facet_labeller <- ggplot2::labeller(pop = c("RILs" ="RILs 3@8.51")) 
+
+p1 <- paired %>%
+  dplyr::filter(pop == "RILs") %>%
+  ggplot(aes( x = genotype, y = signalZ, group = species, color = factor(sign))) +
+  geom_point() + geom_line() +
+  coord_cartesian(ylim = c(-1.5, 1.8))  +
+  ylab("Signal (Z-score)") + xlab("Genotype")   +
+  ggplot2::scale_color_manual(values= c("#df1b23","#1260ad") )+
+  ggplot2::facet_grid(pop ~ trait, scales = "free", 
+                      labeller = facet_labeller ) +
+  ggpubr::stat_pvalue_manual(
+    wilcox_1 , label = "p = {pval_fmt}", bracket.nudge.y = 0.1,
+  ) +
+  ggrepel::geom_text_repel(
+    data= paired %>%
+      dplyr::filter(pop == "RILs" & species == "PC_36_2" ),
+    aes(label = label),
+    hjust = 2,
+    min.segment.length = unit(0, 'lines'),
+    segment.size = 0.5,
+    segment.alpha = 0.5,
+    xlim  = c(1.2,NA),
+    ylim  = c(NA,-1.2),
+  ) +
+  ggrepel::geom_text_repel(
+    data= paired %>%
+      dplyr::filter(pop == "RILs" & species == "LPC_18_2" ),
+    aes(label = label),
+    hjust = 2,
+    min.segment.length = unit(0, 'lines'),
+    segment.size = 0.5,
+    segment.alpha = 0.5,
+    xlim  = c(1.2,NA),
+    ylim  = c(0.4,NA),
+  ) +
+  ggpubr::theme_pubr(legend ="none", base_size = base_size) +
+  theme(strip.text = element_text(size = base_size),
+        strip.background =element_rect(color ="white",  fill="white"),
+        axis.title.x=element_blank())
+
+
+wilcox_2 <- rbind(
+  paired %>%
+    dplyr::filter(pop == "CRISPR/CAS9", trait == "PCs")  %>%
+    dplyr::group_by(pop, trait) %>%
+    rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "less") %>%
+    rstatix::add_xy_position(x = "genotype"),
+  
+  paired %>%
+    dplyr::filter(pop == "CRISPR/CAS9", trait == "LPCs")  %>%
+    dplyr::group_by(pop, trait) %>%
+    rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "greater") %>%
+    rstatix::add_xy_position(x = "genotype")
+  
+) %>%    
+  rstatix::adjust_pvalue(method = "BH") %>%
+  rstatix::add_significance() %>%
+  dplyr::mutate( p_raw = p, p = p.adj,
+                 pval_fmt = format.pval(p.adj, digits = 2))
+
+
+p2 <- paired %>%
+  dplyr::filter(pop == "CRISPR/CAS9") %>%
+  ggplot(aes( x = factor(genotype, levels = c("wt","mut")), 
+              y = signalZ, group = species, color = factor(sign))) +
+  geom_point() + geom_line() +
+  coord_cartesian( ylim = c(-0.5, 0.55))  +
+  ylab("Signal (Z-score)") + xlab("Genotype")   +
+  ggplot2::scale_color_manual(values= c("#df1b23","#1260ad"))+
+  ggplot2::facet_grid(pop ~ trait, scales = "free" ) +
+  scale_x_discrete(labels = abbreviate) +
+  ggpubr::stat_pvalue_manual(
+    wilcox_2 , label = "p = {pval_fmt}", bracket.nudge.y = 0.05,
+  ) +
+  ggrepel::geom_text_repel(
+    aes(label = label),
+    direction = "y",
+    hjust = 2,
+    min.segment.length = unit(0, 'lines'),
+    segment.size = 0.5,
+    segment.alpha = 0.5,
+    xlim  = c(1.2,NA),
+  ) +
+  ggpubr::theme_pubr(legend ="none", base_size = base_size) +
+  theme(strip.text = element_text(size = base_size),
+        strip.background =element_rect(color ="white", fill="white"),
+        axis.title.x=element_blank())
+
+p3  <- ggpubr::ggarrange(p1,p2, align = "hv", nrow = 2)
+
+# quartz(height = 1.3*4.13, width = 9.58)
+
+png(file = "Figure3C.png", height = 538, width = 958))
+ggpubr::ggarrange(
+  ggpubr::ggarrange(p032,  p132, p320, 
+                    p031,  p131, p310,
+                    nrow = 2, ncol = 3),
+  p3, 
+  ncol = 2,
+  widths = c(1.75,1), align = "hv")
+dev.off()
+```
+
