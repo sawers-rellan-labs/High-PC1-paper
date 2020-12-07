@@ -13,7 +13,7 @@ library(MASS)
 library(qtl)
 library(lme4)
 library(arm)
-library(lsmeans)
+library(emmeans)
 library(pbkrtest)
 library(cowplot)
 library(viridis)
@@ -24,6 +24,7 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
+library(ComplexHeatmap)
 ```
 
 #PBE resample P-value HeatMap

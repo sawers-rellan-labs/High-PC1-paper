@@ -225,6 +225,5 @@ effect_size_ASI <- plot(unpaired_ASI, axes.title.fontsize = 14,
  plot_grid(effect_size_dts, effect_size_dta, effect_size_ASI, ncol = 3)    
      
 ```
-```
 
 
