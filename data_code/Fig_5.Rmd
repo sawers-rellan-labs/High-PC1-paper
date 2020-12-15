@@ -229,6 +229,8 @@ gddtf <- read.csv("Dataset_S2.Photoperiod_paper_data_supplement_line_BLUPs.csv")
   dplyr::select( Taxa = geno_code, gdd_anth_long, gdd_anth_short,gdd_anth_photo_resp
                  , gdd_silk_long, gdd_silk_short, gdd_silk_photo_resp)
 
+# https://datacommons.cyverse.org/browse/iplant/home/shared/commons_repo/curated/Kremling_Nature3RNASeq282_March2018
+
 tissue_file <- list.files(pattern = "TASSEL.*Dups.txt") # This dataset is huge add to .gitignorre
 tissue <-  gsub(".*and_Altnames_","",tissue_file)
 tissue <-  gsub("_.*","",tissue)
@@ -249,7 +251,7 @@ colnames(DTF_RNA) <- gsub("gdd_","",colnames(DTF_RNA))
 
 hmp <- file.path(data_dir,'GRMZM2G353444_AGPV3_282.hapmap.hmp.txt')
 
-tree <- read.tree("282_til_pt_german.aln tree.newick")
+tree <- read.tree("ZmPLA1.2_282_til_german_AA.tree")
 class(tree)
 
 tree$tip.label

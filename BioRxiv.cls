@@ -103,7 +103,9 @@
 
 % Bibliography
 \usepackage{natbib} \bibpunct{(}{)}{;}{author-year}{}{,}
-\bibliographystyle{genetics}
+% \bibliographystyle{genetics}
+\bibliographystyle{pnas-new}
+
 \addto{\captionsenglish}{\renewcommand{\refname}{References}}
 \setlength{\bibsep}{0.0pt}
 
