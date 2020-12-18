@@ -62,6 +62,29 @@ refined_peaks <- refine_peaks(peaks, perms = perms, single_scan = single_scan) %
 
 new_peaks  <- refined_peaks[refined_peaks$lod > refined_peaks$thresh_adj,]
 
+# Variance explained by  3@8.5
+
+pla12_pos <- pull.map(cross = cross)[[3]]["S3_8542287"]
+
+q1 <- makeqtl(sim.geno(cross), 3, pla12_pos, "3@8.5")
+
+qtraits <-  c("PCs","LPCs","PCs.LPCs")
+
+peaks %>%
+  dplyr::filter(trait %in% qtraits) %>%
+  dplyr::select(trait, pos, marker, marker_lod)
+
+trait_var <- lapply(qtraits, function(x){
+  fit <- fitqtl(sim.geno(cross) , 
+       pheno.col=which(colnames(cross$pheno) == x), 
+       dropone = TRUE,
+       q1)
+  fit$result.full[1,5]
+})
+
+names(trait_var) <- qtraits
+trait_var
+
 ##### Output Profile ##########################################################
 
 p1 <- single_scan  %>%
@@ -84,9 +107,6 @@ p1 <- single_scan  %>%
                  strip.background = ggplot2::element_blank(),
                   strip.placement = "outside",
                   axis.text.x = ggplot2::element_text(size =8, angle = 90))
-
-pla12_pos <- pull.map(cross = cross)[[3]]["S3_8542287"]
-
 
 p2 <- single_scan  %>%
   dplyr::filter(chr==3) %>%

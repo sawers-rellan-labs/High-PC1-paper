@@ -91,8 +91,9 @@
                 figurename=Figure,%
                 singlelinecheck=off,%
                 justification=RaggedRight]{caption}
-\setlength{\columnsep}{24pt} % Distance between the two columns of text
+\setlength{\columnsep}{20pt} % Distance between the two columns of text
 \setlength{\parindent}{12pt} % Paragraph indent
+\setlength{\parskip}{0.1em}
 
 % Set document color scheme
 \definecolor{black50}{gray}{0.5} % 50% black for hrules
@@ -113,6 +114,10 @@
 \arrayrulecolor{color0} % Set the color of the horizontal rules
 \renewcommand{\arraystretch}{1.5} % Increased line spacing
 \captionsetup[table]{position=below} % Reduce spacing below caption
+
+% Figure caption style
+\setlength\abovecaptionskip{0.5\baselineskip}
+\setlength\belowcaptionskip{-15pt}
 
 % Algorithm style
 \newcommand\fs@coloruled{\def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@coloruled
@@ -190,10 +195,10 @@
   {}
   {0em}
   {#1}
-\titlespacing*{\section}{0pc}{3ex \@plus4pt \@minus3pt}{5pt}
-\titlespacing*{\subsection}{0pc}{2.5ex \@plus3pt \@minus2pt}{2pt}
-\titlespacing*{\subsubsection}{0pc}{2ex \@plus2.5pt \@minus1.5pt}{2pt}
-\titlespacing*{\paragraph}{0pc}{1.5ex \@plus2pt \@minus1pt}{12pt}
+\titlespacing*{\section}{0pc}{2ex \@plus2pt \@minus2pt}{2pt}
+\titlespacing*{\subsection}{0pc}{1ex \@plus1pt \@minus1pt}{1pt}
+\titlespacing*{\subsubsection}{0pc}{1ex \@plus1pt \@minus1pt}{1pt}
+\titlespacing*{\paragraph}{0pc}{1.5ex \@plus1pt \@minus1pt}{10pt}
 
 % Article meta data additional fields
 \newcommand{\runningauthor}[1]{\def\@runningauthor{#1}}
@@ -202,13 +207,15 @@
 \newcommand{\keywords}[1]{\def\@keywords{#1}}
 \newcommand{\runningtitle}[1]{\def\@runningtitle{#1}}
 
+\newcommand{\dropcap}[1]{\lettrine[lines=2,lraise=0.05,findent=0.1em, nindent=0em]{{\dropcapfont{#1}}}{}}
 \newcommand{\keywordname}{KEYWORDS} % Defines the keywords heading name
 
 % Colored margin box
 \newcommand{\marginmark}{}
 
+%% Abstract formatting
 \def\xabstract{abstract}
-\long\def\abstract#1\end#2{\def\two{#2}\ifx\two\xabstract
+\long\def\abstract#1\end#2{\def\two{#2}\ifx\two\xabstract 
 \long\gdef\theabstract{\ignorespaces#1}
 \def\go{\end{abstract}}\else
 \typeout{^^J^^J PLEASE DO NOT USE ANY \string\begin\space \string\end^^J
@@ -218,22 +225,26 @@ NOT USE {\tt\string\begin...\string\end} COMMANDS WITHIN
 THE ABSTRACT\vskip12pt}\let\go\relax\fi
 \go}
 
-% Set environment for abstract content and styling
+% Define an environment with abstract content and styling
 \newcommand{\abscontent}{
 \noindent
-{%
 \parbox{\dimexpr\linewidth}{%
-	\ifthenelse{\boolean{displaylineno}}{\internallinenumbers}{}%
-    {\absfont\bfseries ABSTRACT} \absfont \theabstract
+    \vskip3pt%
+	\absfont \theabstract
 }%
 \vskip10pt%
 \noindent
-\parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
-\ifthenelse{\boolean{displaylineno}}{\internallinenumbers}{}%
-{\keywordsfont\bfseries\keywordname}\hspace*{0.1em} \keywordsfont \@keywords%
-}%
-}%
-}%
+\parbox{\dimexpr\linewidth}{%
+{
+ \keywordsfont \@ifundefined{@keywords}{}{\@keywords}}%
+}
+\vskip12pt%
+}
+
+% Option to format abstract differently for certain layouts (not used)
+\newcommand{\abscontentformatted}{
+\abscontent
+}
 
 % Custom title page
 \renewcommand{\@maketitle}{\bgroup\setlength{\parindent}{0pt}

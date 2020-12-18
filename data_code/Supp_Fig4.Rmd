@@ -1,211 +1,94 @@
 ---
-title: "Fig 1 Code"
+title: "Supp Fig4 Code"
 output: html_document
 ---
 ```{r}
-library(tidyverse)
-library(data.table)
-library(cowplot)
-library(wesanderson)
+library(dplyr)
+library(tidyr)
 library(ggplot2)
-library(MASS) 
 library(qtl)
-library(lme4) 
-library(arm) 
-library(lsmeans) 
-library(pbkrtest)
-library(cowplot) 
-library(viridis)
-library(qtlcharts)
-library(readr)
-library(ggfortify)
-library(ggmap)
-library(maps)
-library(qtlcharts)
-library(Hmisc)
-```
+
+data_dir <- "../data/fig_3"
+geno_file  <- file.path(data_dir, "B73xPT_AGPv3_genotype.csv")
+pheno_file <- file.path(data_dir, "B73xPT_combined_phenotype.csv")
+
+cross <- read.cross(
+  format = "csvs",  file = geno_file ,
+  na.strings = c("-",NA),
+  phefile = pheno_file,
+  genotypes = c("A","B")) %>%
+  convert2riself() %>%
+  jittermap() %>%
+  calc.genoprob( step = 1)
+
+pheno <- read.csv(pheno_file) %>%
+    dplyr::group_by(id)
+
+cross$pheno$id
+
+S3_8542287 <-factor(pull.geno(cross,3)[, "S3_8542287"])
+levels(S3_8542287) <-  c("B73", "PT")
+to_plot <- dplyr::inner_join(
+  data.frame( id = cross$pheno$id,
+              genotype = S3_8542287),
+  pheno
+)
+
+qtl <- read.csv("QTL/combined_QTL_intervals_refined.csv")
+
+ratio_traits <- qtl %>%
+  dplyr::filter(grepl(".LPC",trait) &  trait != "PCs.LPCs") %>%
+  dplyr::arrange(-peak_marker_lod) %>%
+  dplyr::slice(1:12) %>%
+  dplyr::pull(trait) 
 
 
-#PBE analysis
+PC_traits <- qtl %>%
+  dplyr::filter(grepl("^PC",trait) &  !grepl("\\.",trait) & chr == 3) %>%
+  dplyr::arrange(-peak_marker_lod) %>%
+  dplyr::pull(trait) %>% unique()
 
-```{r}
-mex<-fread("data/fig_1/MexHigh.allPBE.txt",header=T) %>% mutate(POP="MH",POS=POS/1E6)
-gua<-fread("data/fig_1/GuaHigh.allPBE.txt",header=T) %>% mutate(POP="GH",POS=POS/1E6)
-and<-fread("data/fig_1/Andes.allPBE.txt",header=T) %>% mutate(POP="AN",POS=POS/1E6)
-swu<-fread("data/fig_1/SW_US.allPBE.txt",header=T) %>% mutate(POP="US",POS=POS/1E6)
-all_pops_pbe<-rbind(swu,mex,gua,and) %>% mutate(POP=factor(POP,levels=c("US","MH","GH","AN")))
+LPC_traits <- qtl %>%
+  dplyr::filter(grepl("^LPC",trait) & !grepl("\\.",trait) & trait != "LPCs") %>%
+  dplyr::arrange(-peak_marker_lod) %>%
+  dplyr::pull(trait) %>% unique()
 
-#GRMZM2G353444(Chr3:8.442106..8.444078)
-gswu<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="US") %>%
-  ggplot(aes(y=PBE0,x=POS))+
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
+plot_traits <- c(ratio_traits, PC_traits, LPC_traits)
 
-gmex<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="MH") %>%
-  ggplot(aes(y=PBE0,x=POS))+  
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
-
-ggua<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="GH") %>%
-  ggplot(aes(y=PBE0,x=POS)) +
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8)+
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.2,fill="grey")  
+species_effect <-  to_plot %>% 
+  dplyr::select(id, genotype, all_of(plot_traits)) %>%
+  dplyr::mutate_if(is.numeric, scale) %>%
+  tidyr::pivot_longer(all_of(plot_traits), names_to = "species", values_to = "Zscore" )
 
 
-gand<-filter(all_pops_pbe,CHROM==3,POS>8.5 ,POS<8.6,POP=="AN") %>%
-  ggplot(aes(y=PBE0,x=POS)) +
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(8.5, 8.6) +
-  theme_cowplot()+
-  #theme(axis.text.x=element_text(size=15),axis.title.x = element_text(size=16))+
-  xlab("Position (Mb)")+
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=8.542, xmax=8.544, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
+species_effect$Zscore <- species_effect$Zscore[,1]
 
-bob=filter(all_pops_pbe,CHROM==3,POS>8.4 ,POS<8.6) %>% 
-  ggplot(aes(y=PBE0,x=POS,color=POP))+geom_point(size=2)+ theme(legend.position="bottom")+
-  scale_color_manual(values=c(wes_palette("Darjeeling1")[c(3,1)], wes_palette("Royal2")[3], "purple"),name="Populations:")
+sp_label <- sub(".","/", plot_traits,fixed = TRUE) 
+sp_label <- sub("PC_","PC", sp_label,fixed = TRUE) 
+sp_label <- sub("LPC_","LPC", sp_label,fixed = TRUE)
+sp_label <- gsub("(PC\\d\\d)_","\\1:", sp_label)
+sp_label <- gsub("(LPC\\d\\d)_","\\1:", sp_label)
+sp_label <- gsub("_","", sp_label)
+sp_label <- paste0("q", sp_label,"-3@8.5")
+names(sp_label) <- plot_traits
+facet_labeller <- ggplot2::labeller(species = sp_label) 
 
-#legend <- get_legend(bob)
-plot_grid(gswu,gmex,ggua,gand,ncol=1)
-#plot_grid(legend,pgrid,  ncol = 1, rel_heights = c(.1, 1))
-ggsave("GRMZM2G353444.pdf")
+length(sp_label)
+length(plot_traits)
 
-
-#GRMZM2G481755(Chr5:195495289..195505503)
-
-gswu_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="US") %>%
-  ggplot(aes(y=PBE0,x=POS))+
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(195.45, 195.55) +
-  theme_cowplot() +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-gmex_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="MH") %>%
-  ggplot(aes(y=PBE0,x=POS))+  
-  ylim(-0.5,1.5) +
-  xlim(195.45, 195.55) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-ggua_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="GH") %>%
-  ggplot(aes(y=PBE0,x=POS))+
-  ylim(-0.5,1.5) + 
-  xlim(195.45, 195.55) +
-  theme_cowplot()+
-  geom_point(size=2, alpha = 0.8) +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed")+
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-
-gand_lpcat <-filter(x,CHROM==5,POS>195.4,POS<195.6,POP=="AN") %>%
-  ggplot(aes(y=PBE0,x=POS)) +
-  geom_point(size=2, alpha = 0.8) +
-  ylim(-0.5,1.5) +
-  xlim(195.45, 195.55) +
-  theme_cowplot() +
-  #theme(axis.text.x=element_text(size=15),axis.title.x = element_text(size=16)) +
-  xlab("Position (Mb)") +
-  geom_hline(yintercept=0.4, color="red", linetype="dashed") +
-  annotate("rect",xmin=195.495, xmax=195.506, ymin=-Inf, ymax=Inf,alpha=0.5,fill="grey")  
-
-bob=filter(x,CHROM==5,POS>195.4,POS<195.6) %>% 
-  ggplot(aes(y=PBE0,x=POS,color=POP))+geom_point(size=2)+ theme(legend.position="bottom")+
-  scale_color_manual(values=c(wes_palette("Darjeeling1")[c(3,1)], wes_palette("Royal2")[3], "purple"),name="Populations:")
-
-#legend <- get_legend(bob)
-plot_grid(gswu, gswu_lpcat, gmex, gmex_lpcat, ggua, ggua_lpcat, gand, gand_lpcat, ncol = 2)
-#plot_grid(legend,pgrid,  ncol = 1, rel_heights = c(.1, 1))
-ggsave("GRMZM2G481755.pdf")
-
-```
-
-
-#HiLo panel analysis
-
-```{r}
-#file with hilo panel metadata
-
-hilo_panel <- read_csv("data/fig_1/hilo_panel_info.csv")
-
-
-```
-
-Plot map with location of accessions
-
-```{r}
-#register google_key
-
-register_google(key = "AIzaSyC7ysJP7aVkxc-r1fIPskFkUtRiKGkzxCk")
-
-basemap <- get_map(location=c(lon = -85, lat = -5), zoom = 3, maptype = "hybrid", color='bw', source='google', scale = 4)
-ggmap(basemap)
-
-map <- ggmap(basemap, extent='panel', base_layer=ggplot(hilo_panel, aes(x=Long, y=Lat))) #adds hilo panel info
-
-map + geom_point(aes(colour = ele_cont), size = 3) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  theme(legend.position="none") +
-  theme_cowplot()
-
-
-
-```
-
-```{r}
-#file with hilo panel lipid data
-
-hilo_lipids <- read_csv("data/fig_1/hilo_panel_lipid.csv")
-
-# add elevation continent variable
-hilo_lipids %>% 
-  mutate(ele_cont = ifelse(continent == "Mex" & elevation == "High", 1,
-                    ifelse(continent == "Mex" & elevation == "aLow", 2, 
-                    ifelse(continent == "SA" & elevation == "High", 3, 4))))
-
-hilo_lipids$ele_cont <- paste(hilo_lipids$continent, hilo_lipids$elevation, sep = "_")
-
-A <- hilo_lipids %>%
-  filter (FIELD == "MT2016") %>%
-  #filter(PCs/LPCs > 5) %>%
-  ggplot(aes(x = log10(PCs/LPCs), y = log10(LPCs), color = ele_cont)) +
-  geom_point(alpha = 0.7, size = 3) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  coord_fixed(ratio = 1.2) +
-  theme_cowplot(12) +
-  theme(legend.position="none") 
-  
-
-
-B <- hilo_lipids %>%
-  filter (FIELD == "MT2016") %>%
-  #filter(LPC_18_1 < 5e+05) %>%
-  ggplot(aes(x = ele_cont, y = log10(PC34_1_LPC18_1) , color = ele_cont)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  scale_color_manual(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot(12) +
-  coord_fixed(ratio = 1.25) +
-  xlab("Elevation") + 
-  ylab("log10(PC34:1/LPC18:1)") +
-  theme(legend.position="none") 
-
-plot_grid(A, B, ncol = 2)
+quartz( width = 12, height =7)
+species_effect %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  dplyr::mutate(species = factor(species, levels = plot_traits)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = Zscore, color =genotype)) +
+  ggplot2::ylab("Z-score") + ggplot2::xlab("Genotype") +
+  ggplot2::geom_jitter(position=position_jitter(0.2), size = 1.5) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), 
+                        geom="pointrange", color = "black", size = 0.5) +
+  ggplot2::facet_wrap(. ~ species, scales = "free", ncol = 6,
+                      labeller = facet_labeller)  +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+  ggpubr::theme_pubr(legend ="none") +
+  ggplot2::theme(strip.text = element_text(face = "bold", size = 9),
+                 strip.background =element_rect(color ="white",  fill="white"))
 ```
