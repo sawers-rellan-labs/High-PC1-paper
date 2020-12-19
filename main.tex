@@ -1,10 +1,10 @@
-\documentclass[9pt,twocolumn,twoside]{BioRxiv}
+\documentclass[9pt,twocolumn,twoside,lineno]{BioRxiv}
 % Use the documentclass option 'lineno' to view line numbers
 \setlength{\marginparwidth}{2cm}
 \usepackage[textsize=tiny,colorinlistoftodos]{todonotes} % comments in margins
 \definecolor{cornflowerblue}{rgb}{0.39, 0.58, 0.93}
 \usepackage{blindtext}
-
+\usepackage[switch]{lineno} 
 
 %%%%%%%Add comments in color
 \newcommand{\citex}[1]{{\small \textcolor{red}{CITE(#1)}}}
@@ -33,6 +33,7 @@
 %\title{Adaptive teosinte mexicana introgression of \textit{ZmPLA1.2} in highland maize and modern inbreds controls phosphatidylcholine levels and reduces flowering time}
 %\title{Adaptive teosinte mexicana introgression of \textit{ZmPLA1.2} in highland maize and Northern Flints controls phosphatidylcholine levels and reduces flowering time}
 %\title{Adaptive teosinte \textit{mexicana} introgression of \textit{ZmPLA1.2} in highland maize controls phosphatidylcholine levels and reduces flowering time}
+
 \title{Adaptive highland teosinte introgression into maize at \textit{ZmPLA1.2} controls phosphatidylcholine levels and induces earlier flowering} %Thanks Matt!
 
 \author[a,b,1]{Fausto Rodríguez-Zapata}
@@ -70,7 +71,7 @@
 
 \keywords{phospholipid metabolism; maize genetics; highland adaptation; convergent evolution}
 
-\runningtitle{Phospholipid Pathway Selection in Highland Maize} % For use in the footer 
+\runningtitle{\textit{ZmPLA1.2} selection in highland maize} % For use in the footer 
 
 %% For the footnote.
 %% Give the last name of the first author if only one author;
@@ -89,6 +90,8 @@ We then showed that the highland \textit{ZmPLA1.2} allele was introgressed from 
 We show that genetic variation in \textit{ZmPLA1.2} has a strong genotype by environment interaction in Mexican common garden experiments and that the highland \textit{ZmPLA1.2} leads to higher fitness in highland environments and possibly in cold temperate conditions via a reduction of flowering time.
 We further confirm the effects of \textit{ZmPLA1.2} in PC/LPC ratios and flowering time using a CRISPR-CAS9 mutant of \textit{ZmPLA1.2}.
 \end{abstract}
+
+
 
 \begin{document}
 
@@ -510,8 +513,10 @@ We showed that indeed, \textit{ZmPLA-PT} is an introgression from teosinte \text
 \textit{ZmPLA1.2} in inbreds carrying the \textit{ZmPLA1.2} haplotype show low levels of expression and earlier flowering times (Figure \ref{Fig5}D) \cite{Kremling2018-gn}. 
 Moreover, genetic variation in the regulatory region of ZmPLA1.2 was significantly associated with photoperiod sensitivity in the maize Nested Association Mapping population \cite{Hung2012-ms}. 
 The effect of genetic variation of \textit{ZmPLA1.2} on flowering time in mexican landraces indicated a strong GxE interaction where the highland allele lead to a reduction of flowering time and ASI in highland enviroments similar to the effect observed to the well known teosinte \textit{mexicana} introgression of inversion \textit{inv4m} \cite{Crow2020-gene}.
-Interestingly, for yield related traits, the effect of the highland allele shows typical conditional neutrality with increased fitness of the \textit{ZmPLA1.2-PT} allele in highland environments. 
-Conversely, the previously characterized \textit{mexicana} introgression textit{inv4m} \cite{Gonzalez-Segovia2019-jy} shows no effect in highland environments and negative effect in lowland environments \cite{Crow2020-gene}.
+Interestingly, for yield related traits, the effect of the highland allele shows typical conditional neutrality with increased fitness of the \textit{ZmPLA1.2-PT} allele in highlands. 
+Conversely, the previously characterized \textit{mexicana} introgression textit{inv4m} \cite{Gonzalez-Segovia2019-jy} shows no effect in highlands and negative effect in lowlands \cite{Crow2020-gene}.
+
+To the best of our knowledge this is the first documented case of an adaptive teosinte \textit{mexicana} introgression with a characterized metabolic phenotype and fitness advantage in highlands.
 
 %Conversely, LPC increases at the end of the light period when \textit{PLA1.2} is the most highly expressed.
 %Maatta et al 2012 reports that PC in Arabidopsis cycles in this manner \cite{Maatta2012-ip}. PC 34:3, 34:4, 36:5, and 36:6 are all higher at 11 hours into the dark period. 
@@ -522,6 +527,17 @@ Conversely, the previously characterized \textit{mexicana} introgression textit{
 %Transgenically increasing PC levels in the shoot apical meristem of Arabidopsis caused a faster flowering time, while lowering them caused flowering delays. 
 %The ortholog of FT in maize is ZCN8  ZCN8 underlies a major flowering time QTL and regulatory changes in ZCN8 through various SNPs have allowed maize to adapt its flowering time \cite{Guo2019-pn}.
 %However, it is not yet known if ZCN8 also has the ability to bind to PC.
+
+\section{Significance statement} 
+%(Direct and Contributed Submissions only)
+%Explain the significance of the research at a level understandable to an undergraduate-educated scientist outside their field of specialty
+%Include no more than 120 words
+
+After domestication in the tropical lowlands of México, maize expanded throughout the Americas and adapted to very diverse environments. 
+Because of its rich evolutionary history, maize is an ideal species to study convergent evolution. 
+Here, we use multiple highland adapted populations to study how phosphatidylcholine metabolism helped maize adapt to new environments. 
+We show that an introgression from teosinte \textit{mexicana} \textit{ZmPLA1.2} into maize lead to an increase in phosphatidylcholine levels that improved maize fitness probably through an effect on flowering time.  
+\textit{ZmPLA1.2} is a good example of what could be many genes to be characterized in the \textit{mexicana} introgression that may help maize adapt to stressful growing conditions. 
 
 \section{Materials and Methods}
 \label{sec:materials:methods}
@@ -814,8 +830,7 @@ E) \textit{ZmPLA1.2} expression levels of temperate inbreds B73, Mo17, Oh43, and
 \begin{center}
 \includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_5.png}
 \caption{A)Effect sizes of PC/LPC levels at BILs homozyzogous B73, PT and heterozygous qPC/LPC3@8.5.
-B) Flap lid domain and catalytic triad \textit{ZmPLA1.2} protein alignment from several plant species. 
-C) Nucleotidy diversity analysis of the promoter and CDS region of \textit{ZmPLA1.2} using whole genome sequencing data of highland and lowland landraces México and South American obtainedfrom \cite{Wang2017-bc}
+B) Nucleotidy diversity analysis of the promoter and CDS region of \textit{ZmPLA1.2} using whole genome sequencing data of highland and lowland landraces México and South American obtainedfrom \cite{Wang2017-bc}
 }
 \label{SupFig6}
 \end{center}

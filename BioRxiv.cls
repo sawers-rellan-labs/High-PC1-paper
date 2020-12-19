@@ -22,8 +22,13 @@
 
 % April 16, 2016:
 % Line numbers
-\RequirePackage[running,switch]{lineno}
-\ifthenelse{\boolean{displaylineno}}{\AtBeginDocument{\linenumbers}}{}
+%\RequirePackage[running,switch]{lineno}
+%\ifthenelse{\boolean{displaylineno}}{\AtBeginDocument{\linenumbers}}{}
+\newif\if@pnaslineno
+\DeclareOption{lineno}{\@pnaslinenotrue}
+\DeclareOption*{\PassOptionsToClass{\CurrentOption}{extarticle}}
+\ProcessOptions*
+%\LoadClass{extarticle}
 
 % Fonts and language
 \RequirePackage[utf8]{inputenc}
