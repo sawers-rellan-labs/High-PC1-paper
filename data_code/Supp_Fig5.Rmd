@@ -1,165 +1,99 @@
 ---
-title: "Supplemental Figure 5"
-author: "Rubén Rellán Álvarez"
-date: "9/14/2020"
+title: "Nucleotide diversity of ZmPla1.2 across cds and promoter regions"
+author: "Andi Kur"
+date: "11/12/2020"
 output: html_document
 ---
 
+A script for estimation pi across the gene regions of PLA in maize
 
-
-Load packages
-```{r}
-library(tidyr)
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(magrittr)
-library(rmarkdown)
-library(cowplot)
-library(ggmap)
-library(maps)
-library(readr)
-library(forcats)
-library(viridis)
-library(ggfortify)
-library(dabestr)
-require(FactoMineR)
-require(factoextra)
-require(ggplot2)
-require(tidyr)
-require(dplyr)
-require(MASS)
-require(reshape2)
-require(cowplot)
+```{r setup}
+#clear the R environment and load libraries
+rm(list = ls())
+library(tidyverse)
+library(PopGenome)
 
 ```
 
+Start by reading in FASTA file with all samples in single file
+Note that the FASTA must be in its own directory. For estimating pi separately 
+across coding and promoter regions, I put my subset FASTA into two separate folders:
+  ./promoter/all_PLA_promoter.fasta
+  ./cds/ALL/all_PLA_cds.fasta
 
-Load data
+````{r data}
+#Use Popgenome to read in data for promoter and cds
+  #must use include.unknown=FALSE so that uncertain nucleotides do not bias the pi estimate
 
-```{r}
-#load file
+#Promoter:
+PLA_promoter <- readData("./promoter/", format = "FASTA", include.unknown = FALSE)
+get.sum.data(PLA_promoter)
 
-pla_ionomics <- read_csv("data/Supp_fig5/pla_ionomics.csv")
-
-pla_lipid_phyt <- read_csv("data/Supp_fig5/pla_phyt_20.csv")
-
-pv18_ionomics <- read_csv("data/Supp_fig5/PV18_ionomics.csv")
-```
-
-Lipid analysis
-
-```{r}
-pla_lipid_phyt_std <- scale(pla_lipid_phyt)
-
-
-lipid_mr <- pla_lipid_mr %>%
-  filter(!is.na(`PC (34:4)`)) %>%
-  dabest(geno, `PC (34:4)`, 
-         idx = list(c("m", "wt")),
-         paired = FALSE
-        )
-plot(lipid_mr)
-
-lipid_phyt <- pla_lipid_phyt %>%
-  filter(!is.na(`PC (34:4)`)) %>%
-  dabest(geno, `PC (34:4)`, 
-         idx = list(c("m", "wt")),
-         paired = FALSE
-        )
-plot(lipid_phyt)
-
-
+#cds:
+PLA_cds <- readData("./cds/ALL/", format = "FASTA", include.unknown = FALSE)
+get.sum.data(PLA_cds)
 
 ```
 
-PV18 ionomics
+Because all of our samples are in a single FASTA file, we need to sort them by population.
+To do this, write a tab delimited text file with 2 columns, with sample IDs in the
+first column and population ID in the second.
 
-```{r}
+``` {r labels}
+#read population labels in
+PLA_info <- read_delim("./PLApopulations.txt", delim = "\t")
+PLA_info
 
+#get data for the populations
+populations <- split(PLA_info$ind, PLA_info$pop)
 
-PVP31 <- pv18_ionomics %>%
-  ggplot(aes(x = group, y = P31 , color = group)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot(12) +
-  xlab("Genotype") +
-  ylab("P31 (mg/Kg)") +
-  theme(legend.position="none")
+#now set for both coding and promoter objects
+PLA_promoter <- set.populations(PLA_promoter, populations)
+PLA_cds <- set.populations(PLA_cds, populations)
 
-pv18_ionomics %>%
-  ggplot(aes(x = P31, y = As75 , color = group)) +
-  geom_point() +
-  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
-  theme_cowplot(16) +
-  xlab("P31 (mg/Kg)") +
-  ylab("As75 (mg/Kg)")
-
-pv18_ionomics_pca <- pv18_ionomics[,c(13:33)]
-pv18_pca <- prcomp(pv18_ionomics_pca, scale = TRUE)
-
-pv18_pca %>% 
-  autoplot(loadings = TRUE, loadings.label = TRUE,
-         data = pv18_ionomics, colour = 'group') +
-  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
-  theme_cowplot(12)
-  
-
-
-  
+#check that it worked
+PLA_promoter@populations
+PLA_cds@populations
 ```
 
-
-Field Ionomics
-
-```{r}
-
-
-plaP31 <- pla_ionomics %>%
-  ggplot(aes(x = Genotype, y = (P * 10000) , color = Genotype)) +
-  geom_jitter(position=position_jitter(0.1), size = 2) +
-  scale_color_manual(values=c("#1260ad", "#df1b23")) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot(12) +
-  xlab("Genotype") +
-  ylab("P (mg/Kg)") +
-  theme(legend.position="none")
-
-ionomics_pca <- pla_ionomics[,c(3:14)]
-pca <- prcomp(ionomics_pca, scale = TRUE)
-
-pla_pca <- pca %>% 
-  autoplot(loadings = FALSE, loadings.label = FALSE,
-         data = pla_ionomics, colour = 'Genotype') +
-  scale_color_manual(values=c("#1260ad", "#df1b23")) +
-  theme_cowplot(12) +
-  theme(legend.position="none")
-  
+Next, calculate pi using PopGenome and the nucleotide.diversity.within method.
+This will calculate pi for each sight in the cds and promoter regions within each
+defined population. The output will then need to be transposed so that SNPs are in each 
+row and populations are in the columns.
 
 
-  
+```{r pi}
+#calculate nucleotide diversity
+PLA_cds <- diversity.stats(PLA_cds, pi=TRUE)
+PLA_promoter <- diversity.stats(PLA_promoter, pi=TRUE)
+
+  #Extract nucleotide data for each of the populations from the GENOME object
+  #use t to transpose the data, so that each row is a SNP and each column a pop
+PLA_promoter_pi <- t(PLA_promoter@region.stats@nuc.diversity.within[[1]])
+PLA_cds_pi <- t(PLA_cds@region.stats@nuc.diversity.within[[1]]) 
+
+
+#need to get data into a more suitable format for visualization
+# get SNP positions from the row names
+position_promoter <- as.numeric(rownames(PLA_promoter_pi))
+position_cds <- as.numeric(rownames(PLA_cds_pi))
+
+#rename the matrix columns after the populations
+colnames(PLA_promoter_pi) <- c("MexH", "MexL", "SAH", "SAL")
+colnames(PLA_cds_pi) <- c("MexH", "MexL", "SAH", "SAL")
+#combine into a data.frame and remove the row.names
+PLA_promoter_nd <- data.frame(position, PLA_promoter_pi, row.names = NULL)
+PLA_cds_nd <- data.frame(position, PLA_cds_pi, row.names = NULL)
+
+PLA_promoter_nd <- as.tibble(PLA_promoter_nd)
+PLA_cds_nd <- as.tibble(PLA_cds_nd)
+
+PLA_promoter_nd
+PLA_cds_nd
+
+#Save
+write.csv(PLA_promoter_nd, "~/Desktop/PLA_promoter.csv")
+write.csv(PLA_cds_nd, "~/Desktop/PLA_cds.csv")
 ```
 
-Andosol frequency with elevation
-
-```{r}
-andosols <- read_csv("data/Supp_fig5/andosol_elevation_bins.csv")
-
-andosol_ele <- andosols %>%
-  ggplot(aes(x = Elevation, y = Andosol*100)) +
-  geom_point() +
-  geom_smooth() +
-  #coord_fixed(ratio = 1.3) +
-  theme_cowplot(12) +
-  ylab("Andosol freq") +
-  xlab("Elevation (masl)") +
-  theme(legend.position="none")
-```
-
-Putting it all together
-
-```{r}
-plot_grid(PVP31, andosol_ele, plaP31, pla_pca, ncol = 2, labels = "AUTO")
-```
 

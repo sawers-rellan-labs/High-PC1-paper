@@ -207,7 +207,7 @@ dev.off()
 
 ```
 
-## PLA1.2 282 exprresion vs Flowering time
+## PLA1.2 282 expression vs Flowering time
 
 ```{r}
 library(dplyr)

@@ -1,0 +1,166 @@
+---
+title: "Supplemental Figure 5"
+author: "Rubén Rellán Álvarez"
+date: "9/14/2020"
+output: html_document
+---
+
+
+
+Load packages
+```{r}
+library(tidyr)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(rmarkdown)
+library(cowplot)
+library(ggmap)
+library(maps)
+library(readr)
+library(forcats)
+library(viridis)
+library(ggfortify)
+library(dabestr)
+require(FactoMineR)
+require(factoextra)
+require(ggplot2)
+require(tidyr)
+require(dplyr)
+require(MASS)
+require(reshape2)
+require(cowplot)
+
+```
+
+
+Load data
+
+```{r}
+#load file
+
+pla_ionomics <- read_csv("data/Supp_fig8/pla_ionomics.csv")
+
+pla_lipid_phyt <- read_csv("data/Supp_fig8/pla_phyt_20.csv")
+
+pv18_ionomics <- read_csv("data/Supp_fig8/PV18_ionomics.csv")
+```
+
+Lipid analysis
+
+```{r}
+pla_lipid_phyt_std <- scale(pla_lipid_phyt)
+
+
+lipid_mr <- pla_lipid_mr %>%
+  filter(!is.na(`PC (34:4)`)) %>%
+  dabest(geno, `PC (34:4)`, 
+         idx = list(c("m", "wt")),
+         paired = FALSE
+        )
+plot(lipid_mr)
+
+lipid_phyt <- pla_lipid_phyt %>%
+  filter(!is.na(`PC (34:4)`)) %>%
+  dabest(geno, `PC (34:4)`, 
+         idx = list(c("m", "wt")),
+         paired = FALSE
+        )
+plot(lipid_phyt)
+
+
+
+```
+
+PV18 ionomics
+
+```{r}
+
+
+PVP31 <- pv18_ionomics %>%
+  ggplot(aes(x = group, y = P31 , color = group)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme_cowplot(12) +
+  xlab("Genotype") +
+  ylab("P31 (mg/Kg)") +
+  theme(legend.position="none")
+
+pv18_ionomics %>%
+  ggplot(aes(x = P31, y = As75 , color = group)) +
+  geom_point() +
+  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
+  theme_cowplot(16) +
+  xlab("P31 (mg/Kg)") +
+  ylab("As75 (mg/Kg)")
+
+pv18_ionomics_pca <- pv18_ionomics[,c(13:33)]
+pv18_pca <- prcomp(pv18_ionomics_pca, scale = TRUE)
+
+pv18_pca %>% 
+  autoplot(loadings = TRUE, loadings.label = TRUE,
+         data = pv18_ionomics, colour = 'group') +
+  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820")) +
+  theme_cowplot(12)
+  
+
+
+  
+```
+
+
+Field Ionomics
+
+```{r}
+
+pla_ionomics$Genotype = forcats::fct_rev(factor(pla_ionomics$Genotype))
+
+plaP31 <- pla_ionomics %>%
+  ggplot(aes(x = Genotype, y = (P31 * 10000) , color = Genotype)) +
+  geom_jitter(position=position_jitter(0.1), size = 2) +
+  scale_color_manual(values=c("#df1b23", "#1260ad")) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  theme_cowplot(12) +
+  xlab("Genotype") +
+  ylab("P31 (mg/Kg)") +
+  theme(legend.position="none")
+
+ionomics_pca <- pla_ionomics[,c(3:14)]
+pca <- prcomp(ionomics_pca, scale = TRUE)
+
+pla_pca <- pca %>% 
+  autoplot(loadings = FALSE, loadings.label = FALSE,
+         data = pla_ionomics, colour = 'Genotype') +
+  scale_color_manual(values=c("#1260ad", "#df1b23")) +
+  theme_cowplot(12) +
+  theme(legend.position="none")
+  
+
+
+  
+```
+
+Andosol frequency with elevation
+
+```{r}
+andosols <- read_csv("data/Supp_fig8/andosol_elevation_bins.csv")
+
+andosol_ele <- andosols %>%
+  ggplot(aes(x = Elevation, y = Andosol*100)) +
+  geom_point() +
+  geom_smooth() +
+  #coord_fixed(ratio = 1.3) +
+  theme_cowplot(12) +
+  ylab("Andosol freq") +
+  xlab("Elevation (masl)") +
+  theme(legend.position="none")
+```
+
+Putting it all together
+
+```{r}
+plot_grid(PVP31, andosol_ele, plaP31, pla_pca, ncol = 2, labels = "AUTO")
+```
+

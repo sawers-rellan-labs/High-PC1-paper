@@ -32,6 +32,8 @@ library(data.table)
 library(GridLMM)
 library(grid)
 library(gridExtra)
+library(dabestr)
+
 ```
 
 
@@ -58,85 +60,85 @@ GWH<- BCWdata$plot[[1]]
 DA_fig <- DA %>%
   ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
   geom_line() +
-  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
   theme_cowplot(12) +
   ggtitle('Days to Anthesis') +
   theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=10)) +
+  theme(plot.title = element_text(size=9)) +
   theme(legend.position = "none") 
 
 PH_fig <- PH %>%
   ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
   geom_line() +
-  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
   theme_cowplot(12) +
   ggtitle('Plant Height') +
   theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=10)) +
+  theme(plot.title = element_text(size=9)) +
   theme(legend.position = "none")  
 
 ASI_fig <- ASI %>%
   ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
   geom_line() +
-  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
   theme_cowplot(12) +
   ggtitle('ASI') +
   theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=10)) +
+  theme(plot.title = element_text(size=9)) +
   theme(legend.position = "none")  
 
 FW_fig <- FW %>%
   ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
   geom_line() +
-  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
   theme_cowplot(12) +
   ggtitle('Fresh Ear Weight') +
   theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=10)) +
+  theme(plot.title = element_text(size=9)) +
   theme(legend.position = "none") 
 
 BCW_fig <- BCW %>%
   ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
   geom_line() +
-  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
   theme_cowplot(12) +
   ggtitle('Cob Weight') +
   theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=10)) +
+  theme(plot.title = element_text(size=9)) +
   theme(legend.position = "none")   
 
 GWH_fig <- FW %>%
   ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
   geom_line() +
-  scale_fill_manual(values=c("#9816E9", "#67E916")) +
+  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
   geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
   labs(x=NULL, y=NULL) +
   theme_cowplot(12) +
   ggtitle('Grain Weight/ha') +
   theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=10)) +
+  theme(plot.title = element_text(size=9)) +
   theme(legend.position = "none")  
 
 plotG <- plot_grid(DA_fig, PH_fig, ASI_fig, FW_fig, BCW_fig, GWH_fig, align = "v", nrow=2)
 
 y.grob <- textGrob("Effect of the highland allele", 
-                   gp=gpar( col="black", fontsize=12), rot=90)
+                   gp=gpar( col="black", fontsize=10), rot=90)
 x.grob <- textGrob("Elevation (km)", 
                    gp=gpar( col="black", fontsize=12))
 #add to plot
 Gplot<-grid.arrange(arrangeGrob(plotG, left = y.grob, bottom = x.grob))
 
-#ggsave(Gplot,device = 'png',filename = 'EffectsForRuben.png',width=8,height=8,dpi=200)
+ggsave(plot= Gplot,height=6,width=12,dpi=200, filename="~/effects_pla.pdf", useDingbats=FALSE)
 
 ```
 PLA Mutant analysis
@@ -188,7 +190,7 @@ unpaired_DTS <- pla %>%
   mean_diff()
 
 effect_size_dts <- plot(unpaired_DTS, axes.title.fontsize = 14,
-     palette = c(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")),
+     palette = c(values=c("#df1b23", "#1260ad")),
      rawplot.ylabel = "",
      effsize.ylabel = "",
      rawplot.markersize = 2)
@@ -202,7 +204,7 @@ unpaired_DTA <- pla %>%
   mean_diff()
 
 effect_size_dta <- plot(unpaired_DTA, axes.title.fontsize = 14,
-     palette = c(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")),
+     palette = c(values=c("#df1b23", "#1260ad")),
      rawplot.ylabel = "",
      effsize.ylabel = "",
      rawplot.markersize = 2)
@@ -216,13 +218,15 @@ unpaired_ASI <- pla %>%
   mean_diff()
 
 effect_size_ASI <- plot(unpaired_ASI, axes.title.fontsize = 14,
-     palette = c(values=c("#df1b23", "#1260ad", "#fd6820", "#14ade8")),
+     palette = c(values=c("#df1b23", "#1260ad")),
      rawplot.ylabel = "",
      effsize.ylabel = "",
-     rawplot.markersize = 1,
-     rawplot.groupwidth = 0.2)
+     rawplot.markersize = 2)
     
- plot_grid(effect_size_dts, effect_size_dta, effect_size_ASI, ncol = 3)    
+ plat_ft <- plot_grid(effect_size_dts, effect_size_dta, effect_size_ASI, ncol = 3)    
+ 
+ggsave(plot= plat_ft,height=6,width=12,dpi=200, filename="~/ft_pla.pdf", useDingbats=FALSE)
+
      
 ```
 
