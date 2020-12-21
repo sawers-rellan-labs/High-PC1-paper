@@ -138,7 +138,7 @@ Finally, there is evidence that early flowering alleles that confer an adaptive 
 %Maize has also adapted to a wide variety of uses, from the myriad culinary applications of local communities growing maize landraces particularly in México \cite{Bellon2018-cm} to the diverse range of products (from ethanol to high fructose syrup) that are produced with modern hybrids in modern agroindustrial operations. 
 %The genetic changes that lead to maize domestication \cite{Doebley1995-su,Doebley1997-oy, Wang2005-by, Clark2006-xh,Dorweiler1993-ik} and maize adaptation to a wider latitudinal range  provide a relatively good understanding of the genetic regions and mechanisms that shaped maize domestication and latitudinal expansion.
 
-Plant glycerolipids, which include phopsholipids, sulfolipids, galactolipids and other less polar lipids such as triacylglycerol, are involved in plant response to abiotic stresses typical of highland environments like low temperature and low phosphorus availability and flowering time.
+Plant glycerolipids, which include phopsholipids, sulfolipids, galactolipids and other less polar lipids such as triacylglycerol, are involved in plant response to stresses typical of highland environments like low temperature, low phosphorus availability and earlier flowering time.
 %In this paper, we posit that phospholipid metabolism has had an important role in maize adaptation to highlands and more generally in maize adaptation to low temperature, low phosphorus availability and flowering time.   
 %Our hypothesis is based on our current knowledge of how plants respond to a number of environmental conditions that are characteristic of highland environments and that affect phospholipid metabolism. 
 In low temperature, two strategies plants use are to increase phospholipid concentration \cite{Degenkolbe2012-wf} and to reduce the levels of unsaturated fatty acids in glycerolipids \cite{Welti2002-uk, Lynch1987-ln} which may help maintain the fluidity of cell membranes.
@@ -157,7 +157,7 @@ We further confirmed this loss of function using a CRISPR-CAS9 knockout in a tem
 Using data from thousands of genotyped landrace testcrosses grown in common garden experiments at different elevations in México, we showed a strong genotype by environment effect of the \textit{ZmPLA1.2} locus, 
 where the highland allele leads to higher fitness in highland environments and reduced fitness at lower elevations. 
 This GxE fitness effect is probably driven by the highland \textit{ZmPLA1.2} allele that is associated with later flowering times in lowland environments and earlier flowering times in highland environments. 
-\textit{ZmPLA1.2} CRISPR-Cas9 mutants grown in similar conditions to lowland environments confirmed this effect.
+\textit{ZmPLA1.2} CRISPR-Cas9 (\textit{ZmPLA1.2\textsuperscript{CR}})mutants grown in similar conditions to lowland environments confirmed this effect.
 Lastly, we showed that the highland PT \textit{ZmPLA1.2} locus is the result of teosinte \textit{mexicana} introgression and that this introgression was further conserved in northern US and European Flints. 
 These results suggest a potential beneficial effect of the \textit{ZmPLA1.2} highland allele in cold, high latitude environments where early flowering time would be advantageous.
 
@@ -188,10 +188,11 @@ The most over-represented intersection of selected genes was SWUS-MH-GH ($p = 1 
 \includegraphics[width=0.7\paperwidth]{Figures/Fig_1.png}
 \caption{Glycerolipid pathway selection. 
 A) Populations used in the Population Branch Excess (PBE)analysis. 
-B) Highland selection of Glycerolipid pathways using PBE. 
-For each pathway, we first selected all SNPs in the CDS regions and 10Kb upstream and downstream of the gene and we calculated the mean pathway PBE score. 
-We then constructed a null distribution by drawing 10000 samples without replacement of $n$ SNPs from those found within or around 10Kb upstream and downstream of all protein coding genes and we obtained the mean PBE for this null distribution. 
-For each pathway, the heat map shows p-values corresponding to the probability of sampling from the null distribution a set of $n$ SNPs with the observed glycerolipid pathway mean PBE score or higher.
+B) Highland selection of Glycerolipid pathways using PBE. See methods for details.
+%For each pathway, we first selected all SNPs in the CDS regions and 10Kb upstream and downstream of the gene and we calculated the mean pathway PBE score. 
+%We then constructed a null distribution by drawing 10000 samples without replacement of $n$ SNPs from those found within or around 10Kb upstream and downstream of all protein coding genes and we obtained the mean PBE for this null distribution. 
+%For each pathway, the heat map shows p-values corresponding to the probability of sampling from the null distribution a set of $n$ SNPs with the observed glycerolipid pathway mean PBE score or higher.
+C) PBE values of SNPs in \textit{ZmLPCAT1} and \textit{ZmPLA1.2}
 D) Map showing the geographical origin of the 120 accessions used in the common garden experiment to quantify glycerolipid levels.
 E) Logarithmic values of the PCs/LPCs ratio of highland and lowland landraces from MesoAmerica and South America.
 %TODO (fausto): Add Highland lowland to upper and lower "panels"
@@ -217,7 +218,7 @@ Pathways involved in triacylglycerol degradation and galactolipid biosynthesis w
 %\textit{ZmPLA1.2} also showed significant associations with glycerolipid content variation in a maize lipid GWAS analysis using the European Flint and Dent inbred panels \cite{Riedelsheimer2013-bd}.
 
 \subsubsection{Modes of convergent adaptation constraint} 
-Following Yeaman's \cite{yeaman2018} definition of the underlying causes of convergent adaptation we previously defined two possible modes of convergent adapation constraint in highland maize populations \cite{Wang2020-mp}. 
+Following Yeaman's \cite{yeaman2018} definition of the underlying causes of convergent adaptation we previously defined two possible modes of convergent adaptation constraint in highland maize populations \cite{Wang2020-mp}. 
 Convergence can be constrained by the number of genes influencing a trait, imposing a \textit{physiological} constraint; on the other hand, there can be many genes that can influence a trait but \textit{pleiotropic} constraint effects may limit the number of genes that can be repeatedly selected in different populations. 
 Using Yeaman's \textit{et al.} $C_{hyper}$ statistic \cite{yeaman2018} that quantifies these two modes of convergent adaptation, we found that the overlap observed among the presumably adapted genes in the populations can not be explained just by physiological constraint ($C_{hyper} = 3.96$) and that most likely it includes certain degree of pleiotropic constraint, where the observed convergent adapted genes must be the least penalized by antagonistic pleiotropic effects on fitness.
 The overlap was higher for the US-MesoAmerica population pairs ($C_{hyper} = 4.79$), than between the Andean and US-Mesomérica pair ($C_{hyper} = 3.14$).
@@ -237,6 +238,7 @@ To distinguish between these two competing scenarios, we compared each phenotype
 We calculated $Q_{ST}$-$F_{ST}$ using DartSeq genotypic data from the same plants that were used to analyze glycerolipid levels, and we calculated the $Q_{ST}$-$F_{ST}$ values for each glycerolipid species for highland/lowland populations of each subcontinent. 
 Mean $Q_{ST}$ was greater than mean $F_{ST}$ in mesoamerican and South American comparisons, though only the mesoamerican comparison is significant (two-tailed t-test, $p$ = 0.00073; South American comparison $p$ = 0.12).
 Yet, we observed several PC and LPC species with higher $Q_{ST}$ values than the neutral $F_{ST}$ in both sub continents (Supplementary Figure \ref{SupFig1}C-D, Supplementary File 2).
+In particular, one of the species with the highest $Q_{ST}$ values is PC 36:5. 
 %All together, these results further confirm that selection in genes of pathways involved in phospholipid remodelling is reflected on the phospholipids whose levels are determined by the action of the enzymes encoded by selected genes.
 \subsubsection{\textit{pcadapt} analysis of biological adaptation of Mexican landraces.} 
 We then used GBS data from 2700 geo-referenced landraces from México generated by the SeeD project \cite{Romero_Navarro2017-cn, Gates2019-xu} to run a \textit{pcadapt} analysis that detects how strongly loci are contributing to patterns of differentiation between major principal components of genetic variation \cite{Luu2017-ws}.
@@ -294,8 +296,8 @@ We further confirmed chloroplast localization by transiently expressing  the \te
 A) PT and B73 plants growing in the highland Metepec field. 
 B) QTL analysis using data collected from plants growing in the highland and lowland fields of PCs, LPCs and PCs/LPCs ratio identified overlapping major QTLs at 8.5 Mb in chromosome 3. 
 QTL peak coincides with the physical location of \textit{ZmPLA1.2}. 
-C)PCs, LPCs and PC/LPCs z-scores effect sizes of BILs at chr 3 8.5 Mb that are either homozygous B73 or PT (top row) and CRISPR-CAS9 \textit{ZmPLA1.2} mutant and wild plants (bottom row).        
-D)Individual PCs and LPCs species z-scores effect sizes of BILs at at chr 3 8.5 Mb (top row) and CRISPR-CAS9 \textit{ZmPLA1.2} mutant}
+C)PCs, LPCs and PC/LPCs z-scores effect sizes of BILs at chr 3 8.5 Mb that are either homozygous B73 or PT (top row) and CRISPR-CAS9 \textit{ZmPLA1.2\textsuperscript{CR}} mutant and wild plants (bottom row).        
+D)Individual PCs and LPCs species z-scores effect sizes of BILs at at chr 3 8.5 Mb (top row) and CRISPR-CAS9 \textit{ZmPLA1.2\textsuperscript{CR}} mutant}
 \label{Fig3}
 \end{center}
 \end{figure*} 
@@ -328,7 +330,7 @@ A) \textit{ZmPLA1.2} promoter and coding sequence showing different features. CT
 B) \textit{ZmPLA1.2} Expression analysis of B73, PT and their F1 grown in control and cold temperatures in growth chamber conditions. 
 C) PC/LPC ratios of several BILs including B042 that shows a recombination of event 500 bp upstream of the ATG.
 D) Bacterial optimal growth temperature (OGT) of different residues at the position in the flap-lid domain where the B73/PT mutation leading to a V211I conversion. Across the whole lipase domain, residues in bold in the flap lid domain (A) showed high correlation with bacterial OGT. 
-E) Alignments around the V211I mutation in the flap-lid domain in B73, mexicana and parviglumis and highland and lowland landraces southwest US, mesoamerican highlands and lowlands and Andes and South America lowlands} 
+E) Alignments around the V211I mutation in the flap-lid domain in B73, \textit{mexicana} and \textit{parviglumis} and highland and lowland landraces southwest US, mesoamerican highlands and lowlands and Andes and South America lowlands} 
 \label{Fig4}
 \end{center}
 \end{figure*} 
@@ -368,7 +370,7 @@ To address this we constructed phylogenetic tree using the Hapmap3 inbred lines 
 \caption{Introgression of teosinte \textit{mexicana} into maize \textit{ZmPLA1.2}  
 A) \(f_d\) analysis of \textit{mexicana} introgression. Data was obtained from \cite{Gonzalez-Segovia2019-jy}. 
 B) Haplotype network analysis of \textit{ZmPLA1.2} CDS SNPs using 1060 Mexican homozyogous individuals from the Seeds dataset.
-C) Phyologenetic tree of \textit{ZmPLA1.2} CDS using a sample of hapmap inbreds and Palomero Toluqueño
+C) Phyologenetic tree of \textit{ZmPLA1.2} CDS using a sample of Hapmap3 inbreds and Palomero Toluqueño
 D) \textit{ZmPLA1.2-PT} expression correlation with DTA in short and long days. Inbred lines from the PT lineage shown in panel C are colored in blue while inbred lines from the B73 lineage are colored in red.
 Data from \cite{Kremling2018-gn}}
 \label{Fig5}
@@ -411,9 +413,9 @@ We are currently performing further experiments in conditions simulating highlan
 \caption{A)Fitness effects of \textit{ZmPLA1.2-PT}. 
 We modeled each trait as a function of \textit{ZmPLA1.2-PT} genotype, trial elevation, and tester line, with controls for main effects and responses to elevation of the genomic background. 
 We used BLUPs and GBS data from ~ 2700 landraces from \cite{Gates2019-xu} evaluated in 23 common gardens at different elevations in México. 
-Purple lines and ribbons show estimates of the effect of the highland allele of \textit{ZmPLA1.2-PT} as a function of common garden elevation ± 2SE, based on conditional F-tests at the REML solutions of the random effect variance components using the \textit{GridLMM} package \cite{Runcie2019-Gr}. 
-Green lines show estimates of the \textit{ZmPLA1.2-PT} effect in a model that additionally included effects of Days-to-Anthesis on the focal trait within each trial.
-B) Flowering traits measured in the CRISPR-CAS9 mutant is long day conditions during the Summer of 2020 in Raleigh, NC}. 
+Gray lines and ribbons show estimates of the effect of the highland allele of \textit{ZmPLA1.2-PT} as a function of common garden elevation ± 2SE, using the \textit{GridLMM} package \cite{Runcie2019-Gr}. 
+Purple lines show estimates of the \textit{ZmPLA1.2-PT} effect in a model that additionally included effects of Days-to-Anthesis.
+B) Flowering traits measured in the CRISPR-CAS9 \textit{ZmPLA1.2\textsuperscript{CR}} mutant is long day conditions during the Summer of 2020 in Clayton, NC}. 
 \label{Fig6}
 \end{center}
 \end{figure}
@@ -494,6 +496,7 @@ As we mentioned before, PC metabolism is intimately connected to multiple stress
 %We observe similar trends between cold-acclimation-imposed lipid changes published in the literature and adaptation-imposed lipid changes in highlands maize. 
 The large qPC/LPC3@8.5 QTL is driven by individual QTLs of PC and LPC species with high levels of unsaturated fatty acids (Figure \ref{SupFig4}).
 Some of these species, like 36:5 PC and 18:1 LPC (Figure\ref{Fig3}D, Supplementary File 3), show similar patterns during Arabidopsis cold acclimation \cite{Welti2002-uk} and sorghum chilling response \cite{Marla2017-ph}.
+PC 36:5 was also identified was on of our highest $Q_{ST}$ values from the landrace panel (Supplementary Figure \ref{SupFig1}C-D, Supplementary File 2).
 %Increases in PC 36:5 and 36:6 combined with decreases in LPC 18:1 of highland maize resemble observed PC and LPC changes that occur during Arabidopsis cold acclimation \cite{Welti2002-uk} and sorghum chilling response \cite{Marla2017-ph}.
 %Highland maize shows an increase in PC and decrease of LPC. This trend is matched in Arabidopsis responding to cold acclimation where PC 36:5 and 36:6 increases, while LPC 18:1 decreases \cite{Welti2002-uk}. PC 36:5 and 36:6 increasing during cold stress also occurs in sorghum \cite{Marla2017-ph}. 
 %When exploring the lipid changes, they found that maize and sorghum, two relatively cold-sensitive species, displayed increases in desaturation in PC, while tripsacum, the relatively cold-tolerant species, displayed decreases in PC desaturation \cite{Yan2019-tx}. 
@@ -738,7 +741,7 @@ Frequency of Andosol soils at different elevations was calculated using the soil
 Phosphorus content in flag leaves of the the same \textit{Zmpla1.2\textsuperscript{CR}} and WT mutants used for the flowering time experiment were analyzed using ICP-OES at the North Carolina Department of Agriculture.   
 
 \section{Acknowledgments}
-This work was supported by Conacyt Young Investigator (CB-238101), Conacyt National Problems (APN-2983), UC-Mexus and NC State startup funds awarded to Rubén Rellán-Álvarez. Allison Barnes was supported by NSF-PGRP grant 201703.
+This work was supported by Conacyt Young Investigator (CB-238101), Conacyt National Problems (APN-2983), UC-Mexus and NC State startup funds awarded to Rubén Rellán-Álvarez. Allison Barnes was supported by NSF-PGRP grant 201703. Andi Kur was supported as an AgBioFEWS fellow by the NSF grant 1828820.
 We want to acknowledge the work of the Rellán-Álvarez and Sawers lab students that have helped generate the mapping populations developed in this manuscript.
 We specially want to thank the indigenous people of the Americas that through fascinating agricultural ingenuity domesticated and made possible the spread and adaptation of maize throughout the continent. 
 Field experiments were carried out in Wixárika (Puerto Vallarta, México); Nahuatl, Matlatzinca, and Mazahua (Metepec, México); and Tuscarora (Clayton, NC) land.
@@ -807,11 +810,7 @@ B) Genome wide analysis of \textit{Pcadapt} PC1 outliers.
 \begin{figure*}[t]
 \begin{center}
 \includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_3.png}
-\caption{A) Genomic Location of genes coding for enzymes predicted Phospholipase A1 activity. 
-B) Site of action of the different types of phospholipases.
-C) Subcellular localization of \textit{ZmPLA1.2}.
-D) B73 expression levels of genes coding for enzymes with predicted Phospholipase A1 activity across different tissues. \textit{ZmPLA1.2} is indicated in blue. 
-E) \textit{ZmPLA1.2} expression levels of temperate inbreds B73, Mo17, Oh43, and Ph207 under control, control and heat stress. Values taken from \cite{Waters2017-nat}. 
+\caption{A) Effect sizes of several individual PC, LPC, and PC/LPC QTL peaks.
 }
 \label{SupFig4}
 \end{center}
@@ -820,7 +819,12 @@ E) \textit{ZmPLA1.2} expression levels of temperate inbreds B73, Mo17, Oh43, and
 \begin{figure*}[t]
 \begin{center}
 \includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_4.png}
-\caption{A) Effect sizes of several individual PC, LPC, and PC/LPC QTL peaks.
+
+\caption{A) Genomic Location of genes coding for enzymes predicted Phospholipase A1 activity. 
+B) Site of action of the different types of phospholipases.
+C) Subcellular localization of \textit{ZmPLA1.2}.
+D) B73 expression levels of genes coding for enzymes with predicted Phospholipase A1 activity across different tissues. \textit{ZmPLA1.2} is indicated in blue. 
+E) \textit{ZmPLA1.2} expression levels of temperate inbreds B73, Mo17, Oh43, and Ph207 under control, control and heat stress. Values taken from \cite{Waters2017-nat}. 
 }
 \label{SupFig3}
 \end{center}
@@ -857,10 +861,10 @@ Data obtained from \cite{Kremling2018-gn}
 \begin{figure*}[t]
 \begin{center}
 \includegraphics[width=0.8\paperwidth]{Sup_Figures/Sup_Fig_8.png}
-\caption{A) Flag leaf hosphorus levels of B73 and 10 highland landraces each from México and Perú grown in control conditions.
+\caption{A) Flag leaf phosphorus levels of B73 and 10 highland landraces each from México and Perú grown in control conditions.
 B) Andosol soil frequency measured using the geographic coordinates of landrace accessions from the SEEDS dataset calculated using the soilP package \cite{Rodriguez-Zapata2018-vz}.
-C) Phosphorus content on the CRISPR \textit{ZmPLA1.2} mutants grown in long day conditions in Raleigh.
-D) PCA analysis of ionomics data of the CRISPR \textit{ZmPLA1.2} mutants and control plants grown in long day conditions in Raleigh
+C) Phosphorus content on the \textit{ZmPLA1.2\textsuperscript{CR}} mutants grown in long day conditions in Clayton, NC.
+D) PCA analysis of ionomics data of the \textit{ZmPLA1.2\textsuperscript{CR}} mutants and control plants grown in long day conditions in Raleigh
 }
 \label{SupFig8}
 \end{center}
