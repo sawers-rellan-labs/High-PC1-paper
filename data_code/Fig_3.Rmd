@@ -188,61 +188,37 @@ metabolite$PC_LPC <- metabolite$PCs/metabolite$LPCs
 ## Normalized per species
 
 ```{r}
-pct_thresh <- 100
+plot_traits <- c("PCs","LPCs", "PC_LPC")
 
-PCs_paired <-  PCs %>%
-  dplyr::group_by(genotype,species) %>%
-  dplyr::summarise(signal = mean(signal, na.rm =TRUE), signalZ = mean(signalZ, na.rm =TRUE)) %>%
-  dplyr::ungroup() %>%
-  dplyr::group_by(genotype) %>%
-  dplyr::filter(!is.na(signal)) %>%
-  dplyr::mutate(pct= prop.table(signal)*100) %>%
-  dplyr::arrange(-pct) %>%
-  dplyr::mutate(cum_pct = cumsum(pct)) %>%
-  dplyr::filter(cum_pct <=  pct_thresh) %>%
-  dplyr::ungroup() %>%
-  dplyr::group_by(species) %>%
-  dplyr::mutate( n = length(genotype)) %>%
-  dplyr::filter( n > 1)
+species_effect <- metabolite %>%
+  dplyr::select(sample_id,genotype, all_of(plot_traits)) %>%
+  dplyr::mutate_if(is.numeric, scale) %>%
+  tidyr::pivot_longer(all_of(plot_traits), names_to = "species", values_to = "Zscore") %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  dplyr::mutate(species = factor(species, levels = plot_traits)) 
 
-PCs_paired$label <- ""
-PCs_paired$empty_label <- ""
-PCs_paired$label[PCs_paired$genotype == "wt"] <- PCs_paired$species[PCs_paired$genotype == "mut"]
-PCs_paired$empty_label[PCs_paired$genotype == "wt"] <- " "
+species_effect$Zscore <- species_effect$Zscore[,1]
 
+sp_label <- c("PCs","LPCs", "PC/LPC")
+names(sp_label) <- plot_traits
+facet_labeller <- ggplot2::labeller(species = sp_label) 
 
-PC_wilcox <- PCs_paired %>%
-  dplyr::ungroup() %>%
-  rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "less")  %>%
-  rstatix::add_xy_position(fun = "max", x = "geno")
-
-
-
-LPCs_paired <- LPCs %>%
-  dplyr::group_by(genotype,species) %>%
-  dplyr::summarise(signal = mean(signal, na.rm =TRUE), signalZ = mean(signalZ, na.rm =TRUE)) %>%
-  dplyr::ungroup() %>%
-  dplyr::group_by(genotype) %>%
-  dplyr::filter(!is.na(signal)) %>%
-  dplyr::mutate(pct= prop.table(signal)*100) %>%
-  dplyr::arrange(-pct) %>%
-  dplyr::mutate(cum_pct = cumsum(pct)) %>%
-  dplyr::filter(cum_pct <=  pct_thresh) %>%
-  dplyr::ungroup() %>%
-  dplyr::group_by(species) %>%
-  dplyr::mutate( n = length(genotype)) %>%
-  dplyr::filter( n > 1)
-
-
-LPCs_paired$label <- ""
-LPCs_paired$empty_label <- ""
-LPCs_paired$label[LPCs_paired$genotype == "wt"] <- LPCs_paired$species[LPCs_paired$genotype == "mut"]
-LPCs_paired$empty_label[LPCs_paired$genotype == "wt"] <- " "
-
-LPC_wilcox <- LPCs_paired %>%
-  dplyr::ungroup() %>%
-  rstatix::wilcox_test(signalZ ~ genotype, paired =TRUE, exact = TRUE, alternative = "greater")  %>%
-  rstatix::add_xy_position(fun = "max", x = "geno")
+pe12 <- species_effect %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = Zscore, color = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.2), size = 1.5) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), 
+                        geom="pointrange", color = "black", size = 0.5) +
+  ggplot2::xlab("Genotype") + ggplot2::ylab("Z-score") +
+  ggplot2::facet_wrap(. ~ species, scales = "free", 
+                      labeller =facet_labeller,
+                      ncol = 3)  +
+  scale_x_discrete(labels = c(expression(italic("wt")), expression(italic("CR")))) +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+  ggpubr::theme_pubr(legend ="none", base_size = base_size) +
+  ggplot2::theme( axis.title = element_blank(),
+                 strip.text = element_blank(),
+                 strip.background =element_rect(color ="white",  fill="white"))
 ```
 
 # Now with the RILs 
@@ -263,115 +239,40 @@ cross$pheno$id
 
 S3_8542287 <-factor(pull.geno(cross,3)[, "S3_8542287"])
 levels(S3_8542287) <-  c("B73", "PT")
+
 to_plot <- dplyr::inner_join(
   data.frame( id = cross$pheno$id,
               genotype = S3_8542287),
   pheno
 )
 
+plot_traits <- c("PCs","LPCs", "PCs.LPCs")
+species_effect <-  to_plot %>% 
+  dplyr::select(id, genotype, all_of(plot_traits)) %>%
+  dplyr::mutate_if(is.numeric, scale) %>%
+  tidyr::pivot_longer(all_of(plot_traits), names_to = "species", values_to = "Zscore" )
+species_effect$Zscore <- species_effect$Zscore[,1]
 
-p031 <- metabolite %>%
-  dplyr::filter(genotype %in% c("mut","wt")) %>%
-  dplyr::mutate(genotype = factor(genotype, levels =  c("wt","mut"))) %>%
-  ggplot2::ggplot(aes(x = genotype, y = PCs %>% scale() %>% as.vector(), colour = genotype)) +
-  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
-  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  # ggplot2::ggtitle("B104 CRISPR") +
-  ggplot2::ylab("PCs") +
-  ggplot2::xlab("Genotype") +
+sp_label <- c("PCs","LPCs", "PCs/LPCs")
+names(sp_label) <- plot_traits
+facet_labeller <- ggplot2::labeller(species = sp_label) 
+
+pe11 <- species_effect %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  dplyr::mutate(species = factor(species, levels = plot_traits)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = Zscore, color = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.2), size = 1.5) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), 
+                        geom="pointrange", color = "black", size = 0.5) +
+  ggplot2::facet_wrap(. ~ species, scales = "free", 
+                      labeller = facet_labeller,
+                      ncol = 3)  +
   ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
-    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
-  ggplot2::theme(axis.title.x=element_blank())
+  ggpubr::theme_pubr(legend ="none", base_size = base_size) +
+  ggplot2::theme( axis.title = element_blank(),
+                 strip.text = element_blank())
 
-p131 <- metabolite %>%
-  dplyr::filter(genotype %in% c("mut","wt")) %>%
-  dplyr::mutate(genotype = factor(genotype, levels =  c("wt","mut"))) %>%
-  ggplot2::ggplot(aes(x = genotype, y = LPCs  %>% scale() %>% as.vector(), colour = genotype)) +
-  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
-  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  # ggplot2::ggtitle("B104 CRISPR") +
-  ggplot2::ylab("LPCs") +
-  ggplot2::xlab("Genotype") +
-  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
-    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
-  ggplot2::theme(axis.title.x=element_blank())
-
-p032 <- to_plot %>%
-  dplyr::filter(!is.na(genotype)) %>%
-  ggplot2::ggplot(aes(x = genotype, y = PCs %>% scale() %>% as.vector(), colour = genotype)) +
-  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
-  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  ggplot2::ylab("PCs") +
-  ggplot2::xlab("Genotype") +
-  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
-  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
-    ggpubr::theme_pubr(legend ="none", base_size=base_size)+
-  ggplot2::theme(axis.title.x=element_blank())
-
-
-p132 <- to_plot %>%
-  dplyr::filter(!is.na(genotype)) %>%
-  ggplot2::ggplot(aes(x = genotype, y = LPCs %>% scale() %>% as.vector(), colour = genotype)) +
-  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
-  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  ggplot2::ylab("LPCs") +
-  ggplot2::xlab("Genotype") +
-  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
-  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
-    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
-  ggplot2::theme(axis.title.x=element_blank())
-
-
-p310 <- metabolite %>%
-  dplyr::filter(genotype %in% c("mut","wt")) %>%
-  dplyr::mutate(genotype = factor(genotype, levels =  c("wt","mut"))) %>%
-  ggplot2::ggplot(aes(x = genotype, y = PC_LPC %>% scale() %>% as.vector(), colour = genotype)) +
-  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
-  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  # ggplot2::ggtitle("B104 CRISPR") +
-  ggplot2::ylab("PCs/LPCs") +
-  ggplot2::xlab("Genotype") +
-  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
-    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
-  ggplot2::theme(axis.title.x=element_blank())
-
-p320 <- to_plot %>%
-  dplyr::filter(!is.na(genotype)) %>%
-  ggplot2::ggplot(aes(x = genotype, y = PCs.LPCs %>% scale() %>% as.vector(), colour = genotype)) +
-  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
-  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  ggplot2::ylab("PCs/LPCs") +
-  ggplot2::xlab("Genotype") +
-  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
-  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad"))+
-    ggpubr::theme_pubr(legend ="none", base_size=base_size) +
-  ggplot2::theme(axis.title.x=element_blank())
-
-
-PCs <- to_plot %>%
-  dplyr::select(id, genotype, starts_with("PC_") & !matches("LPC") & !matches("\\.")) %>%
-  dplyr::filter(!is.na(genotype)) %>%
-  tidyr::pivot_longer(cols = starts_with("PC_"),
-                      names_to = "species", values_to = "signal"
-  ) %>%
-  dplyr::group_by(species) %>%
-  dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
-                log10 = log10(signal) %>% as.vector(),
-                log10Z = scale(log10(signal)) %>% as.vector()) %>%
-  dplyr::ungroup()
-
-LPCs <- to_plot %>%
-  dplyr::select(id, genotype, starts_with("LPC_") & !matches("\\.")) %>%
-  dplyr::filter(!is.na(genotype))  %>%
-  tidyr::pivot_longer(
-    cols = starts_with("LPC_"),
-    names_to = "species", values_to = "signal"
-  ) %>%
-  dplyr::group_by(species) %>%
-  dplyr::mutate(signalZ = scale(signal) %>% as.vector(),
-                log10 = log10(signal) %>% as.vector(),
-                log10Z = scale(log10(signal)) %>% as.vector()) %>%
-  dplyr::ungroup()
+quartz(height =2.5, width =6)
 
 ```
 
@@ -422,10 +323,12 @@ CRISPR_norm <- rbind(
 )
 ```
 
-# Now with the RILs
-
 
 ```{r}
+# Now with the RILs -----------------------------------------------------------------
+
+library(qtl)
+
 cross <- read.cross(
   format = "csvs",  file = "B73xPT_AGPv3_genotype.csv",
   na.strings = c("-",NA),
@@ -438,6 +341,7 @@ cross <- read.cross(
 pheno <- read.csv("B73xPT_combined_phenotype.csv") %>%
   dplyr::group_by(id)
 
+cross$pheno$id
 
 S3_8542287 <-factor(pull.geno(cross,3)[, "S3_8542287"])
 levels(S3_8542287) <-  c("B73", "PT")
@@ -497,18 +401,26 @@ paired <-  rbind(CRISPR_norm, RILs_norm) %>%
   dplyr::filter( n == 2) %>%
   dplyr::mutate( sign = sign(signal[2] - signal[1])) %>% print(n=60)
 
+table(paired$genotype,paired$species)
 
 paired$label <- ""
 paired$empty_label <- ""
 # paired$label[paired$genotype == "wt"] <- paired$species[paired$genotype == "mut"]
 
-paired$label[paired$species == "PC..36.2." & paired$genotype == "wt"] <- "PC 36:2"
-paired$label[paired$species == "LPC..18.2." & paired$genotype == "wt"] <- "LPC 18:2"
+paired$label[paired$species == "PC..36.2." & paired$genotype == "mut"] <- "PC36:2"
+paired$label[paired$species == "PC..36.5." & paired$genotype == "mut"] <- "PC36:5"
+paired$label[paired$species == "LPC..18.2." & paired$genotype == "mut"] <- "LPC18:2"
+paired$label[paired$species == "LPC..18.1." & paired$genotype == "mut"] <- "LPC18:1"
 
-paired$label[paired$species == "PC_36_2" & paired$genotype == "B73"] <- "PC 36:2"
-paired$label[paired$species == "LPC_18_2" & paired$genotype == "B73"] <- "LPC 18:2"
-# paired$label[paired$genotype == "B73"] <- paired$species[paired$genotype == "PT"]
 
+paired$label[paired$species == "PC_36_2" & paired$genotype == "PT"] <- "PC36:2"
+paired$label[grepl("PC_36_5",paired$species) & paired$genotype == "PT"] <-  c("PC36:5A","PC36:5B")
+paired[grepl("PC_36_5",paired$species) & paired$genotype == "PT",]
+paired$label[paired$species == "LPC_18_1" & paired$genotype == "PT"] <- "LPC18:1"
+
+paired$label[paired$species == "LPC_18_2" & paired$genotype == "PT"] <- "LPC18:2"
+
+paired$species
 paired$empty_label[paired$genotype == "wt"] <- " "
 paired$empty_label[paired$genotype == "B73"] <- " "
 
@@ -542,47 +454,63 @@ wilcox_1 <- rbind(
   dplyr::mutate(y.position = y_pos)
 as.data.frame(wilcox_1)
 levels(paired$pop)
-?labeller
-facet_labeller <- ggplot2::labeller(pop = c("RILs" ="RILs 3@8.51")) 
 
-p1 <- paired %>%
-  dplyr::filter(pop == "RILs") %>%
+
+
+paired  %>%
+  dplyr::filter(pop == "RILs") %>% print(n= 100)
+
+pe21 <- paired %>%
+  dplyr::filter(pop == "RILs" & trait == "PCs") %>%
   ggplot(aes( x = genotype, y = signalZ, group = species, color = factor(sign))) +
   geom_point() + geom_line() +
-  coord_cartesian(ylim = c(-1.5, 1.8))  +
+  coord_cartesian(ylim = c(-1.5, 1.8), xlim = c(1,2.5))  +
   ylab("Signal (Z-score)") + xlab("Genotype")   +
   ggplot2::scale_color_manual(values= c("#df1b23","#1260ad") )+
-  ggplot2::facet_grid(pop ~ trait, scales = "free", 
-                      labeller = facet_labeller ) +
+  # ggplot2::facet_wrap(pop ~ trait, scales = "free_y") +
   ggpubr::stat_pvalue_manual(
-    wilcox_1 , label = "p = {pval_fmt}", bracket.nudge.y = 0.1,
+    wilcox_1 %>% dplyr::filter(trait == "PCs"), label = "p = {pval_fmt}", bracket.nudge.y = 0.1,
   ) +
   ggrepel::geom_text_repel(
-    data= paired %>%
-      dplyr::filter(pop == "RILs" & species == "PC_36_2" ),
+    data= paired  %>%
+      dplyr::filter(pop == "RILs" & species %in% c("PC_36_2","PC_36_5_A", "PC_36_5_B")),
     aes(label = label),
     hjust = 2,
     min.segment.length = unit(0, 'lines'),
     segment.size = 0.5,
     segment.alpha = 0.5,
-    xlim  = c(1.2,NA),
-    ylim  = c(NA,-1.2),
-  ) +
-  ggrepel::geom_text_repel(
-    data= paired %>%
-      dplyr::filter(pop == "RILs" & species == "LPC_18_2" ),
-    aes(label = label),
-    hjust = 2,
-    min.segment.length = unit(0, 'lines'),
-    segment.size = 0.5,
-    segment.alpha = 0.5,
-    xlim  = c(1.2,NA),
-    ylim  = c(0.4,NA),
+    xlim  = c(2.2, NA),
   ) +
   ggpubr::theme_pubr(legend ="none", base_size = base_size) +
-  theme(strip.text = element_text(size = base_size),
-        strip.background =element_rect(color ="white",  fill="white"),
-        axis.title.x=element_blank())
+  theme(strip.text = element_blank(),
+        axis.title=element_blank(),
+  )
+
+pe22 <- paired %>%
+  dplyr::filter(pop == "RILs" & trait == "LPCs") %>%
+  ggplot(aes( x = genotype, y = signalZ, group = species, color = factor(sign))) +
+  geom_point() + geom_line() +
+  coord_cartesian(ylim = c(-1.5, 1.8), xlim = c(1,2.5))  +
+  ylab("Signal (Z-score)") + xlab("Genotype")   +
+  ggplot2::scale_color_manual(values= c("#df1b23","#1260ad") )+
+  # ggplot2::facet_wrap(pop ~ trait, scales = "free_y") +
+  ggpubr::stat_pvalue_manual(
+    wilcox_1 %>% dplyr::filter(trait == "LPCs"), label = "p = {pval_fmt}", bracket.nudge.y = 0.1,
+  ) +
+  ggrepel::geom_text_repel(
+    data= paired  %>%
+       dplyr::filter(pop == "RILs" & species %in% c("LPC_18_1",  "LPC_18_2")),
+    aes(label = label),
+    hjust = 2,
+    min.segment.length = unit(0, 'lines'),
+    segment.size = 0.5,
+    segment.alpha = 0.5,
+    xlim  = c(2.2, NA),
+  ) +
+  ggpubr::theme_pubr(legend ="none", base_size = base_size) +
+  theme(strip.text = element_blank(),
+        axis.title=element_blank(),
+  )
 
 
 wilcox_2 <- rbind(
@@ -604,46 +532,105 @@ wilcox_2 <- rbind(
   dplyr::mutate( p_raw = p, p = p.adj,
                  pval_fmt = format.pval(p.adj, digits = 2))
 
-
-p2 <- paired %>%
-  dplyr::filter(pop == "CRISPR/CAS9") %>%
-  ggplot(aes( x = factor(genotype, levels = c("wt","mut")), 
-              y = signalZ, group = species, color = factor(sign))) +
-  geom_point() + geom_line() +
-  coord_cartesian( ylim = c(-0.5, 0.55))  +
-  ylab("Signal (Z-score)") + xlab("Genotype")   +
-  ggplot2::scale_color_manual(values= c("#df1b23","#1260ad"))+
-  ggplot2::facet_grid(pop ~ trait, scales = "free" ) +
-  scale_x_discrete(labels = abbreviate) +
+pe23 <- paired %>%
+  dplyr::filter(pop == "CRISPR/CAS9" & trait == "PCs") %>%
+  ggplot2::ggplot(aes( x = genotype, y = signalZ, group = species, color = factor(sign))) +
+  ggplot2::geom_point() + geom_line() +
+  ggplot2::coord_cartesian( ylim = c(-0.5, 0.6), xlim = c(1,2.5))  +
+  ggplot2::ylab("Signal (Z-score)") + ggplot2::xlab("Genotype")   +
+  ggplot2::scale_color_manual(values= c("#df1b23","#1260ad") ) +
+  ggplot2::scale_x_discrete(labels = c(expression(italic("wt")), expression(italic("CR")))) +
+  # ggplot2::facet_wrap(pop ~ trait, scales = "free_y") +
   ggpubr::stat_pvalue_manual(
-    wilcox_2 , label = "p = {pval_fmt}", bracket.nudge.y = 0.05,
+    wilcox_2 %>% dplyr::filter(trait == "PCs"), label = "p = {pval_fmt}", bracket.nudge.y = 0.1,
   ) +
   ggrepel::geom_text_repel(
+    data= paired  %>%
+      dplyr::filter(pop == "CRISPR/CAS9" & species %in% c("PC..36.2.","PC..36.5.")),
     aes(label = label),
-    direction = "y",
     hjust = 2,
     min.segment.length = unit(0, 'lines'),
     segment.size = 0.5,
     segment.alpha = 0.5,
-    xlim  = c(1.2,NA),
+    xlim  = c(2.2, NA),
   ) +
   ggpubr::theme_pubr(legend ="none", base_size = base_size) +
-  theme(strip.text = element_text(size = base_size),
-        strip.background =element_rect(color ="white", fill="white"),
-        axis.title.x=element_blank())
+  ggplot2::theme(strip.text = element_blank(),
+                 axis.title=element_blank(),
+  )
 
-p3  <- ggpubr::ggarrange(p1,p2, align = "hv", nrow = 2)
+paired 
 
-# quartz(height = 1.3*4.13, width = 9.58)
+pe24 <- paired %>%
+  dplyr::filter(pop == "CRISPR/CAS9" & trait == "LPCs") %>%
+  ggplot2::ggplot(aes( x = genotype, y = signalZ, group = species, color = factor(sign))) +
+  ggplot2::geom_point() + geom_line() +
+  ggplot2::coord_cartesian( ylim = c(-0.5, 0.6), xlim = c(1,2.5))  +
+  ggplot2::ylab("Signal (Z-score)") + ggplot2::xlab("Genotype")   +
+  ggplot2::scale_color_manual(values= c("#df1b23","#1260ad") ) +
+  ggplot2::scale_x_discrete(labels = c(expression(italic("wt")), expression(italic("CR")))) +
+  # ggplot2::facet_wrap(pop ~ trait, scales = "free_y") +
+  ggpubr::stat_pvalue_manual(
+    wilcox_2 %>% dplyr::filter(trait == "LPCs"), label = "p = {pval_fmt}", bracket.nudge.y = 0.1,
+  ) +
+  ggrepel::geom_text_repel(
+    data= paired  %>%
+      dplyr::filter(pop == "CRISPR/CAS9" & species %in% c("LPC..18.1.","LPC..18.2.")),
+    aes(label = label),
+    hjust = 2,
+    min.segment.length = unit(0, 'lines'),
+    segment.size = 0.5,
+    segment.alpha = 0.5,
+    xlim  = c(2.2, NA)
+  ) +
+  ggpubr::theme_pubr(legend ="none", base_size = base_size) +
+  ggplot2::theme(strip.text = element_blank(),
+                 axis.title=element_blank(),
+  )
 
-png(file = "Figure3C.png", height = 538, width = 958))
-ggpubr::ggarrange(
-  ggpubr::ggarrange(p032,  p132, p320, 
-                    p031,  p131, p310,
-                    nrow = 2, ncol = 3),
-  p3, 
-  ncol = 2,
-  widths = c(1.75,1), align = "hv")
+
+fig <- ggpubr::ggarrange(
+  ggpubr::ggarrange(pe11,
+                    pe12,
+                    align = "hv", nrow = 2),
+  ggpubr::ggarrange(pe21,pe22,
+                    pe23, pe24,
+                    align = "hv", nrow = 2, ncol =2),
+  ncol = 2
+  
+) +
+  theme(strip.text = element_blank(),
+        axis.title.y=element_blank(),
+        plot.margin = unit(c(0.05,0.075, 0.05, 0.05), "npc")
+  )
+
+
+line_x0 <- "Genotype"
+line_x1 <- "PCs"
+line_x2 <- "LPCs"
+line_x3 <- "PCs/LPCs"
+
+line_y0 <- "Z-score"
+line_y1 <- "BILs"
+line_y2 <- expression(italic("3@8.5"))
+line_y3 <- "CRISPR/CAS9"
+line_y4 <- expression(italic("ZmPLA1.2"))
+
+fig3CD <- cowplot::ggdraw(fig) + 
+ # cowplot::draw_label(line_x0, x = 0.45, y = 0.05) +
+  cowplot::draw_label(line_x1, x = 0.15, y = 0.97) + # use relative coordinates for positioning
+  cowplot::draw_label(line_x2, x = 0.285, y = 0.97) +
+  cowplot::draw_label(line_x3, x = 0.42, y = 0.97) + # use relative coordinates for positioning
+  cowplot::draw_label(line_x1, x = 0.6, y = 0.97) +
+  cowplot::draw_label(line_x2, x = 0.817, y = 0.97) +
+  cowplot::draw_label(line_y0, x = 0.05, y = 0.5, angle = 90) +
+  cowplot::draw_label(line_y1, x = 0.95, y = 0.75, angle = -90) + # use relative coordinates for positioning
+  cowplot::draw_label(line_y2, x = 0.93, y = 0.75, angle = -90) +
+  cowplot::draw_label(line_y3, x = 0.95, y = 0.3, angle = -90) + # use relative coordinates for positioning
+  cowplot::draw_label(line_y4, x = 0.93, y = 0.3, angle = -90)
+  
+pdf(file= "Figure3CD.pdf", height = 5, width = 12)
+fig3CD
 dev.off()
 ```
 
