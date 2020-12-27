@@ -27,6 +27,114 @@ library(Hmisc)
 library(ggpubr)
 ```
 
+A script to put together the chromosomes from all chromosomes EXCEPT the chromosome that the SNP tested lives on and run the PCAdapt on them
+In theory this should let me break a pcadapt scoring scheme (communality) and specify the snp value and the PCA value independently 
+
+```{r}
+#Important to install the 3.0.4 version of pcadapt because 
+install_version("pcadapt", version = "3.0.4", repos = "https://cran.r-project.org/")
+library(pcadapt)
+#make a generic matrix
+setwd('/Users/dangates/Desktop/RubenFiles/')
+
+#make a big combined matrix that we can easily subset later
+#Genotypes for this analysis also can be located at : https://github.com/danjgates/AdaptationScripts2/tree/master/Genotypes
+
+#mat<-read.table('/Users/dangates/Desktop/ImputedSeeDs/Ch1_Imputed_RefProbability.txt',header=TRUE,skip=1)
+#mat[,1]<-sapply(as.character(mat[,1]),function(x) strsplit(x,':')[[1]][1],USE.NAMES=FALSE)
+#mat<-mat[!duplicated(mat[,1]),]
+#rownames(mat)<-mat[,1]
+#mat<-mat[,-1]
+#finalMat2<-read.table('/Users/dangates/Desktop/SeeDs/WorkingSeeDID.csv',sep=",",header=TRUE)
+#finalMat2<-finalMat2[which(finalMat2[,'latitude']>12),]
+#finalMat2<-finalMat2[which(finalMat2[,'longitude'] < -85.5),]
+#finalMat2<-finalMat2[which(finalMat2[,'longitude'] > -130),]
+#rownames(finalMat2)<-finalMat2[,1]
+#finalMat2<-finalMat2[,-1]
+#Coord<-as.matrix(finalMat2[,c('longitude','latitude')])
+#kp<-rownames(finalMat2)
+#kp<-kp[kp %in% rownames(mat)]
+#mat<-mat[kp,]
+#finalMat2<-finalMat2[kp,]
+#mat<-mat[,which(colnames(mat)%in%names(maf))]
+#fmat<-mat
+#now keep iterating....
+#for (chr in 2:10){
+#	mat<-read.table(paste('/Users/dangates/Desktop/ImputedSeeDs/Ch',chr,'_Imputed_RefProbability.txt',sep=""),header=TRUE,skip=1)
+#	mat[,1]<-sapply(as.character(mat[,1]),function(x) strsplit(x,':')[[1]][1],USE.NAMES=FALSE)
+#	mat<-mat[!duplicated(mat[,1]),]
+#	rownames(mat)<-mat[,1]
+#	mat<-mat[,-1]
+#	finalMat2<-read.table('/Users/dangates/Desktop/SeeDs/WorkingSeeDID.csv',sep=",",header=TRUE)
+#Remove outlying individuals
+#	finalMat2<-finalMat2[which(finalMat2[,'latitude']>12),]
+#	finalMat2<-finalMat2[which(finalMat2[,'longitude'] < -85.5),]
+#	finalMat2<-finalMat2[which(finalMat2[,'longitude'] > -130),]
+#	rownames(finalMat2)<-finalMat2[,1]
+#	finalMat2<-finalMat2[,-1]
+#	Coord<-as.matrix(finalMat2[,c('longitude','latitude')])
+#	kp<-rownames(finalMat2)
+#	kp<-kp[kp %in% rownames(mat)]
+#	mat<-mat[kp,]
+#	finalMat2<-finalMat2[kp,]
+#	mat<-mat[,which(colnames(mat)%in%names(maf))]
+#	fmat<-cbind(fmat,mat)
+#}
+#save the big matrix
+#fmat[which(is.na(fmat),arr.ind=TRUE)]<- 9
+
+#save(fmat,file='/Users/dangates/Desktop/BigMatrix.Rimage')
+
+#load up the file
+load('BigMatrix.Rimage')
+
+#ok lets try chr 10 against everything else...
+
+ChiProbs<-lapply(1:10,function(num){
+SinglSNPs<-fmat[,grep(paste('S',num,'_',sep=""),colnames(fmat))]
+write.table(t(SinglSNPs),'Test2.lfmm',quote=FALSE,row.names=FALSE,col.names=FALSE)
+pcad2<-pcadapt('Test2.lfmm',K=10)
+
+#now make a matrix of everything else
+RestSNPs<-fmat[,which(!(1:ncol(fmat) %in% grep(paste('S',num,'_',sep=""),colnames(fmat))))]
+write.table(t(RestSNPs),'/Users/dangates/Desktop/RubenFiles/Test.lfmm',quote=FALSE,row.names=FALSE,col.names=FALSE)
+pcad<-pcadapt('/Users/dangates/Desktop/RubenFiles/Test.lfmm',K=10)
+rm(RestSNPs)
+#now for the actual tests...
+nSNP<-ncol(SinglSNPs)
+K=10
+stat <- sapply(1:nSNP, FUN = function(xx) {
+  sum(pcad2$loadings[xx, 1:K]^2 * pcad$singular.values[1:K]^2/(nSNP))
+})
+c <- sum(pcad$singular.values[1:K]^2)/K
+df <- K
+gif <- median(stat * nSNP/c, na.rm = TRUE)/qchisq(0.5, df = K)
+chi2.stat <- stat * nSNP/(c * gif)
+chiProb<-pchisq(chi2.stat,df=df,lower.tail=FALSE)
+names(chiProb)<-colnames(SinglSNPs)
+return(chiProb)
+})
+
+#now I want to make a manhatten again:
+chr<-as.numeric(sapply(names(unlist(ChiProbs)),function(x) substr(strsplit(x,'_')[[1]][1],2,3)))
+bp<-as.numeric(sapply(names(unlist(ChiProbs)),function(x) strsplit(x,'_')[[1]][2]))
+colm<-cbind(chr,bp,unlist(ChiProbs))
+colm<-colm[order(colm[,'chr'],colm[,'bp']),]
+colm<-cbind(paste('r',1:nrow(colm),sep=""),colm)
+colnames(colm)<-c('SNP','CHR','BP','P')
+colm<-data.frame(colm,stringsAsFactors = FALSE)
+colm[,c(2:3)]<-sapply(colm[,c(2:3)],as.integer)
+colm[,4]<-sapply(colm[,4],as.numeric)
+library(qqman)
+manhattan(colm)
+save(colm,file='/Users/dangates/Desktop/PCadapt/CorrectedPvalues.Rimage')
+load('/Users/dangates/Desktop/PCadapt/CorrectedPvalues.Rimage')
+```
+
+
+
+
+
 ```{r}
 # Load all files
 

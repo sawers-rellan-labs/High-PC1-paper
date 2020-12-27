@@ -28,7 +28,7 @@ library(maps)
 library(qtlcharts)
 library(Hmisc)
 library(pegas)
-library(ggtext)
+library(mdthemes)
 ```
 
 
@@ -57,7 +57,7 @@ F1 expression data
 exp_valuesPLALPCAT <- read_csv("data/fig_4/ZmPla-Lpcat.csv")
 
 ZmPla1_exp <- exp_valuesPLALPCAT %>%
-  filter(gene=="ZmPLA1.2") %>%
+  filter(gene=="ZmPla1.2") %>%
   #filter(fertilizer_tx=="high") %>%
 	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
   scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
@@ -65,9 +65,9 @@ ZmPla1_exp <- exp_valuesPLALPCAT %>%
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black") +
   #ylim(0,8) +
-  labs(x = "Temperature", y = "ZmPla1.2") +
-  theme(axis.text.y = element_text(face = "italic")) +
-  theme_cowplot(16) +
+  labs(x = "Temperature", y = "*ZmPLA1.2*") +
+  md_theme_classic() +
+  #theme_cowplot(16) +
   #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
   facet_grid(cols = vars(line)) +
   #coord_fixed(ratio = 0.9) +
