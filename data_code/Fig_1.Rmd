@@ -527,3 +527,41 @@ allwise_p_chisq(pbe[,colnames(pbe)!="AN"], num_permute = 10000)
 ```{r}
 estimate_pa(pbe, ndigits = 4, show.plot = F, na.rm = F)
 ```
+
+Qst-Fst 
+
+```{r}
+
+Qst_Fst <- read.csv("data/fig_1/qst_df.csv")
+
+Qst_Fst_mex <- Qst_Fst %>%
+  filter(class == "PC" | class == "LPC") %>%
+  ggplot(aes(x = qst_elevation_mex, y = reorder(metabolite, qst_elevation_mex), colour = qst_elevation_mex)) +
+  geom_point(size = 3) +  
+  scale_color_viridis(option = "plasma", direction = -1) +
+  theme_cowplot() +
+  xlim(0,1) +
+  geom_vline(xintercept=0.01984786, color="red", size= 1) +
+  theme(legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(size = 8))
+
+Qst_Fst_sa <- Qst_Fst %>%
+  filter(class == "PC" | class == "LPC") %>%
+  ggplot(aes(x = qst_elevation_sa, y = reorder(metabolite, qst_elevation_sa), colour = qst_elevation_sa)) +
+  geom_point(size = 3) +  
+  scale_color_viridis(option = "plasma", direction = -1) +
+  theme_cowplot() +
+  xlim(0,1) +
+  geom_vline(xintercept=0.03332049, color="red", size= 1) +
+  theme(legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(size = 8))
+
+plot_grid(Qst_Fst_mex, Qst_Fst_sa, ncol = 1)
+  
+
+```
+
