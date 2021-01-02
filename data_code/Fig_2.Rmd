@@ -138,10 +138,10 @@ load('/Users/dangates/Desktop/PCadapt/CorrectedPvalues.Rimage')
 ```{r}
 # Load all files
 
-gbs <- read_csv("data/hpl_GBS_data.csv")
-mapping_file <- read_csv("data/mapping_file.csv")
-AccID <- read_csv("data/AccID.csv")
-allLines_mapping <- read_csv("data/allLines_with_GID.csv")
+gbs <- read_csv("data/fig_2/hpl_GBS_data.csv")
+mapping_file <- read_csv("data/fig_2/mapping_file.csv")
+AccID <- read_csv("data/fig_2/AccID.csv")
+allLines_mapping <- read_csv("data/fig_2/allLines_with_GID.csv")
 load("data/fig_2/pcadapt_corrected.Rimage")
 
 
@@ -162,9 +162,60 @@ colm %>%
 	#xlim(5379695, 5395010) +
 	#ylim(0, 130)
 
+# ZmPLA1.2 figure
+
+A <-	colm %>%
+	filter(CHR == 3) %>%
+	#filter(BP > 7500000) %>%
+	#filter(BP < 9500000) %>%
+	filter(-log10(P) > 5) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 1) +
+	theme_cowplot(14) +
+	#geom_segment(x = 8.541, xend = 8.543, y = 120, yend = 120, colour = "red", size = 6) +
+  theme(legend.position = "none") +
+	#xlim(5379695, 5395010) +
+	#ylim(0, 130) +
+  xlab("MB")
+  
+  B <-	colm %>%
+	filter(CHR == 3) %>%
+	filter(BP > 7500000) %>%
+	filter(BP < 9500000) %>%
+	filter(-log10(P) > 5) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 1) +
+	theme_cowplot(14) +
+	geom_segment(x = 8.541, xend = 8.543, y = 120, yend = 120, colour = "red", size = 6) +
+  theme(legend.position = "none") +
+	#xlim(5379695, 5395010) +
+	ylim(0, 130) +
+  xlab("MB")
+
 # LPCAT1 figure
 
-colm %>%
+C <- colm %>%
+	filter(CHR == 5) %>%
+	#filter(BP > 194500000) %>%
+	#filter(BP < 196500000) %>%
+	#filter(-log10(P) > 70) %>%
+	#ggplot(aes(x = BP, P, colour = P)) +
+	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+	scale_color_viridis(option = "plasma", direction = -1) +
+	geom_point(size = 1) +
+	theme_cowplot(12) +
+	#facet_wrap( ~ CHR, ncol=5)
+	#geom_segment(x = 195.443, xend = 195.454, y = 110, yend = 110, colour = "red", size = 6) +
+  theme(legend.position = "none") +
+	#xlim(5379695, 5395010) +
+	#ylim(0, 130) +
+  xlab("MB")
+  
+ D <- colm %>%
 	filter(CHR == 5) %>%
 	filter(BP > 194500000) %>%
 	filter(BP < 196500000) %>%
@@ -173,27 +224,19 @@ colm %>%
 	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
 	scale_color_viridis(option = "plasma", direction = -1) +
 	geom_point(size = 1) +
-	theme_cowplot(16) +
+	theme_cowplot(12) +
 	#facet_wrap( ~ CHR, ncol=5)
 	geom_segment(x = 195.443, xend = 195.454, y = 110, yend = 110, colour = "red", size = 6) +
+  theme(legend.position = "none") +
 	#xlim(5379695, 5395010) +
-	ylim(0, 130)
+	ylim(0, 130) +
+  xlab("MB")
 
-	# ZmPLA1.2 figure
 
-	colm %>%
-	filter(CHR < 3) %>%
-	filter(BP > 7500000) %>%
-	filter(BP < 9500000) %>%
-	filter(-log10(P) > 5) %>%
-	#ggplot(aes(x = BP, P, colour = P)) +
-	ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
-	scale_color_viridis(option = "plasma", direction = -1) +
-	geom_point(size = 2) +
-	theme_cowplot(12) +
-	geom_segment(x = 8.541, xend = 8.543, y = 120, yend = 120, colour = "red", size = 6) +
-	#xlim(5379695, 5395010) +
-	ylim(0, 130)
+
+plot_grid(A, C, B, D, ncol = 2)
+
+C
 ```
 
 
@@ -287,10 +330,11 @@ pla1_plot <- ele_fr %>% ggpubr::ggscatter(  x = "Elevation", y = "S3_8542287_fr"
                                add = "loess",               # Add regression line
                                conf.int = TRUE,             # Add confidence interval
                                color = "#1260ad") +
-  ggplot2::ggtitle("3@8.5 Mb") +
+  #ggplot2::ggtitle("3@8.5 Mb") +
   ggplot2::ylab("Minor Allele Frequency") +
   ggplot2::scale_x_continuous(breaks = seq(0, 3000, 1000), limits = c(0, 3000)) +
   ggplot2::scale_y_continuous(breaks = seq(0, 1, .25), limits = c(0, 1.15)) +
+  theme_cowplot(12)
   ggpubr::theme_classic2(base_size = 20)
 
 
@@ -301,11 +345,14 @@ lpcat_plot <- ele_fr %>%
                      add = "loess",               # Add regression line
                      conf.int = TRUE,  # Add confidence interval
                      color = "#1260ad") +
-  ggplot2::ggtitle("5@195.5 Mb") +
+  #ggplot2::ggtitle("5@195.5 Mb") +
   ggplot2::ylab("Minor Allele Frequency") +
   ggplot2::scale_x_continuous(breaks = seq(0, 3000, 1000), limits = c(0, 3000)) +
   ggplot2::scale_y_continuous(breaks = seq(0, 1, .25), limits = c(0, 1.15)) +
-  ggpubr::theme_classic2(base_size = 20)
+  theme_cowplot(12)
+  #ggpubr::theme_classic2(base_size = 20)
+
+plot_grid(pla1_plot, lpcat_plot)
 
 pdf(file.path('output',"fig_1CD.pdf"), width = 14)
 ggpubr::ggarrange(pla1_plot,lpcat_plot) %>% print()

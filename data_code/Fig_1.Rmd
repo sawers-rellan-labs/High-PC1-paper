@@ -536,13 +536,14 @@ Qst_Fst <- read.csv("data/fig_1/qst_df.csv")
 
 Qst_Fst_mex <- Qst_Fst %>%
   filter(class == "PC" | class == "LPC") %>%
-  ggplot(aes(x = qst_elevation_mex, y = reorder(metabolite, qst_elevation_mex), colour = qst_elevation_mex)) +
+  ggplot(aes(x = qst_elevation_mex, y = reorder(metabolite, qst_elevation_mex), colour = insaturations)) +
   geom_point(size = 3) +  
   scale_color_viridis(option = "plasma", direction = -1) +
   theme_cowplot() +
   xlim(0,1) +
   geom_vline(xintercept=0.01984786, color="red", size= 1) +
-  theme(legend.position = "none",
+  facet_grid(~class)
+  #theme(legend.position = "none",
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y = element_text(size = 8))
