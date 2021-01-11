@@ -1,9 +1,11 @@
-By the same logic, we should change 'day' and 'night' to be more inclusive.---
+---
 title: "Nucleotide diversity of ZmPla1.2 across cds and promoter regions"
 author: "Andi Kur"
 date: "11/12/2020"
 output: html_document
 ---
+
+# Supplemantary figure 6
 
 A script for estimation pi across the gene regions of PLA in maize
 

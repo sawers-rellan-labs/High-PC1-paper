@@ -1,0 +1,83 @@
+---
+title: "Convergent Evolution and Genetic Constraint"
+author: "Fausto Rodriguez"
+date: "9/18/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+
+library(inti)
+library(agridat)
+
+
+base_pheno <- read.csv('B73xPT_base_phenotype_reps.csv')  %>%
+  # dplyr::select(id:lipid_batch_number,PCs.LPCs) %>%
+  dplyr::mutate(rep = paste0("rep",rep)) %>%
+  dplyr::arrange(FIELD, ROW_ID)
+
+hr <-NULL
+hr1 <- H2cal(data = base_pheno
+            , trait = "PCs.LPCs"
+            , gen.name = "id"
+            , rep.n = 3
+            , fix.model = "rep + (1|rep:FIELD) + id"
+            , ran.model = "rep + (1|rep:FIELD) + (1|id)"
+            , emmeans = TRUE
+            , plot_diag = TRUE
+            , plot_dots = "rep"
+            , outliers.rm = FALSE
+)
+
+
+hr <-NULL
+hr <- H2cal(data = base_pheno,
+            , trait = "LPCs"
+            , gen.name = "id"
+            , rep.n = 3
+            , fix.model = "rep + (1|rep:FIELD) + id"
+            , ran.model = "rep + (1|rep:FIELD) + (1|id)"
+            , emmeans = TRUE
+            , plot_diag = TRUE
+            , plot_dots = "rep"
+            , outliers.rm = FALSE
+)
+
+hr$tabsmr$h2.s
+# 0.6666027
+
+hr <-NULL
+hr <- H2cal(data = base_pheno,
+            , trait = "PCs"
+            , gen.name = "id"
+            , rep.n = 3
+            , fix.model = "rep + (1|rep:FIELD) + id"
+            , ran.model = "rep + (1|rep:FIELD) + (1|id)"
+            , emmeans = TRUE
+            , plot_diag = TRUE
+            , plot_dots = "rep"
+            , outliers.rm = FALSE
+)
+
+hr$tabsmr$h2.s
+# 0.5727905
+
+
+# dt <- john.alpha
+# 
+# hr <- H2cal(data = dt
+#             , trait = "yield"
+#             , gen.name = "gen"
+#             , rep.n = 3
+#             , fix.model = "rep + (1|rep:block) + gen"
+#             , ran.model = "rep + (1|rep:block) + (1|gen)"
+#             , emmeans = TRUE
+#             , plot_diag = TRUE
+#             , plot_dots = "rep"
+#             , outliers.rm = FALSE
+# )
+# 
+# hr
+```

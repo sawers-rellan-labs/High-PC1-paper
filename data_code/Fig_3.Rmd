@@ -5,6 +5,34 @@ editor_options:
   chunk_output_type: inline
 ---
 
+```{r}
+rm(list = ls())
+library(tidyverse)
+library(data.table)
+library(cowplot)
+library(wesanderson)
+library(ggplot2)
+library(MASS) 
+library(qtl)
+library(lme4) 
+library(arm) 
+library(lsmeans) 
+library(pbkrtest)
+library(cowplot) 
+library(viridis)
+library(qtlcharts)
+library(readr)
+library(ggfortify)
+library(ggmap)
+library(maps)
+library(qtlcharts)
+library(Hmisc)
+library(pegas)
+library(mdthemes)
+```
+
+
+
 # Annotated LOD profile
 
 ```{r}
@@ -634,3 +662,184 @@ fig3CD
 dev.off()
 ```
 
+
+
+##F1 expression data
+
+```{r}
+
+exp_valuesPLALPCAT <- read_csv("data/fig_4/ZmPla-Lpcat.csv")
+
+ZmPla1_exp <- exp_valuesPLALPCAT %>%
+  filter(gene=="ZmPla1.2") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
+               color = "black") +
+  #ylim(0,8) +
+  labs(x = "Temperature", y = "*ZmPLA1.2*") +
+  md_theme_classic() +
+  #theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
+
+ZmLpcat_exp <- exp_valuesPLALPCAT %>%
+  filter(gene=="ZmLpcat") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmLpcat1") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
+
+ratio_exp <- exp_valuesPLALPCAT %>%
+  filter(gene=="Ratio") %>%
+  #filter(fertilizer_tx=="high") %>%
+	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+	geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
+               color = "black") +
+  #ylim(0,8) +
+  ylab("ZmPla1.2/ZmLpcat1") +
+  xlab("Temperature") +
+  theme_cowplot(16) +
+  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+  facet_grid(cols = vars(line)) +
+  #coord_fixed(ratio = 0.9) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
+
+plot_grid(ZmPla1_exp, ZmLpcat_exp, ratio_exp, ncol = 1)
+
+```
+
+
+## Fig 4D Recombination breakpoint + Lipid Phenotype overlay: log(PCs/PCs)
+
+```{r}
+
+library(qtl)
+library(dplyr)
+library(ggplot2)
+
+
+data_dir <- "../data/fig_3" # all the source data is the same as Fig_3
+geno_file  <- file.path(data_dir, "B73xPT_AGPv3_genotype.csv")
+pheno_file <- file.path(data_dir, "B73xPT_combined_phenotype.csv")
+base_pheno_file <- file.path(data_dir, "B73xPT_base_phenotype.csv")
+
+cross <- read.cross(
+  format = "csvs",  file = geno_file,
+  na.strings = c("-",NA),
+  phefile = pheno_file,
+  genotypes = c("A","B")) %>%
+  convert2riself() %>%
+  jittermap() %>%
+  calc.genoprob( step = 1)
+cross$pheno$id <- gsub("LANMLR17B","B",cross$pheno$id)
+
+  
+S3_8542287 <-factor(pull.geno(cross,3)[, "S3_8542287"])
+names(S3_8542287) <- gsub("LANMLR17B","B",cross$pheno$id)
+levels(S3_8542287) <-  c("B73", "PT")
+
+pheno <- cross$pheno  %>%
+  dplyr::select(id, LPCs, PCs, PCs.LPCs) %>%
+  dplyr::left_join(
+    base_pheno %>%  
+      dplyr::mutate( log10 = log10(PCs.LPCs)) %>%
+      group_by(id) %>%
+      dplyr::summarise(mean_log10 = mean(log10))
+  ) %>%
+  dplyr::mutate(S3_8542287 = S3_8542287[id]) %>%
+  dplyr::filter(!is.na(S3_8542287) & !is.na(PCs.LPCs)) %>%
+  dplyr::arrange(mean_log10) %>%
+  dplyr::mutate(
+    id = forcats::fct_reorder(id, mean_log10,.fun = identity)
+    ) %>%
+  dplyr::arrange(-mean_log10)
+
+n <- 18
+top_n <- pheno$id[1:n]
+
+
+peak_idx <- which(colnames(cross$geno$`3`$data) == "S3_8542287")
+
+
+bg_data <- cross$geno$`3`$data[,c((peak_idx-2):(peak_idx))] %>% 
+  as.data.frame() %>%
+  dplyr::mutate(id = factor(cross$pheno$id)) %>%
+  dplyr::filter(id %in% as.character(pheno$id)) %>%
+  dplyr::mutate(id = factor(id , levels = levels(pheno$id))) %>%
+  tidyr::pivot_longer(cols = tidyselect::contains("_"),
+                      names_to = "marker", values_to = "genotype") %>%
+  tidyr::separate(marker, c("chr","pos"), sep = "_",remove  = FALSE) %>%
+  dplyr::mutate(pos = as.integer(pos)) %>%
+  dplyr::arrange(id,pos) %>%
+  dplyr::group_by(id) %>%
+  dplyr::mutate(len = pos - dplyr::lag(pos, default = pos[1])) %>%
+  dplyr::mutate(lag_pos = dplyr::lag(pos)) %>%
+  dplyr::mutate(cumlen = cumsum(len)) %>%
+  dplyr::mutate(br = len/2 + dplyr::lag(cumlen)) %>%
+  dplyr::filter(!is.na(lag_pos)) %>%
+  dplyr::mutate(marker = factor(marker, levels = rev(marker[1:3]))) %>%
+  dplyr::mutate(genotype = factor( c("B73", "PT")[genotype])) %>%
+  dplyr::ungroup()
+
+scatter_data <- bg_data %>%
+  dplyr::inner_join(
+    base_pheno[,c(1:4,which(colnames(base_pheno) == "PCs.LPCs"))] %>%
+      dplyr::mutate(id = gsub("LANMLR17B","B",id)),
+    by = "id",
+  ) %>% 
+  dplyr::mutate(log10_PCs.LPCs = log10(PCs.LPCs))  %>%
+  dplyr::mutate(id = forcats::fct_reorder(id,log10_PCs.LPCs,.fun = mean, na.rm = TRUE))
+
+
+png(file = "Fig_4D.png", width = 7, height = 7, units = "in", res = 200)
+# quartz()
+bg_data %>%
+  dplyr::inner_join(pheno) %>%
+  dplyr::filter(id %in% top_n) %>%
+  ggplot2::ggplot() + 
+  xlab("") +
+  # Add background columns for illustrating recombination
+  ggplot2::geom_col(aes(x = id, y = len, group = marker, fill= genotype),
+                    color="white") +
+  # Add points:
+  #
+  # ggplot2::geom_point(
+  #   data = scatter_data %>% dplyr::filter(id %in% top),
+  #   aes( y = log10_PCs.LPCs*9.1^6, x = id, shape = FIELD),
+  #   size =2, color = "grey75") +
+  #
+  ggplot2::scale_fill_manual(values = c("#df1b23","#1260ad")) +
+  ggplot2::stat_summary(data = scatter_data %>% dplyr::filter(id %in% top), 
+                        aes(x = id, y = log10_PCs.LPCs*9.1^6),
+                        fun.data=mean_sdl,fun.args = list(mult = 1), col ="white", size = 0.8) +
+  ggplot2::scale_y_continuous( 
+    name = "Marker Position",
+    breaks = bg_data$br[1:2],
+    labels = round(bg_data$pos[1:2] /1e6,2),
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./1e6, name="log10(PCs/LPCs)")
+  ) +
+  ggplot2::coord_flip() +
+  ggpubr::theme_pubr(legend = "none", base_size = 18)
+dev.off()
+```

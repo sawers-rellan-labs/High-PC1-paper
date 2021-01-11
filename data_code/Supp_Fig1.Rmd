@@ -1,193 +1,65 @@
----
-title: "Supplemental Figure 1"
-author: "Fausto Rodríguez Zapata"
-date: "5/27/2020"
-output: html_document
----
+#PBE resample P-value HeatMap
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# Panels A B (Codigo de dan) and C
 
-## PBE resampling for SNPs in Glycerolipid pathway
+```{r}
+library(pglipid)
+library(ggplot2)
+library(cowplot)
+library(Hmisc)
+library(ComplexHeatmap)
 
-```{r} 
+pval        <- read.csv(file.path( "data","fig_1", "PBE_pvalues.csv"))
+pglipid_cyc <- read.csv(file.path( "data","fig_1", "pglipid_cyc.csv"))
 
-library(dplyr)
-library(GenomicRanges)
-library(regioneR) 
+pwy_summary <- pval  %>%
+  dplyr::left_join(pglipid_cyc, by =c(geneset ="Pathway.id") )
 
-pvalue_string <- function(x, n = 10000){
-  if(x == 0){
-    paste("p <", formatC(1/n, format = "G", digits = 2))
-  } else{
-    paste("p =", formatC(x, format = "G", digits = 2))
-  }
-}
-
-datadir <- file.path("","Users","fvrodriguez","Projects","NCSU","05_PLA1")
-refdir <-  file.path("","ref","zea")
-```
+rownames(m) <- pwy_summary$Pathway.name
 
 
-### Get the genome annotation 
-B73_RefGen_v3_Chr.bed 
-file with each chromosome start and end coordinates
-this is useful for checking the genome version of the markers
+m[m ==0] = 1e-5
 
-```{r} 
-AGPv3 <- regioneR::toGRanges(file.path(refdir,"B73_RefGen_v3_Chr.bed"))
-seqlengths(AGPv3) <- width(AGPv3)
-genome(AGPv3 ) <- "AGPv3"
+hm <-   ComplexHeatmap::Heatmap(
+  m,
+  name = "p value",
+  row_names_max_width = ComplexHeatmap::max_text_width(rownames(m))
+)
 
-B73v3 <- rtracklayer::import(
-  file.path(refdir,"zea_mays.protein_coding_chr.gff"))
+ht <- ComplexHeatmap::draw(hm, heatmap_legend_side = "left")
 
-genes <- subset(B73v3, 
-                type == "gene" &
-                  biotype != "transposable_element" & 
-                  biotype != "pseudogene" &
-                  seqnames %in% 1:10) + 10000 # + 10Kb upstream and downstream
-nrow(mcols(genes))
-```
+row_dend <- row_dend(ht)
+row_dend <- rev(row_dend)
 
-### Loading the test gene set and specifying SNP statistic files
+pwy_summary$geneset[order.dendrogram(row_dend)]
+rownames(m)[order.dendrogram(row_dend)]
 
-SNP PBE files are divided in different populations
 
-```{r} 
-geneset <- read.csv(file.path(datadir,"glycerolipid_pathways.csv"))
+# s1 <- m
+# n_test <- nrow(s1)*ncol(s1)
+# s1[m > 0] <- ""
+# s1[m <  0.05] <- "*"
+# s1[m < 0.05 / n_test] <- "**"
 
-testgeneID <- as.character(geneset$geneID)
+hm <-   ComplexHeatmap::Heatmap(
+  m,
+  name = "p value",
+  cluster_rows = row_dend,
+  row_dend_reorder = FALSE,
+  column_order = colnames(m),
+  column_names_side = "top",
+  column_names_rot = 0,
+  column_names_centered = TRUE,
+  column_names_gp = gpar(fontsize = 10),
+  row_names_max_width = ComplexHeatmap::max_text_width(rownames(m)),
+  row_names_gp = gpar(fontsize = 10)
+#   cell_fun = function(j, i, x, y, width, height, fill) {
+#     grid.text( s1[i, j], x, y, gp = gpar(fontsize = 10, col = "white"))
+#   }
+)
 
-testgenes <-  subset(genes, ID %in% testgeneID)
-
-ngene <- length(testgeneID)
-
-# some test genes are not in this genome annotation
-testgeneID[! testgeneID %in% genes$ID ] 
-
-pops <- colnames(geneset)[2:5]
-pbe_files <- c("SW_US.allPBE.txt",  "MexHigh.allPBE.txt",
-               "GuaHigh.allPBE.txt", "Andes.allPBE.txt")
-```
-
-### Sampling and plot
-
-```{r} 
-pdf(file = file.path("output","sample_PBE_nonredundant_genic.pdf"))
-par(mfrow=c(2,2))
-
-for(idx in 1:4){
-  # idx = 4
-  pop <- pops[idx]
-  pbe_in <- pbe_files[idx]
-  pbe <- read.delim(file.path(datadir,"PBE",pbe_in), header = TRUE)
-  head(pbe)
-  colnames(pbe)[1:2]<-c("CHR","BP")
-  colnames(pbe)[ncol(pbe)] <- "PBE"
-  
-  SNP <- makeGRangesFromDataFrame(pbe,
-                                  keep.extra.columns=TRUE,
-                                  ignore.strand=TRUE,
-                                  seqinfo = seqinfo(AGPv3),
-                                  seqnames.field="CHR",
-                                  start.field="BP",
-                                  end.field="BP")
-  SNP$BP <- pbe$BP
-  SNP$CHR <- pbe$CHR
-  
-  # Find genic SNPs for background null distribution
-  
-  genes_olap <- findOverlaps(SNP,genes)
-  
-  in_genes <- queryHits(genes_olap) %>% unique()
-  
-  length(SNP$BP)
-  length(in_genes)
-  
-  # Find SNPs in test genes
-  
-  testgenes_olap <- findOverlaps(SNP, testgenes)
-  
-  testgenes_with_SNP <- subjectHits(testgenes_olap) %>% unique()
-  in_testgenes <- queryHits(testgenes_olap) %>% unique()
-  
-  length(testgenes_with_SNP)
-  length(in_testgenes)
-  
-  hits <- data.frame( 
-    CHR  = SNP$CHR[queryHits(testgenes_olap)],
-    BP   =  SNP$BP[queryHits(testgenes_olap)],
-    gene = testgenes$ID[subjectHits(testgenes_olap)])
-  
-  testgeneSNP <- hits %>% 
-    dplyr::inner_join(as.data.frame(SNP), by=c("CHR","BP")) %>% 
-    arrange(CHR,BP)  
-  testgeneSNP$gene %>% unique() %>% length() 
-  
-  # Resampling for estimating null distribution ________________________________
-  
-  # # Redundant sampling  as Li Wang 2019 ________________________________________
-  # # A particular SNP appears as many times as it has overlaps with the +-10 Kb
-  # # extended genes 
-  # 
-  # sampling <- "r"
-  # 
-  # test <- testgeneSNP$PBE
-  # 
-  # ## Genomic background, i.e. all SNPs genic and intergenic
-  # #  
-  # bg_name <- "genomic"
-  # bg <- SNP$PBE
-  # 
-  # # Genic SNPs background
-  # # bg_name <- "genic"
-  # # bg <- SNP$PBE[in_genes]
-  
-  # Non redundant sampling _______________________________________________________
-  # A particular SNP appears a single time in the test set
-  
-  sampling <- "nr"
-  
-  test <- SNP$PBE[in_testgenes]
-
-  
-  ## Genomic background, i.e. all SNPs genic and intergenic
-  #  
-  ##  bg_name <- "genomic"
-  ##  bg <- SNP$PBE
-  
-  # Genic SNPs background
-  bg_name <- "genic"
-  bg <- SNP$PBE[in_genes]
-  
-  # ____________________________________________________________________________
-  
-  n <- length(test)
-  test_mean <- mean(test)
-  
-  n_bg <- length(bg)
-  bg_mean <- mean(bg)
-  
-  # Null distribution
-  PBE <- replicate(10000, mean(sample(bg, n, replace=FALSE)))
-  
-  pvalue <- 1 - ecdf(PBE)(test_mean) 
-  
-  # Plot
-  #  quartz()
-  hist(PBE , breaks = 100, col = "black",
-       xlim = c(min(PBE,test_mean), max(PBE,test_mean)),
-       main = paste(pop,"Glycerolipid genes",
-                    pvalue_string(pvalue), "\n",
-                    "bg:",n_bg, bg_name, "SNPs\n",
-                    "test:", n, sampling, "SNPs",
-                    "from", length(testgenes_with_SNP), "genes"))
-  abline(v = bg_mean, col = "darkgreen",lwd = 2)
-  abline(v = test_mean, col = "red",lwd = 2)
-}
-
+pdf(file = "fig_S8.pdf")
+print(hm)
 dev.off()
-```
 
+```

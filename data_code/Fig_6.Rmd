@@ -1,10 +1,9 @@
 ---
-title: "fig6_fitness_effects"
-author: "Dan Gates, RRA, FRZ"
+title: "fig6_teo_introgression"
+author: "rra"
 date: "5/4/2020"
 output: html_document
 ---
-
 
 ```{r}
 rm(list = ls())
@@ -13,13 +12,13 @@ library(data.table)
 library(cowplot)
 library(wesanderson)
 library(ggplot2)
-library(MASS)
+library(MASS) 
 library(qtl)
-library(lme4)
-library(arm)
-library(lsmeans)
+library(lme4) 
+library(arm) 
+library(lsmeans) 
 library(pbkrtest)
-library(cowplot)
+library(cowplot) 
 library(viridis)
 library(qtlcharts)
 library(readr)
@@ -28,1427 +27,488 @@ library(ggmap)
 library(maps)
 library(qtlcharts)
 library(Hmisc)
-library(data.table)
-library(GridLMM)
-library(grid)
-library(gridExtra)
-library(dabestr)
-
+library(pegas)
 ```
 
-GridLMM analysis of the effect of highland allele of ZmPLA1.2 in several traits.
+
+## Panel 6A alignment
 
 ```{r}
-#Genotype file is at : https://github.com/danjgates/AdaptationScripts2/tree/master/Genotypes
+library(dplyr)
+library(ape)
+library(msa)
+library(Biostrings)
 
-chr<-3
-mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-mat<-data.frame(mat)
-row.names(mat)<-mat[,1]
-mat<-mat[,-1]
-mat<-mat[grep('SEED',rownames(mat)),]
-nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-dups<-duplicated(nms)
-xx<-mat[-which(dups==TRUE),]
-rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-mat<-xx
+fasta <- file.path(data_dir,"ZmPLA12_cds.fasta")
 
-loc<-sapply(colnames(mat),function(x) as.numeric(strsplit(x,'_')[[1]][2]))
+seqs <- readDNAStringSet(fasta)
+aln<- as(msa(seqs, order = "input"), "BStringSet")
 
-mat<-mat[,which(loc>7736013 & loc < 7737138)]
-afs<-apply(mat,MARGIN=2,function(x) length(which(x==1)))
+# search for alignment around lid domain variant
+focus <- stringr::str_locate(as.character(aln[1,]), "CACCATCA")
 
-plaGeno<-mat[,'S3_7736891']
-#make the 1s into 0s and vice versa:
-plag2<-plaGeno
-plaGeno[which(plag2==1)]<-0
-plaGeno[which(plag2==0)]<-1
-plaGeno<-matrix(plaGeno)
-rownames(plaGeno)<-rownames(mat)
+# Specify codons around lid domain variant
+focus[1,1] <- focus[1,1] - 2 - 3*3
+focus[1,2] <- focus[1,2] + 2 + 3*4
 
+mut <-  subseq(aln, start = focus[1,1], end = focus[1,2]) %>%
+         as("DNAStringSet") %>%
+         Biostrings::translate()
 
-#get kinship: Run this from https://github.com/danjgates/AdaptationScripts2/tree/master/Genotypes/HighFilteredReduced.Rimage
-#Or just run it for a chromosome like chr 10:
+pop_levels <-  c("reference","parviglumis","mexicana",  
+          "SW_US", "Mex_Highland","Gua_high","Mex_Lowland", 
+          "SA_high", "SA_lowland")
 
-#chr<-10
-#setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-#mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-#mat<-data.frame(mat)
-#row.names(mat)<-mat[,1]
-#mat<-mat[,-1]
-#mat<-mat[grep('SEED',rownames(mat)),]
-#nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-#dups<-duplicated(nms)
-#xx<-mat[-which(dups==TRUE),]
-#rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-#mat<-xx
-#X<-mat
-#X<-X[,-c(which(is.na(X),arr.ind=TRUE)[,2])] #I'm dropping any column w/ NA, since this is imputed it ends up being ~ 0.1% of columns
-#X<-X*2
-#X<-as.matrix(X)
-##center it around 0
-#X<-X-1
-#X_centered = sweep(X,2,colMeans(X),'-') # center marker genotypes
-#K = tcrossprod(X_centered) / ncol(X_centered)
-#rownames(K) = colnames(K) = rownames(X)
-#K = K/mean(diag(K))
+seq_names <- data.frame(name= gsub("^\\s+|\\s+$","", names(mut))) %>%
+  tidyr::separate(name, c("id","pop"), sep = "_|\\ ", 
+                extra = "merge",
+                remove = FALSE) %>%
+  tibble::rowid_to_column("idx") 
+             
 
-#dim(K)
+names(mut) <-  seq_names$id
 
-#save(K,file='/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-K = readRDS('/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
+seq_names <- seq_names %>%
+  dplyr::mutate(pop= factor(pop, levels = pop_levels )) %>%
+  dplyr::arrange(pop,id)
 
-#now try doing an association test like the one from Crow et al.
 
-phenot<-'Bare cob weight'
-#phenotypes<-c('Plant height','Anthesis silking interval','Bare cob weight','Grain weight per hetare')
-#plots<-lapply(phenotypes,function(phenot){
-env<-'altitude'
+## call unified interface msa() for default method (ClustalW) and
+## default parameters
 
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/')
-#setwd('/home/dangates/AdaptationScripts2-master/GWASResiduals/')
-load(paste(phenot,'_',env,'_GWASResiduals.Rimage',sep=""))
-print(paste('loaded Phenotypes',phenot))
+mut_aln <- msa(mut[seq_names$idx], order = "input")
+## show resulting LaTeX code with default settings
+msaPrettyPrint(mut_aln, output="asis", askForOverwrite=FALSE)
 
+## create PDF file according to some custom settings
+## its a PDF because TexShade is a latex package
+## npo PNG output can be generated
 
-data<-jimbo[,c('value','SampleID','trialElv','year','tester','locale')]
-colnames(data)<-c('y','Geno','env','year','tester','locale')
-data$Geno2 = data$Geno
-data$env2<-data$env
-data<-data[data$Geno %in% rownames(K),]
+out_file <-  "Fi6A.pdf"
 
-#now you can optionally set up a null model, but the GxE test will run it by default 
-#Since we only have a few loci (what changes most are our phenotypes) I'll let it run by default
-#null_model = GridLMM_ML(formula = y~ 1 + env  + tester + tester:env + (1 + env || Geno)  + (1 + env || Geno2) ,data=data,relmat = list(Geno=K),tolerance = 0.5,ML = F,REML=T,mc.cores=1)
-#h2_start = null_model$results[1,grep('.REML',colnames(null_model$results),fixed=T)]
-#V_setup = null_model$setup
-#rm(null_model)
-#eventually want to save all these null models in case I need to rerun them because the association test w/ 1 marker is fast but the null model is the time limiter
 
-#now add in dta covariance (unless this is DTA)
-pheno = jimbo
-pheno$observation_ID = paste(pheno$SampleID,pheno$tester,pheno$year,pheno$locale,sep=':')
-pheno$trial = paste(pheno$locale,pheno$year,sep=':')
-pheno = subset(pheno,SampleID %in% rownames(K))
+msaPrettyPrint(mut_aln, file=out_file, output="pdf",
+               showNames="left", showNumbering="none", showLogo="none",
+               furtherCode=c("\\shadingmode{diverse}",
+                             "\\nomatchresidues{Blue}{White}{upper}{up}",
+                             "\\similarresidues{Blue}{White}{upper}{up}",
+                             "\\shaderegion{1}{6..6}{Red}{White}"),
+               showLegend=FALSE,
+               showConsensus="none", verbose=FALSE, askForOverwrite=FALSE)
 
-# if trait is not flowering, also load flowering data, add this to pheno
-#These phenotypes can be found : https://github.com/danjgates/AdaptationScripts2/GWASResiduals
-load('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/Days to anthesis_altitude_GWASResiduals.Rimage')
-pheno_days = jimbo
-pheno_days$observation_ID = paste(pheno_days$SampleID,pheno_days$tester,pheno_days$year,pheno_days$locale,sep=':')
-pheno_days = aggregate(value~SampleID + tester+year+locale+trialElv+observation_ID,pheno_days,FUN = mean)
-pheno$DTA = pheno_days$value[match(pheno$observation_ID,pheno_days$observation_ID)]
-
-# lets set the intercept of elevation at 1500m, and 1 unit = change of 1000m
-pheno$trialElv = pheno$trialElv - 150
-pheno$trialElv = pheno$trialElv/100
-
-elevs = seq(-1.5,1,length=20)
-
-# set up for GridLMM
-pheno$Geno = pheno$Geno2 = pheno$SampleID
-
-pheno$plaGeno = plaGeno[pheno$SampleID,]
-
-results = list()
-
-plasticity = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~1,
-                          data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),#h2_start = c(0.5,0,0,0),
-                          method='REML',mc.cores = 1,h2_step = 1,h2_start_tolerance = 0.5)
-
-beta = unlist(unname(plasticity$results[1,grep('beta',colnames(plasticity$results))]))
-p = unlist(unname(plasticity$results[1,grep('p_value_REML',colnames(plasticity$results))]))
-Fs = unlist(unname(plasticity$results[1,grep('F.',colnames(plasticity$results))]))
-results = rbind(results,data.frame(Test = 'plasticity',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity$results[,grep('.REML',colnames(plasticity$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity$setup$V_setup,h2s)
-X = cbind(plasticity$setup$X_cov,'pla'=plaGeno[pheno$SampleID,1],'pla:trialElv'=plaGeno[pheno$SampleID,1]*pheno$trialElv)
-y_star = solve(t(as.matrix(chol_V$chol_V)),pheno$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starpla','X_starpla:trialElv'),c('X_starpla','X_starpla:trialElv')]
-effects = data.frame(
-  Test = 'plasticity',
-  Elevation = elevs*1000+1500,
-  effect = coef(conditional_model)['X_starpla'] + elevs*coef(conditional_model)['X_starpla:trialElv'],
-  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2])
-)
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot1<-ggplot(effects,aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla1.2")
-
-
-# add fixed effects for trial:DTA
-h2_start = plasticity$results[1,grep('.REML',colnames(plasticity$results),fixed=T)]
-names(h2_start) = sub('.REML','',names(h2_start))
-plasticity_with_DTA = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + trial:DTA + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~0,
-                                   data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),h2_start = h2_start,h2_step=1,
-                                   mc.cores = 1,method='REML')
-beta = unlist(unname(plasticity_with_DTA$results[1,grep('beta',colnames(plasticity_with_DTA$results))]))
-p = unlist(unname(plasticity_with_DTA$results[1,grep('p_value_REML',colnames(plasticity_with_DTA$results))]))
-Fs = unlist(unname(plasticity_with_DTA$results[1,grep('F.',colnames(plasticity_with_DTA$results))]))
-results = rbind(results,data.frame(Test = 'plasticity_with_DTA',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity_with_DTA$results[,grep('.REML',colnames(plasticity_with_DTA$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity_with_DTA$setup$V_setup,h2s)
-m1 = lm(value ~ trial+tester+tester:trialElv + trial:DTA + plaGeno + plaGeno:trialElv,pheno)
-X = model.matrix(m1)
-y_star = solve(t(as.matrix(chol_V$chol_V)),m1$model$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starplaGeno',"X_startrialElv:plaGeno"),c('X_starplaGeno',"X_startrialElv:plaGeno")]
-
-effects = rbind(effects,
-                data.frame(
-                  Test = 'plasticity_with_DTA',
-                  Elevation = elevs*1000+1500,
-                  effect = coef(conditional_model)['X_starplaGeno'] + elevs*coef(conditional_model)['X_startrialElv:plaGeno'],
-                  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2]),
-                  lower.CI = NA,
-                  upper.CI = NA
-                ))
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot2<-ggplot(subset(effects,Test == 'plasticity_with_DTA'),aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla2.1")
-
-effects1<-subset(effects,Test == 'plasticity_with_DTA')
-effects2<-subset(effects,Test == 'plasticity')
-plot3<-ggplot(effects,aes(x=Elevation))+
-  geom_line(data=effects1,aes(y=effect),color='chartreuse',lwd=1.25)+geom_ribbon(data=effects1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effects2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effects2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-
-plot1BCW<-plot1
-plot2BCW<-plot2
-plot3BCW<-plot3
-
-
-
-#####################################################################
-#####################################################################
-#####################################################################
-
-
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#Next phenotype, code is mostly the same
-chr<-3
-mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-mat<-data.frame(mat)
-row.names(mat)<-mat[,1]
-mat<-mat[,-1]
-mat<-mat[grep('SEED',rownames(mat)),]
-nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-dups<-duplicated(nms)
-xx<-mat[-which(dups==TRUE),]
-rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-mat<-xx
-
-loc<-sapply(colnames(mat),function(x) as.numeric(strsplit(x,'_')[[1]][2]))
-#S3_8542175 or S3_8542287 are recommended by him
-
-mat<-mat[,which(loc>7736013 & loc < 7737138)]
-afs<-apply(mat,MARGIN=2,function(x) length(which(x==1)))
-
-#S3_8542289 or S3_8542316 look best
-plaGeno<-mat[,'S3_7736891']
-#make the 1s into 0s and vice versa:
-plag2<-plaGeno
-plaGeno[which(plag2==1)]<-0
-plaGeno[which(plag2==0)]<-1
-plaGeno<-matrix(plaGeno)
-rownames(plaGeno)<-rownames(mat)
-
-
-#get kinship
-#chr<-10
-#setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-#mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-#mat<-data.frame(mat)
-#row.names(mat)<-mat[,1]
-#mat<-mat[,-1]
-#mat<-mat[grep('SEED',rownames(mat)),]
-#nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-#dups<-duplicated(nms)
-#xx<-mat[-which(dups==TRUE),]
-#rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-#mat<-xx
-#X<-mat
-#X<-X[,-c(which(is.na(X),arr.ind=TRUE)[,2])] #I'm dropping any column w/ NA, since this is imputed it ends up being ~ 0.1% of columns
-#X<-X*2
-#X<-as.matrix(X)
-##center it around 0
-#X<-X-1
-#X_centered = sweep(X,2,colMeans(X),'-') # center marker genotypes
-#K = tcrossprod(X_centered) / ncol(X_centered)
-#rownames(K) = colnames(K) = rownames(X)
-#K = K/mean(diag(K))
-
-#dim(K)
-
-#save(K,file='/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-K = readRDS('/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-#now try doing an association test like I did for taylor
-
-phenot<-'Grain weight per hectare'
-#phenotypes<-c('Plant height','Anthesis silking interval','Bare cob weight','Grain weight per hetare')
-#plots<-lapply(phenotypes,function(phenot){
-env<-'altitude'
-
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/')
-#setwd('/home/dangates/AdaptationScripts2-master/GWASResiduals/')
-load(paste(phenot,'_',env,'_GWASResiduals.Rimage',sep=""))
-print(paste('loaded Phenotypes',phenot))
-
-
-data<-jimbo[,c('value','SampleID','trialElv','year','tester','locale')]
-colnames(data)<-c('y','Geno','env','year','tester','locale')
-data$Geno2 = data$Geno
-data$env2<-data$env
-data<-data[data$Geno %in% rownames(K),]
-
-#now set up the null model
-#null_model = GridLMM_ML(formula = y~ 1 + env  + tester + tester:env + (1 + env || Geno)  + (1 + env || Geno2) ,data=data,relmat = list(Geno=K),tolerance = 0.5,ML = F,REML=T,mc.cores=1)
-#h2_start = null_model$results[1,grep('.REML',colnames(null_model$results),fixed=T)]
-#V_setup = null_model$setup
-#rm(null_model)
-#eventually want to save all these null models in case I need to rerun them because the association test w/ 1 marker is fast but the null model is the time limiter
-
-#now add in dta covariance (unless this is DTA)
-pheno = jimbo
-pheno$observation_ID = paste(pheno$SampleID,pheno$tester,pheno$year,pheno$locale,sep=':')
-pheno$trial = paste(pheno$locale,pheno$year,sep=':')
-pheno = subset(pheno,SampleID %in% rownames(K))
-
-# if trait is not flowering, also load flowering data, add this to pheno
-load('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/Days to anthesis_altitude_GWASResiduals.Rimage')
-pheno_days = jimbo
-pheno_days$observation_ID = paste(pheno_days$SampleID,pheno_days$tester,pheno_days$year,pheno_days$locale,sep=':')
-pheno_days = aggregate(value~SampleID + tester+year+locale+trialElv+observation_ID,pheno_days,FUN = mean)
-pheno$DTA = pheno_days$value[match(pheno$observation_ID,pheno_days$observation_ID)]
-
-# lets set the intercept of elevation at 1500m, and 1 unit = change of 1000m
-pheno$trialElv = pheno$trialElv - 150
-pheno$trialElv = pheno$trialElv/100
-
-elevs = seq(-1.5,1,length=20)
-
-# set up for GridLMM
-pheno$Geno = pheno$Geno2 = pheno$SampleID
-
-pheno$plaGeno = plaGeno[pheno$SampleID,]
-
-results = list()
-
-plasticity = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~1,
-                          data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),#h2_start = c(0.5,0,0,0),
-                          method='REML',mc.cores = 1,h2_step = 1,h2_start_tolerance = 0.5)
-
-beta = unlist(unname(plasticity$results[1,grep('beta',colnames(plasticity$results))]))
-p = unlist(unname(plasticity$results[1,grep('p_value_REML',colnames(plasticity$results))]))
-Fs = unlist(unname(plasticity$results[1,grep('F.',colnames(plasticity$results))]))
-results = rbind(results,data.frame(Test = 'plasticity',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity$results[,grep('.REML',colnames(plasticity$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity$setup$V_setup,h2s)
-X = cbind(plasticity$setup$X_cov,'pla'=plaGeno[pheno$SampleID,1],'pla:trialElv'=plaGeno[pheno$SampleID,1]*pheno$trialElv)
-y_star = solve(t(as.matrix(chol_V$chol_V)),pheno$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starpla','X_starpla:trialElv'),c('X_starpla','X_starpla:trialElv')]
-effects = data.frame(
-  Test = 'plasticity',
-  Elevation = elevs*1000+1500,
-  effect = coef(conditional_model)['X_starpla'] + elevs*coef(conditional_model)['X_starpla:trialElv'],
-  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2])
-)
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot1<-ggplot(effects,aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla1.2")
-
-
-# add fixed effects for trial:DTA
-h2_start = plasticity$results[1,grep('.REML',colnames(plasticity$results),fixed=T)]
-names(h2_start) = sub('.REML','',names(h2_start))
-plasticity_with_DTA = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + trial:DTA + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~0,
-                                   data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),h2_start = h2_start,h2_step=1,
-                                   mc.cores = 1,method='REML')
-beta = unlist(unname(plasticity_with_DTA$results[1,grep('beta',colnames(plasticity_with_DTA$results))]))
-p = unlist(unname(plasticity_with_DTA$results[1,grep('p_value_REML',colnames(plasticity_with_DTA$results))]))
-Fs = unlist(unname(plasticity_with_DTA$results[1,grep('F.',colnames(plasticity_with_DTA$results))]))
-results = rbind(results,data.frame(Test = 'plasticity_with_DTA',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity_with_DTA$results[,grep('.REML',colnames(plasticity_with_DTA$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity_with_DTA$setup$V_setup,h2s)
-m1 = lm(value ~ trial+tester+tester:trialElv + trial:DTA + plaGeno + plaGeno:trialElv,pheno)
-X = model.matrix(m1)
-y_star = solve(t(as.matrix(chol_V$chol_V)),m1$model$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starplaGeno',"X_startrialElv:plaGeno"),c('X_starplaGeno',"X_startrialElv:plaGeno")]
-
-effects = rbind(effects,
-                data.frame(
-                  Test = 'plasticity_with_DTA',
-                  Elevation = elevs*1000+1500,
-                  effect = coef(conditional_model)['X_starplaGeno'] + elevs*coef(conditional_model)['X_startrialElv:plaGeno'],
-                  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2]),
-                  lower.CI = NA,
-                  upper.CI = NA
-                ))
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot2<-ggplot(subset(effects,Test == 'plasticity_with_DTA'),aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla2.1")
-effects1<-subset(effects,Test == 'plasticity_with_DTA')
-effects2<-subset(effects,Test == 'plasticity')
-plot3<-ggplot(effects,aes(x=Elevation))+
-  geom_line(data=effects1,aes(y=effect),color='chartreuse',lwd=1.25)+geom_ribbon(data=effects1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effects2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effects2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-
-plot1GWH<-plot1
-plot2GWH<-plot2
-plot3GWH<-plot3
-
-
-#####################################################################
-#####################################################################
-#####################################################################
-
-#Next pheno:
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-chr<-3
-mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-mat<-data.frame(mat)
-row.names(mat)<-mat[,1]
-mat<-mat[,-1]
-mat<-mat[grep('SEED',rownames(mat)),]
-nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-dups<-duplicated(nms)
-xx<-mat[-which(dups==TRUE),]
-rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-mat<-xx
-
-loc<-sapply(colnames(mat),function(x) as.numeric(strsplit(x,'_')[[1]][2]))
-#S3_8542175 or S3_8542287 are recommended by him
-
-mat<-mat[,which(loc>7736013 & loc < 7737138)]
-afs<-apply(mat,MARGIN=2,function(x) length(which(x==1)))
-
-#S3_8542289 or S3_8542316 look best
-plaGeno<-mat[,'S3_7736891']
-#make the 1s into 0s and vice versa:
-plag2<-plaGeno
-plaGeno[which(plag2==1)]<-0
-plaGeno[which(plag2==0)]<-1
-plaGeno<-matrix(plaGeno)
-rownames(plaGeno)<-rownames(mat)
-
-
-#get kinship
-#chr<-10
-#setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-#mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-#mat<-data.frame(mat)
-#row.names(mat)<-mat[,1]
-#mat<-mat[,-1]
-#mat<-mat[grep('SEED',rownames(mat)),]
-#nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-#dups<-duplicated(nms)
-#xx<-mat[-which(dups==TRUE),]
-#rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-#mat<-xx
-#X<-mat
-#X<-X[,-c(which(is.na(X),arr.ind=TRUE)[,2])] #I'm dropping any column w/ NA, since this is imputed it ends up being ~ 0.1% of columns
-#X<-X*2
-#X<-as.matrix(X)
-##center it around 0
-#X<-X-1
-#X_centered = sweep(X,2,colMeans(X),'-') # center marker genotypes
-#K = tcrossprod(X_centered) / ncol(X_centered)
-#rownames(K) = colnames(K) = rownames(X)
-#K = K/mean(diag(K))
-
-#dim(K)
-
-#save(K,file='/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-K = readRDS('/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-#now try doing an association test like I did for taylor
-
-phenot<-'Plant height'
-#phenotypes<-c('Plant height','Anthesis silking interval','Bare cob weight','Grain weight per hetare')
-#plots<-lapply(phenotypes,function(phenot){
-env<-'altitude'
-
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/')
-#setwd('/home/dangates/AdaptationScripts2-master/GWASResiduals/')
-load(paste(phenot,'_',env,'_GWASResiduals.Rimage',sep=""))
-print(paste('loaded Phenotypes',phenot))
-
-
-data<-jimbo[,c('value','SampleID','trialElv','year','tester','locale')]
-colnames(data)<-c('y','Geno','env','year','tester','locale')
-data$Geno2 = data$Geno
-data$env2<-data$env
-data<-data[data$Geno %in% rownames(K),]
-
-#now set up the null model
-#null_model = GridLMM_ML(formula = y~ 1 + env  + tester + tester:env + (1 + env || Geno)  + (1 + env || Geno2) ,data=data,relmat = list(Geno=K),tolerance = 0.5,ML = F,REML=T,mc.cores=1)
-#h2_start = null_model$results[1,grep('.REML',colnames(null_model$results),fixed=T)]
-#V_setup = null_model$setup
-#rm(null_model)
-#eventually want to save all these null models in case I need to rerun them because the association test w/ 1 marker is fast but the null model is the time limiter
-
-#now add in dta covariance (unless this is DTA)
-pheno = jimbo
-pheno$observation_ID = paste(pheno$SampleID,pheno$tester,pheno$year,pheno$locale,sep=':')
-pheno$trial = paste(pheno$locale,pheno$year,sep=':')
-pheno = subset(pheno,SampleID %in% rownames(K))
-
-# if trait is not flowering, also load flowering data, add this to pheno
-load('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/Days to anthesis_altitude_GWASResiduals.Rimage')
-pheno_days = jimbo
-pheno_days$observation_ID = paste(pheno_days$SampleID,pheno_days$tester,pheno_days$year,pheno_days$locale,sep=':')
-pheno_days = aggregate(value~SampleID + tester+year+locale+trialElv+observation_ID,pheno_days,FUN = mean)
-pheno$DTA = pheno_days$value[match(pheno$observation_ID,pheno_days$observation_ID)]
-
-# lets set the intercept of elevation at 1500m, and 1 unit = change of 1000m
-pheno$trialElv = pheno$trialElv - 150
-pheno$trialElv = pheno$trialElv/100
-
-elevs = seq(-1.5,1,length=20)
-
-# set up for GridLMM
-pheno$Geno = pheno$Geno2 = pheno$SampleID
-
-pheno$plaGeno = plaGeno[pheno$SampleID,]
-
-results = list()
-
-plasticity = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~1,
-                          data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),#h2_start = c(0.5,0,0,0),
-                          method='REML',mc.cores = 1,h2_step = 1,h2_start_tolerance = 0.5)
-
-beta = unlist(unname(plasticity$results[1,grep('beta',colnames(plasticity$results))]))
-p = unlist(unname(plasticity$results[1,grep('p_value_REML',colnames(plasticity$results))]))
-Fs = unlist(unname(plasticity$results[1,grep('F.',colnames(plasticity$results))]))
-results = rbind(results,data.frame(Test = 'plasticity',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity$results[,grep('.REML',colnames(plasticity$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity$setup$V_setup,h2s)
-X = cbind(plasticity$setup$X_cov,'pla'=plaGeno[pheno$SampleID,1],'pla:trialElv'=plaGeno[pheno$SampleID,1]*pheno$trialElv)
-y_star = solve(t(as.matrix(chol_V$chol_V)),pheno$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starpla','X_starpla:trialElv'),c('X_starpla','X_starpla:trialElv')]
-effects = data.frame(
-  Test = 'plasticity',
-  Elevation = elevs*1000+1500,
-  effect = coef(conditional_model)['X_starpla'] + elevs*coef(conditional_model)['X_starpla:trialElv'],
-  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2])
-)
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot1<-ggplot(effects,aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla1.2")
-
-
-# add fixed effects for trial:DTA
-h2_start = plasticity$results[1,grep('.REML',colnames(plasticity$results),fixed=T)]
-names(h2_start) = sub('.REML','',names(h2_start))
-plasticity_with_DTA = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + trial:DTA + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~0,
-                                   data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),h2_start = h2_start,h2_step=1,
-                                   mc.cores = 1,method='REML')
-beta = unlist(unname(plasticity_with_DTA$results[1,grep('beta',colnames(plasticity_with_DTA$results))]))
-p = unlist(unname(plasticity_with_DTA$results[1,grep('p_value_REML',colnames(plasticity_with_DTA$results))]))
-Fs = unlist(unname(plasticity_with_DTA$results[1,grep('F.',colnames(plasticity_with_DTA$results))]))
-results = rbind(results,data.frame(Test = 'plasticity_with_DTA',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity_with_DTA$results[,grep('.REML',colnames(plasticity_with_DTA$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity_with_DTA$setup$V_setup,h2s)
-m1 = lm(value ~ trial+tester+tester:trialElv + trial:DTA + plaGeno + plaGeno:trialElv,pheno)
-X = model.matrix(m1)
-y_star = solve(t(as.matrix(chol_V$chol_V)),m1$model$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starplaGeno',"X_startrialElv:plaGeno"),c('X_starplaGeno',"X_startrialElv:plaGeno")]
-
-effects = rbind(effects,
-                data.frame(
-                  Test = 'plasticity_with_DTA',
-                  Elevation = elevs*1000+1500,
-                  effect = coef(conditional_model)['X_starplaGeno'] + elevs*coef(conditional_model)['X_startrialElv:plaGeno'],
-                  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2]),
-                  lower.CI = NA,
-                  upper.CI = NA
-                ))
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot2<-ggplot(subset(effects,Test == 'plasticity_with_DTA'),aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla2.1")
-effects1<-subset(effects,Test == 'plasticity_with_DTA')
-effects2<-subset(effects,Test == 'plasticity')
-plot3<-ggplot(effects,aes(x=Elevation))+
-  geom_line(data=effects1,aes(y=effect),color='chartreuse',lwd=1.25)+geom_ribbon(data=effects1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effects2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effects2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-
-plot1PH<-plot1
-plot2PH<-plot2
-plot3PH<-plot3
-
-#####################################################################
-#####################################################################
-#####################################################################
-
-#Next pheno:
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-chr<-3
-mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-mat<-data.frame(mat)
-row.names(mat)<-mat[,1]
-mat<-mat[,-1]
-mat<-mat[grep('SEED',rownames(mat)),]
-nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-dups<-duplicated(nms)
-xx<-mat[-which(dups==TRUE),]
-rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-mat<-xx
-
-loc<-sapply(colnames(mat),function(x) as.numeric(strsplit(x,'_')[[1]][2]))
-#S3_8542175 or S3_8542287 are recommended by him
-
-mat<-mat[,which(loc>7736013 & loc < 7737138)]
-afs<-apply(mat,MARGIN=2,function(x) length(which(x==1)))
-
-#S3_8542289 or S3_8542316 look best
-plaGeno<-mat[,'S3_7736891']
-#make the 1s into 0s and vice versa:
-plag2<-plaGeno
-plaGeno[which(plag2==1)]<-0
-plaGeno[which(plag2==0)]<-1
-plaGeno<-matrix(plaGeno)
-rownames(plaGeno)<-rownames(mat)
-
-
-#get kinship
-#chr<-10
-#setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-#mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-#mat<-data.frame(mat)
-#row.names(mat)<-mat[,1]
-#mat<-mat[,-1]
-#mat<-mat[grep('SEED',rownames(mat)),]
-#nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-#dups<-duplicated(nms)
-#xx<-mat[-which(dups==TRUE),]
-#rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-#mat<-xx
-#X<-mat
-#X<-X[,-c(which(is.na(X),arr.ind=TRUE)[,2])] #I'm dropping any column w/ NA, since this is imputed it ends up being ~ 0.1% of columns
-#X<-X*2
-#X<-as.matrix(X)
-##center it around 0
-#X<-X-1
-#X_centered = sweep(X,2,colMeans(X),'-') # center marker genotypes
-#K = tcrossprod(X_centered) / ncol(X_centered)
-#rownames(K) = colnames(K) = rownames(X)
-#K = K/mean(diag(K))
-
-#dim(K)
-
-#save(K,file='/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-K = readRDS('/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-#now try doing an association test like I did for taylor
-
-phenot<-'Field weight'
-#phenotypes<-c('Plant height','Anthesis silking interval','Bare cob weight','Grain weight per hetare')
-#plots<-lapply(phenotypes,function(phenot){
-env<-'altitude'
-
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/')
-#setwd('/home/dangates/AdaptationScripts2-master/GWASResiduals/')
-load(paste(phenot,'_',env,'_GWASResiduals.Rimage',sep=""))
-print(paste('loaded Phenotypes',phenot))
-
-
-data<-jimbo[,c('value','SampleID','trialElv','year','tester','locale')]
-colnames(data)<-c('y','Geno','env','year','tester','locale')
-data$Geno2 = data$Geno
-data$env2<-data$env
-data<-data[data$Geno %in% rownames(K),]
-
-#now set up the null model
-#null_model = GridLMM_ML(formula = y~ 1 + env  + tester + tester:env + (1 + env || Geno)  + (1 + env || Geno2) ,data=data,relmat = list(Geno=K),tolerance = 0.5,ML = F,REML=T,mc.cores=1)
-#h2_start = null_model$results[1,grep('.REML',colnames(null_model$results),fixed=T)]
-#V_setup = null_model$setup
-#rm(null_model)
-#eventually want to save all these null models in case I need to rerun them because the association test w/ 1 marker is fast but the null model is the time limiter
-
-#now add in dta covariance (unless this is DTA)
-pheno = jimbo
-pheno$observation_ID = paste(pheno$SampleID,pheno$tester,pheno$year,pheno$locale,sep=':')
-pheno$trial = paste(pheno$locale,pheno$year,sep=':')
-pheno = subset(pheno,SampleID %in% rownames(K))
-
-# if trait is not flowering, also load flowering data, add this to pheno
-load('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/Days to anthesis_altitude_GWASResiduals.Rimage')
-pheno_days = jimbo
-pheno_days$observation_ID = paste(pheno_days$SampleID,pheno_days$tester,pheno_days$year,pheno_days$locale,sep=':')
-pheno_days = aggregate(value~SampleID + tester+year+locale+trialElv+observation_ID,pheno_days,FUN = mean)
-pheno$DTA = pheno_days$value[match(pheno$observation_ID,pheno_days$observation_ID)]
-
-# lets set the intercept of elevation at 1500m, and 1 unit = change of 1000m
-pheno$trialElv = pheno$trialElv - 150
-pheno$trialElv = pheno$trialElv/100
-
-elevs = seq(-1.5,1,length=20)
-
-# set up for GridLMM
-pheno$Geno = pheno$Geno2 = pheno$SampleID
-
-pheno$plaGeno = plaGeno[pheno$SampleID,]
-
-results = list()
-
-plasticity = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~1,
-                          data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),#h2_start = c(0.5,0,0,0),
-                          method='REML',mc.cores = 1,h2_step = 1,h2_start_tolerance = 0.5)
-
-beta = unlist(unname(plasticity$results[1,grep('beta',colnames(plasticity$results))]))
-p = unlist(unname(plasticity$results[1,grep('p_value_REML',colnames(plasticity$results))]))
-Fs = unlist(unname(plasticity$results[1,grep('F.',colnames(plasticity$results))]))
-results = rbind(results,data.frame(Test = 'plasticity',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity$results[,grep('.REML',colnames(plasticity$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity$setup$V_setup,h2s)
-X = cbind(plasticity$setup$X_cov,'pla'=plaGeno[pheno$SampleID,1],'pla:trialElv'=plaGeno[pheno$SampleID,1]*pheno$trialElv)
-y_star = solve(t(as.matrix(chol_V$chol_V)),pheno$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starpla','X_starpla:trialElv'),c('X_starpla','X_starpla:trialElv')]
-effects = data.frame(
-  Test = 'plasticity',
-  Elevation = elevs*1000+1500,
-  effect = coef(conditional_model)['X_starpla'] + elevs*coef(conditional_model)['X_starpla:trialElv'],
-  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2])
-)
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot1<-ggplot(effects,aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla1.2")
-
-
-# add fixed effects for trial:DTA
-h2_start = plasticity$results[1,grep('.REML',colnames(plasticity$results),fixed=T)]
-names(h2_start) = sub('.REML','',names(h2_start))
-plasticity_with_DTA = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + trial:DTA + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~0,
-                                   data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),h2_start = h2_start,h2_step=1,
-                                   mc.cores = 1,method='REML')
-beta = unlist(unname(plasticity_with_DTA$results[1,grep('beta',colnames(plasticity_with_DTA$results))]))
-p = unlist(unname(plasticity_with_DTA$results[1,grep('p_value_REML',colnames(plasticity_with_DTA$results))]))
-Fs = unlist(unname(plasticity_with_DTA$results[1,grep('F.',colnames(plasticity_with_DTA$results))]))
-results = rbind(results,data.frame(Test = 'plasticity_with_DTA',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity_with_DTA$results[,grep('.REML',colnames(plasticity_with_DTA$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity_with_DTA$setup$V_setup,h2s)
-m1 = lm(value ~ trial+tester+tester:trialElv + trial:DTA + plaGeno + plaGeno:trialElv,pheno)
-X = model.matrix(m1)
-y_star = solve(t(as.matrix(chol_V$chol_V)),m1$model$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starplaGeno',"X_startrialElv:plaGeno"),c('X_starplaGeno',"X_startrialElv:plaGeno")]
-
-effects = rbind(effects,
-                data.frame(
-                  Test = 'plasticity_with_DTA',
-                  Elevation = elevs*1000+1500,
-                  effect = coef(conditional_model)['X_starplaGeno'] + elevs*coef(conditional_model)['X_startrialElv:plaGeno'],
-                  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2]),
-                  lower.CI = NA,
-                  upper.CI = NA
-                ))
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot2<-ggplot(subset(effects,Test == 'plasticity_with_DTA'),aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla2.1")
-
-effects1<-subset(effects,Test == 'plasticity_with_DTA')
-effects2<-subset(effects,Test == 'plasticity')
-plot3<-ggplot(effects,aes(x=Elevation))+
-  geom_line(data=effects1,aes(y=effect),color='chartreuse',lwd=1.25)+geom_ribbon(data=effects1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effects2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effects2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-
-plot1FW<-plot1
-plot2FW<-plot2
-plot3FW<-plot3
-
-#####################################################################
-#####################################################################
-#####################################################################
-
-#Next pheno:
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-chr<-3
-mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-mat<-data.frame(mat)
-row.names(mat)<-mat[,1]
-mat<-mat[,-1]
-mat<-mat[grep('SEED',rownames(mat)),]
-nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-dups<-duplicated(nms)
-xx<-mat[-which(dups==TRUE),]
-rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-mat<-xx
-
-loc<-sapply(colnames(mat),function(x) as.numeric(strsplit(x,'_')[[1]][2]))
-#S3_8542175 or S3_8542287 are recommended by him
-
-mat<-mat[,which(loc>7736013 & loc < 7737138)]
-afs<-apply(mat,MARGIN=2,function(x) length(which(x==1)))
-
-#S3_8542289 or S3_8542316 look best
-plaGeno<-mat[,'S3_7736891']
-#make the 1s into 0s and vice versa:
-plag2<-plaGeno
-plaGeno[which(plag2==1)]<-0
-plaGeno[which(plag2==0)]<-1
-plaGeno<-matrix(plaGeno)
-rownames(plaGeno)<-rownames(mat)
-
-
-#get kinship
-#chr<-10
-#setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-#mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-#mat<-data.frame(mat)
-#row.names(mat)<-mat[,1]
-#mat<-mat[,-1]
-#mat<-mat[grep('SEED',rownames(mat)),]
-#nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-#dups<-duplicated(nms)
-#xx<-mat[-which(dups==TRUE),]
-#rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-#mat<-xx
-#X<-mat
-#X<-X[,-c(which(is.na(X),arr.ind=TRUE)[,2])] #I'm dropping any column w/ NA, since this is imputed it ends up being ~ 0.1% of columns
-#X<-X*2
-#X<-as.matrix(X)
-##center it around 0
-#X<-X-1
-#X_centered = sweep(X,2,colMeans(X),'-') # center marker genotypes
-#K = tcrossprod(X_centered) / ncol(X_centered)
-#rownames(K) = colnames(K) = rownames(X)
-#K = K/mean(diag(K))
-
-#dim(K)
-
-#save(K,file='/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-K = readRDS('/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-#now try doing an association test like I did for taylor
-
-phenot<-'Anthesis silking interval'
-#phenotypes<-c('Plant height','Anthesis silking interval','Bare cob weight','Grain weight per hetare')
-#plots<-lapply(phenotypes,function(phenot){
-env<-'altitude'
-
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/')
-#setwd('/home/dangates/AdaptationScripts2-master/GWASResiduals/')
-load(paste(phenot,'_',env,'_GWASResiduals.Rimage',sep=""))
-print(paste('loaded Phenotypes',phenot))
-
-
-data<-jimbo[,c('value','SampleID','trialElv','year','tester','locale')]
-colnames(data)<-c('y','Geno','env','year','tester','locale')
-data$Geno2 = data$Geno
-data$env2<-data$env
-data<-data[data$Geno %in% rownames(K),]
-
-#now set up the null model
-#null_model = GridLMM_ML(formula = y~ 1 + env  + tester + tester:env + (1 + env || Geno)  + (1 + env || Geno2) ,data=data,relmat = list(Geno=K),tolerance = 0.5,ML = F,REML=T,mc.cores=1)
-#h2_start = null_model$results[1,grep('.REML',colnames(null_model$results),fixed=T)]
-#V_setup = null_model$setup
-#rm(null_model)
-#eventually want to save all these null models in case I need to rerun them because the association test w/ 1 marker is fast but the null model is the time limiter
-
-#now add in dta covariance (unless this is DTA)
-pheno = jimbo
-pheno$observation_ID = paste(pheno$SampleID,pheno$tester,pheno$year,pheno$locale,sep=':')
-pheno$trial = paste(pheno$locale,pheno$year,sep=':')
-pheno = subset(pheno,SampleID %in% rownames(K))
-
-# if trait is not flowering, also load flowering data, add this to pheno
-load('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/Days to anthesis_altitude_GWASResiduals.Rimage')
-pheno_days = jimbo
-pheno_days$observation_ID = paste(pheno_days$SampleID,pheno_days$tester,pheno_days$year,pheno_days$locale,sep=':')
-pheno_days = aggregate(value~SampleID + tester+year+locale+trialElv+observation_ID,pheno_days,FUN = mean)
-pheno$DTA = pheno_days$value[match(pheno$observation_ID,pheno_days$observation_ID)]
-
-# lets set the intercept of elevation at 1500m, and 1 unit = change of 1000m
-pheno$trialElv = pheno$trialElv - 150
-pheno$trialElv = pheno$trialElv/100
-
-elevs = seq(-1.5,1,length=20)
-
-# set up for GridLMM
-pheno$Geno = pheno$Geno2 = pheno$SampleID
-
-pheno$plaGeno = plaGeno[pheno$SampleID,]
-
-results = list()
-
-plasticity = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~1,
-                          data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),#h2_start = c(0.5,0,0,0),
-                          method='REML',mc.cores = 1,h2_step = 1,h2_start_tolerance = 0.5)
-
-beta = unlist(unname(plasticity$results[1,grep('beta',colnames(plasticity$results))]))
-p = unlist(unname(plasticity$results[1,grep('p_value_REML',colnames(plasticity$results))]))
-Fs = unlist(unname(plasticity$results[1,grep('F.',colnames(plasticity$results))]))
-results = rbind(results,data.frame(Test = 'plasticity',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity$results[,grep('.REML',colnames(plasticity$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity$setup$V_setup,h2s)
-X = cbind(plasticity$setup$X_cov,'pla'=plaGeno[pheno$SampleID,1],'pla:trialElv'=plaGeno[pheno$SampleID,1]*pheno$trialElv)
-y_star = solve(t(as.matrix(chol_V$chol_V)),pheno$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starpla','X_starpla:trialElv'),c('X_starpla','X_starpla:trialElv')]
-effects = data.frame(
-  Test = 'plasticity',
-  Elevation = elevs*1000+1500,
-  effect = coef(conditional_model)['X_starpla'] + elevs*coef(conditional_model)['X_starpla:trialElv'],
-  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2])
-)
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot1<-ggplot(effects,aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla1.2")
-
-
-# add fixed effects for trial:DTA
-h2_start = plasticity$results[1,grep('.REML',colnames(plasticity$results),fixed=T)]
-names(h2_start) = sub('.REML','',names(h2_start))
-plasticity_with_DTA = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + trial:DTA + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~0,
-                                   data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),h2_start = h2_start,h2_step=1,
-                                   mc.cores = 1,method='REML')
-beta = unlist(unname(plasticity_with_DTA$results[1,grep('beta',colnames(plasticity_with_DTA$results))]))
-p = unlist(unname(plasticity_with_DTA$results[1,grep('p_value_REML',colnames(plasticity_with_DTA$results))]))
-Fs = unlist(unname(plasticity_with_DTA$results[1,grep('F.',colnames(plasticity_with_DTA$results))]))
-results = rbind(results,data.frame(Test = 'plasticity_with_DTA',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity_with_DTA$results[,grep('.REML',colnames(plasticity_with_DTA$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity_with_DTA$setup$V_setup,h2s)
-m1 = lm(value ~ trial+tester+tester:trialElv + trial:DTA + plaGeno + plaGeno:trialElv,pheno)
-X = model.matrix(m1)
-y_star = solve(t(as.matrix(chol_V$chol_V)),m1$model$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starplaGeno',"X_startrialElv:plaGeno"),c('X_starplaGeno',"X_startrialElv:plaGeno")]
-
-effects = rbind(effects,
-                data.frame(
-                  Test = 'plasticity_with_DTA',
-                  Elevation = elevs*1000+1500,
-                  effect = coef(conditional_model)['X_starplaGeno'] + elevs*coef(conditional_model)['X_startrialElv:plaGeno'],
-                  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2]),
-                  lower.CI = NA,
-                  upper.CI = NA
-                ))
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot2<-ggplot(subset(effects,Test == 'plasticity_with_DTA'),aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla2.1")
-
-
-effects1<-subset(effects,Test == 'plasticity_with_DTA')
-effects2<-subset(effects,Test == 'plasticity')
-plot3<-ggplot(effects,aes(x=Elevation))+
-  geom_line(data=effects1,aes(y=effect),color='chartreuse',lwd=1.25)+geom_ribbon(data=effects1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effects2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effects2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-plot3DA<-plot3
-plot1ASI<-plot1
-plot2ASI<-plot2
-plot3ASI<-plot3
-
-
-#####################################################################
-#####################################################################
-#####################################################################
-
-#Next pheno:
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-chr<-3
-mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-mat<-data.frame(mat)
-row.names(mat)<-mat[,1]
-mat<-mat[,-1]
-mat<-mat[grep('SEED',rownames(mat)),]
-nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-dups<-duplicated(nms)
-xx<-mat[-which(dups==TRUE),]
-rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-mat<-xx
-
-loc<-sapply(colnames(mat),function(x) as.numeric(strsplit(x,'_')[[1]][2]))
-#S3_8542175 or S3_8542287 are recommended by him
-
-mat<-mat[,which(loc>7736013 & loc < 7737138)]
-afs<-apply(mat,MARGIN=2,function(x) length(which(x==1)))
-
-#S3_8542289 or S3_8542316 look best
-plaGeno<-mat[,'S3_7736891']
-#make the 1s into 0s and vice versa:
-plag2<-plaGeno
-plaGeno[which(plag2==1)]<-0
-plaGeno[which(plag2==0)]<-1
-plaGeno<-matrix(plaGeno)
-rownames(plaGeno)<-rownames(mat)
-
-
-#get kinship
-#chr<-10
-#setwd('/Users/dangates/Downloads/AdaptationScripts2-master/Genotypes/')
-#setwd('/home/dangates/AdaptationScripts2-master/Genotypes/')
-#mat<-fread(paste('Ch',chr,'Merged.hmp.txt',sep=""),skip=1,sep='\t',header=TRUE)
-#mat<-data.frame(mat)
-#row.names(mat)<-mat[,1]
-#mat<-mat[,-1]
-#mat<-mat[grep('SEED',rownames(mat)),]
-#nms<-sapply(rownames(mat),function(x) strsplit(x,'.MR')[[1]][1])
-#dups<-duplicated(nms)
-#xx<-mat[-which(dups==TRUE),]
-#rownames(xx)<-sapply(rownames(xx),function(x) strsplit(x,'.MR')[[1]][1])
-#mat<-xx
-#X<-mat
-#X<-X[,-c(which(is.na(X),arr.ind=TRUE)[,2])] #I'm dropping any column w/ NA, since this is imputed it ends up being ~ 0.1% of columns
-#X<-X*2
-#X<-as.matrix(X)
-##center it around 0
-#X<-X-1
-#X_centered = sweep(X,2,colMeans(X),'-') # center marker genotypes
-#K = tcrossprod(X_centered) / ncol(X_centered)
-#rownames(K) = colnames(K) = rownames(X)
-#K = K/mean(diag(K))
-
-#dim(K)
-
-#save(K,file='/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-K = readRDS('/Users/dangates/Desktop/AdaptationFiles/GBS_K.rds')
-
-#now try doing an association test like I did for taylor
-
-phenot<-'Days to anthesis'
-#phenotypes<-c('Plant height','Anthesis silking interval','Bare cob weight','Grain weight per hetare')
-#plots<-lapply(phenotypes,function(phenot){
-env<-'altitude'
-
-setwd('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/')
-#setwd('/home/dangates/AdaptationScripts2-master/GWASResiduals/')
-load(paste(phenot,'_',env,'_GWASResiduals.Rimage',sep=""))
-print(paste('loaded Phenotypes',phenot))
-
-
-data<-jimbo[,c('value','SampleID','trialElv','year','tester','locale')]
-colnames(data)<-c('y','Geno','env','year','tester','locale')
-data$Geno2 = data$Geno
-data$env2<-data$env
-data<-data[data$Geno %in% rownames(K),]
-
-#now set up the null model
-#null_model = GridLMM_ML(formula = y~ 1 + env  + tester + tester:env + (1 + env || Geno)  + (1 + env || Geno2) ,data=data,relmat = list(Geno=K),tolerance = 0.5,ML = F,REML=T,mc.cores=1)
-#h2_start = null_model$results[1,grep('.REML',colnames(null_model$results),fixed=T)]
-#V_setup = null_model$setup
-#rm(null_model)
-#eventually want to save all these null models in case I need to rerun them because the association test w/ 1 marker is fast but the null model is the time limiter
-
-#now add in dta covariance (unless this is DTA)
-pheno = jimbo
-pheno$observation_ID = paste(pheno$SampleID,pheno$tester,pheno$year,pheno$locale,sep=':')
-pheno$trial = paste(pheno$locale,pheno$year,sep=':')
-pheno = subset(pheno,SampleID %in% rownames(K))
-
-# if trait is not flowering, also load flowering data, add this to pheno
-load('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/Days to anthesis_altitude_GWASResiduals.Rimage')
-pheno_days = jimbo
-pheno_days$observation_ID = paste(pheno_days$SampleID,pheno_days$tester,pheno_days$year,pheno_days$locale,sep=':')
-pheno_days = aggregate(value~SampleID + tester+year+locale+trialElv+observation_ID,pheno_days,FUN = mean)
-pheno$DTA = pheno_days$value[match(pheno$observation_ID,pheno_days$observation_ID)]
-
-# lets set the intercept of elevation at 1500m, and 1 unit = change of 1000m
-pheno$trialElv = pheno$trialElv - 150
-pheno$trialElv = pheno$trialElv/100
-
-elevs = seq(-1.5,1,length=20)
-
-# set up for GridLMM
-pheno$Geno = pheno$Geno2 = pheno$SampleID
-
-pheno$plaGeno = plaGeno[pheno$SampleID,]
-
-results = list()
-
-plasticity = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~1,
-                          data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),#h2_start = c(0.5,0,0,0),
-                          method='REML',mc.cores = 1,h2_step = 1,h2_start_tolerance = 0.5)
-
-beta = unlist(unname(plasticity$results[1,grep('beta',colnames(plasticity$results))]))
-p = unlist(unname(plasticity$results[1,grep('p_value_REML',colnames(plasticity$results))]))
-Fs = unlist(unname(plasticity$results[1,grep('F.',colnames(plasticity$results))]))
-results = rbind(results,data.frame(Test = 'plasticity',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity$results[,grep('.REML',colnames(plasticity$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity$setup$V_setup,h2s)
-X = cbind(plasticity$setup$X_cov,'pla'=plaGeno[pheno$SampleID,1],'pla:trialElv'=plaGeno[pheno$SampleID,1]*pheno$trialElv)
-y_star = solve(t(as.matrix(chol_V$chol_V)),pheno$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starpla','X_starpla:trialElv'),c('X_starpla','X_starpla:trialElv')]
-effects = data.frame(
-  Test = 'plasticity',
-  Elevation = elevs*1000+1500,
-  effect = coef(conditional_model)['X_starpla'] + elevs*coef(conditional_model)['X_starpla:trialElv'],
-  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2])
-)
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot1<-ggplot(effects,aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla1.2")
-
-
-# add fixed effects for trial:DTA
-h2_start = plasticity$results[1,grep('.REML',colnames(plasticity$results),fixed=T)]
-names(h2_start) = sub('.REML','',names(h2_start))
-plasticity_with_DTA = GridLMM_GWAS(formula = value ~ trial+tester+tester:trialElv + trial:DTA + (1+ trialElv || Geno) + (1+ trialElv || Geno2),test_formula = ~1+trialElv,reduced_formula = ~0,
-                                   data = pheno,X = plaGeno,X_ID = 'Geno',relmat = list(Geno = K),h2_start = h2_start,h2_step=1,
-                                   mc.cores = 1,method='REML')
-beta = unlist(unname(plasticity_with_DTA$results[1,grep('beta',colnames(plasticity_with_DTA$results))]))
-p = unlist(unname(plasticity_with_DTA$results[1,grep('p_value_REML',colnames(plasticity_with_DTA$results))]))
-Fs = unlist(unname(plasticity_with_DTA$results[1,grep('F.',colnames(plasticity_with_DTA$results))]))
-results = rbind(results,data.frame(Test = 'plasticity_with_DTA',Effect = c('main','plasticity'),beta = beta[c(-1,0)+length(beta)],Fs = Fs,p = p))
-
-h2s = unlist(plasticity_with_DTA$results[,grep('.REML',colnames(plasticity_with_DTA$results),fixed=T)])
-chol_V = make_chol_V_setup(plasticity_with_DTA$setup$V_setup,h2s)
-m1 = lm(value ~ trial+tester+tester:trialElv + trial:DTA + plaGeno + plaGeno:trialElv,pheno)
-X = model.matrix(m1)
-y_star = solve(t(as.matrix(chol_V$chol_V)),m1$model$value)
-X_star = solve(t(as.matrix(chol_V$chol_V)),X)
-conditional_model = lm(y_star~0+X_star)
-
-vcov = vcov(conditional_model)[c('X_starplaGeno',"X_startrialElv:plaGeno"),c('X_starplaGeno',"X_startrialElv:plaGeno")]
-
-effects = rbind(effects,
-                data.frame(
-                  Test = 'plasticity_with_DTA',
-                  Elevation = elevs*1000+1500,
-                  effect = coef(conditional_model)['X_starplaGeno'] + elevs*coef(conditional_model)['X_startrialElv:plaGeno'],
-                  SE = sqrt(vcov[1,1] + elevs^2*vcov[2,2] + 2*elevs*vcov[1,2]),
-                  lower.CI = NA,
-                  upper.CI = NA
-                ))
-effects$lower.CI = effects$effect - 2*effects$SE
-effects$upper.CI = effects$effect + 2*effects$SE
-
-plot2<-ggplot(subset(effects,Test == 'plasticity_with_DTA'),aes(x=Elevation)) + geom_ribbon(aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3) +
-  geom_line(aes(y = effect)) + geom_hline(yintercept = 0) + ylab("Effect of highland allele at pla2.1")
-
-effects1<-subset(effects,Test == 'plasticity_with_DTA')
-effects2<-subset(effects,Test == 'plasticity')
-plot3<-ggplot(effects,aes(x=Elevation))+
-  geom_line(data=effects1,aes(y=effect),color='chartreuse',lwd=1.25)+geom_ribbon(data=effects1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effects2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effects2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-plot3DA<-plot3
-
-save(plot3DA,file='/Users/dangates/Desktop/AdaptationFiles/EffectsDAForRuben.Rimage')
-
-load('/Users/dangates/Downloads/AdaptationScripts2-master/GWASResiduals/plotsForRuben.Rimage')
-
-effectsASI<-rbind(plot1ASI$data,plot2ASI$data)
-effectsASI1<-subset(effectsASI,Test == 'plasticity_with_DTA')
-effectsASI2<-subset(effectsASI,Test == 'plasticity')
-plot3ASI<-ggplot(effectsASI,aes(x=Elevation))+
-  geom_line(data=effectsASI1,aes(y=effect),color='chartreuse',lwd=1.25)+geom_ribbon(data=effectsASI1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effectsASI2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effectsASI2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-effectsBCW<-rbind(plot1BCW$data,plot2BCW$data)
-effectsBCW1<-subset(effectsBCW,Test == 'plasticity_with_DTA')
-effectsBCW2<-subset(effectsBCW,Test == 'plasticity')
-plot3BCW<-ggplot(effectsBCW,aes(x=Elevation))+
-  geom_line(data=effectsBCW1,aes(y=effect),color='greenyellow',lwd=1.25)+geom_ribbon(data=effectsBCW1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effectsBCW2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effectsBCW2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-effectsFW<-rbind(plot1FW$data,plot2FW$data)
-effectsFW1<-subset(effectsFW,Test == 'plasticity_with_DTA')
-effectsFW2<-subset(effectsFW,Test == 'plasticity')
-plot3FW<-ggplot(effectsFW,aes(x=Elevation))+
-  geom_line(data=effectsFW1,aes(y=effect),color='greenyellow',lwd=1.25)+geom_ribbon(data=effectsFW1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effectsFW2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effectsFW2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-
-effectsGWH<-rbind(plot1GWH$data,plot2GWH$data)
-effectsGWH1<-subset(effectsGWH,Test == 'plasticity_with_DTA')
-effectsGWH2<-subset(effectsGWH,Test == 'plasticity')
-plot3GWH<-ggplot(effectsGWH,aes(x=Elevation))+
-  geom_line(data=effectsGWH1,aes(y=effect),color='greenyellow',lwd=1.25)+geom_ribbon(data=effectsGWH1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effectsGWH2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effectsGWH2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
-
-#need to rerun PH
-effectsPH<-rbind(plot1PH$data,plot2PH$data)
-effectsPH1<-subset(effectsPH,Test == 'plasticity_with_DTA')
-effectsPH2<-subset(effectsPH,Test == 'plasticity')
-plot3PH<-ggplot(effectsPH,aes(x=Elevation))+
-  geom_line(data=effectsPH1,aes(y=effect),color='greenyellow',lwd=1.25)+geom_ribbon(data=effectsPH1,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  geom_line(data=effectsPH2,aes(y=effect),lwd=1.25)+geom_ribbon(data=effectsPH2,aes(ymin = lower.CI,ymax = upper.CI),alpha = 0.3)+
-  theme_bw()
 ```
 
+fd from palomeros and mushito
 
 ```{r}
+fd_chr3 <- read_csv("data/fig_5/fd_chr_3_pts.csv")
 
-load('data/fig_6/EffectsAllForRuben.Rimage')
+names(fd_chr3)[7] <- "fd"
+	
+fd_chr3 %>% 
+	#filter(`Yes-No`=="S") %>%
+	ggplot(aes(x = start/10e5, xend = end/10e5, y = fd, yend = fd, colour = fd)) +
+	scale_color_viridis() +
+	geom_segment(size = 2) +
+	ylim(0,1) +
+  xlab("Chr 3 Mb") +
+	geom_segment(x = 1000000, xend = 21000000, y = 0, yend = 0, colour = "black") +
+  theme_cowplot(14)
 
-DAdata <- ggplot_build(plot3DA)
-DA <- DAdata$plot[[1]]
-PHdata <- ggplot_build(plot3PH)
-PH <- PHdata$plot[[1]]
-ASIdata <- ggplot_build(plot3ASI)
-ASI<- ASIdata$plot[[1]]
-FWdata <- ggplot_build(plot3FW)
-FW<- FWdata$plot[[1]]
-BCWdata <- ggplot_build(plot3BCW)
-BCW <- BCWdata$plot[[1]]
-GWHdata <- ggplot_build(plot3GWH)
-GWH<- BCWdata$plot[[1]]
+fd_chr3 %>% 
+	filter(POS > 750000) %>% 
+	filter(POS < 20000000) %>%
+	filter(`Yes-No`=="S") %>%
+	ggplot(aes(x = start, xend = end, y = fd, yend = fd, colour = fd)) +
+	scale_color_viridis() +
+	geom_segment(size = 2) +
+	ylim(0,1) +
+	geom_vline(xintercept = 8542106, colour = "red", linetype="dotted", size = 1) +
+  theme_cowplot(14)
 
-
-
-DA_fig <- DA %>%
-  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
-  geom_line() +
-  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
-  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
-  labs(x=NULL, y=NULL) +
-  theme_cowplot(12) +
-  ggtitle('Days to Anthesis') +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=9)) +
-  theme(legend.position = "none") 
-
-PH_fig <- PH %>%
-  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
-  geom_line() +
-  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
-  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
-  labs(x=NULL, y=NULL) +
-  theme_cowplot(12) +
-  ggtitle('Plant Height') +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=9)) +
-  theme(legend.position = "none")  
-
-ASI_fig <- ASI %>%
-  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
-  geom_line() +
-  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
-  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
-  labs(x=NULL, y=NULL) +
-  theme_cowplot(12) +
-  ggtitle('ASI') +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=9)) +
-  theme(legend.position = "none")  
-
-FW_fig <- FW %>%
-  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
-  geom_line() +
-  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
-  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
-  labs(x=NULL, y=NULL) +
-  theme_cowplot(12) +
-  ggtitle('Fresh Ear Weight') +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=9)) +
-  theme(legend.position = "none") 
-
-BCW_fig <- BCW %>%
-  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
-  geom_line() +
-  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
-  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
-  labs(x=NULL, y=NULL) +
-  theme_cowplot(12) +
-  ggtitle('Cob Weight') +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=9)) +
-  theme(legend.position = "none")   
-
-GWH_fig <- FW %>%
-  ggplot(aes(x = Elevation/1000, y = effect, fill=Test)) +
-  geom_line() +
-  scale_fill_manual(values=c("#dbd9d8", "#3630f0")) +
-  geom_ribbon(aes(ymin = lower.CI, ymax = upper.CI, alpha = 0.4)) +
-  labs(x=NULL, y=NULL) +
-  theme_cowplot(12) +
-  ggtitle('Grain Weight/ha') +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(plot.title = element_text(size=9)) +
-  theme(legend.position = "none")  
-
-plotG <- plot_grid(DA_fig, PH_fig, ASI_fig, FW_fig, BCW_fig, GWH_fig, align = "v", nrow=2)
-
-y.grob <- textGrob("Effect of the highland allele", 
-                   gp=gpar( col="black", fontsize=10), rot=90)
-x.grob <- textGrob("Elevation (km)", 
-                   gp=gpar( col="black", fontsize=12))
-#add to plot
-Gplot<-grid.arrange(arrangeGrob(plotG, left = y.grob, bottom = x.grob))
-
-ggsave(plot= Gplot,height=6,width=12,dpi=200, filename="~/effects_pla.pdf", useDingbats=FALSE)
 
 ```
-PLA Mutant analysis
+
+# Haplotype Network
+
 ```{r}
-pla <- read_csv("data/fig_6/pla_crispr_ft.csv")
+# Getting georeferenced data
+accn_file <- file.path('data','fig_2','germinate_SEED_GWAS_GBS_4022.tab')
+accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
+nrow(accn_info)
 
-pla %>% 
-  filter(genotype == "mut" | genotype == "wt") %>%
-  #filter(DTA < 66) %>%
-  ggplot(aes(x = genotype, y = DTA, color = genotype)) +
-  geom_jitter(position=position_jitter(0.1), size = 1) +
-  scale_color_manual(values=c("#1260ad", "#df1b23", "#fd6820", "#14ade8")) +
-  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
-  theme_cowplot() +
-  #facet_grid(cols = vars(Cas9))
-  #theme(legend.position="none") 
-  
-pla_std <- standardize(pla)
+SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
+                            header = TRUE, quote = "",sep ="\t")
 
-pla_dta_neg <- pla_std %>%
-  filter(PLA == "Negative") 
+# There are one or more GWAS seed identifiers per general identifier in the table
 
-pla_dta_pos <- pla_std %>%
-  filter(PLA == "Positive") 
+GWAS_ID <- read.table(file = file.path('data','fig_2',"GWAS_ID.tab"), quote = "",sep ="\t")
+GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
 
-cohens_d(pla_dta_pos$DTA, pla_dta_neg$DTA)
-hedges_g(pla_dta_pos$DTA, pla_dta_neg$DTA)
-glass_delta(pla_dta_pos$DTA, pla_dta_neg$DTA)
+colnames(GWAS_ID)[1] <-"sample_id"
 
-interpret_d(d = 0.308, rules = "gignac2016")
+GWAS_ID <- GWAS_ID %>% 
+  dplyr::select(sample_id,taxa) %>%
+  inner_join(SEED_GWAS_GID)
+
+mex <- accn_info %>% 
+  dplyr::filter(!is.na(locations_longitude) & !is.na(locations_longitude)) %>%
+  dplyr::filter(countries_country_code3 =="MEX") %>% # use the geolocator to retrieve this info
+  dplyr::select(accn_GID  ="general_identifier",collnumb, lon ="locations_longitude",
+                lat="locations_latitude",  ele="locations_elevation", country = "countries_country_code3") 
+
+# Selecting just Mexican accessions (SEEDs) 
+assoc <- mex %>% 
+  dplyr::inner_join(GWAS_ID) %>% dplyr::select(taxa,collnumb) %>%
+  dplyr::inner_join(traits) %>% 
+  dplyr::arrange(locations_elevation) %>%
+  dplyr::group_by(locations_elevation)
+
+# Using a combination of tassel and shell cmds I:
+# Merged SEEDs data with HapMap, which required:
+# Download data from hapmap 282 set in AGPV2 for ZmPLA1.2
+# Merge with SEDDs data for ZmPLA1.2 that is in AGPv2
+# Liftover to AGPV3
+# Filter heterozygote accessions out
+# In order to use the Haplotype network plotting function
+# I had to add phasing replacing '/' with '|' in the genotypes
+# From 56 initial variants found in SEEDs down to 11 sites
 
 
+vcf_file <-  file.path('data','fig_4', 'zmpla12_merged_het0_AGPv3_phased.vcf')
+
+vcf <- vcfR::read.vcfR(vcf_file) 
+ncol(vcf@gt) - 1
+
+is_mexican <- colnames(vcf@gt) %in% c("FORMAT",assoc$taxa) 
+is_teosinte <- grepl("TIL.*|Teo",colnames(vcf@gt), perl = TRUE)
+
+vcf <-vcf[,is_mexican | is_teosinte ]
+ncol(vcf@gt) - 1
+
+# 916 mexican  out of  1379 initial
+dna <- vcfR::vcfR2DNAbin(vcf)
+h <- haplotype(dna, what="label")
 
 
-#dabestr analysis
+haptab <- stack(setNames(attr(h, "index"), rownames(h))) %>%
+  dplyr::mutate(h = as.numeric(ind)) %>%
+  dplyr::select(h, label =ind, dnaid= values)
 
-#create ASI variable
+sumhap <- haptab %>% 
+  dplyr::group_by(h,label) %>%
+  dplyr::summarise(count= length(h))  %>%
+  dplyr::arrange(-count) %>% ungroup() %>%
+  dplyr::mutate(countrank = row_number()) %>%
+  dplyr::mutate(cumcount = cumsum(count)) %>% 
+  dplyr::mutate(cumfreq  = cumcount/sum(count)) %>% 
+  dplyr::mutate(is_major = cumfreq < 0.9) %>%  # haplotypes covering 90% of the population fro the plot
+  as.data.frame()
 
-pla <- pla %>%
-  mutate(ASI = DTS - DTA)
+majorhid <- sumhap$h[sumhap$is_major]
+majordnaid  <- haptab$dnaid[haptab$h %in% majorhid ]
+
+majordna <- dna[majordnaid,]
+
+h <- haplotype(majordna) # Here we get the sequences as haplotypes for plotting
+
+check_mexicana <- function(x,h,dna) {
+  h_names <- rownames(dna)[attr(h,"index")[[x]]]
+  if(any(grepl("TIL08|TIL25",h_names))) {x} else {NULL}
+}
 
 
-unpaired_DTS <- pla %>%
-  filter(genotype == "mut" | genotype == "wt") %>%
-  filter(!is.na(DTS)) %>%
-  dabest(genotype, DTS,
-         idx = list(c("wt", "mut")),
-         paired = FALSE) %>%
-  mean_diff()
+hapind <- stack(setNames(attr(h, "index"), rownames(h))) %>% 
+  dplyr::mutate(h = as.numeric(ind)) %>%
+  dplyr::select(h, label =ind, dnaid = values) %>%
+  dplyr::mutate(seqname = rownames(majordna)[dnaid]) %>%
+  dplyr::mutate(seq = as.alignment(majordna)$seq) %>%
+  dplyr::mutate(taxa = gsub("_.*","",seqname,perl = TRUE)) %>%
+  dplyr::left_join(assoc) %>%
+  dplyr::mutate(is_mexicana    = grepl("TIL08|TIL25", taxa, perl = TRUE)) %>%
+  dplyr::mutate(is_parviglumis = grepl("TIL|Teo", taxa, perl = TRUE) & !is_mexicana) 
 
-effect_size_dts <- plot(unpaired_DTS, axes.title.fontsize = 14,
-     palette = c(values=c("#df1b23", "#1260ad")),
-     rawplot.ylabel = "",
-     effsize.ylabel = "",
-     rawplot.markersize = 2)
 
-unpaired_DTA <- pla %>%
-  filter(genotype == "mut" | genotype == "wt") %>%
-  filter(!is.na(DTA)) %>%
-  dabest(genotype, DTA,
-         idx = list(c("wt", "mut")),
-         paired = FALSE) %>%
-  mean_diff()
+hapind$ele_class <- cut(
+  hapind$locations_elevation, breaks = c(0,1000,2000,4000), 
+  labels = c("low","mid","high"))
 
-effect_size_dta <- plot(unpaired_DTA, axes.title.fontsize = 14,
-     palette = c(values=c("#df1b23", "#1260ad")),
-     rawplot.ylabel = "",
-     effsize.ylabel = "",
-     rawplot.markersize = 2)
+hapind$pop <- hapind$ele_class 
+hapind$pop <- factor(hapind$pop, levels = c("low","mid","high"))
 
-unpaired_ASI <- pla %>%
-  filter(genotype == "mut" | genotype == "wt") %>%
-  filter(!is.na(ASI)) %>%
-  dabest(genotype, ASI,
-         idx = list(c("wt", "mut")),
-         paired = FALSE) %>%
-  mean_diff()
+pie_tab <- with(hapind, table(hap=label, pop=pop))
 
-effect_size_ASI <- plot(unpaired_ASI, axes.title.fontsize = 14,
-     palette = c(values=c("#df1b23", "#1260ad")),
-     rawplot.ylabel = "",
-     effsize.ylabel = "",
-     rawplot.markersize = 2)
-    
- plat_ft <- plot_grid(effect_size_dts, effect_size_dta, effect_size_ASI, ncol = 3)    
- 
-ggsave(plot= plat_ft,height=6,width=12,dpi=200, filename="~/ft_pla.pdf", useDingbats=FALSE)
+net <- pegas::haploNet(h)
 
-     
+pal <- c("#CC6677","#BCDCAD", "#88CCEE")
+
+
+# Preliminary plot just for getting layout coordinates
+p <- plot(net, legend = FALSE,
+     size=attr(net, "freq")/50, 
+     scale.ratio = 2, cex = 0., 
+     pie= pie_tab,
+     col = "white",
+     bg=pal,
+     show.mutation = 2,threshold =0 )
+
+# Parameters for adjusting pie labels (manually):
+size.adjust <- c(0.8, 0.6,0.7, 1.5,1.5,0.6,1,1.2,1.5)
+angle.adjust <- -c(pi/3,pi/3,pi/3,-pi/2, pi/2, pi/3, -pi/3, -pi/2,pi)
+
+# Final plot
+pdf(file.path('output',"fig_1B.pdf"))
+plot(net, legend = FALSE,
+     labels = FALSE,
+     size=attr(net, "freq")/50, 
+     scale.ratio = 2, cex = 0., 
+     pie= pie_tab,
+     bg=pal,
+     show.mutation = 2,threshold =0, )
+# Adjusting pie labels
+text(p$xx + cos(angle.adjust)*p$size*size.adjust , 
+     p$yy + sin(angle.adjust)*p$size*size.adjust ,
+     labels = p$labels, srt = 90)
+legend(-25,30, box.lty = 0, colnames(pie_tab), fill=pal,
+       title = "Population by Elevation", ncol =3)
+dev.off()
+
 ```
+
+## PLA1.2 282 expression vs Flowering time
+
+```{r}
+library(dplyr)
+library(tibble)
+library(ggplot2)
+library(tidyselect)
+library(ggpubr)
+library(ape)
+library(phytools)
+
+data_dir <- "../data/fig_5"
+
+# Make phenotype table #########################################################
+# Summer - winter data Hung et al 2012
+
+# https://datacommons.cyverse.org/browse/iplant/home/shared/panzea/phenotypes/Hung_etal_2012_PNAS_data-120523.zip
+gddtf <- read.csv("Dataset_S2.Photoperiod_paper_data_supplement_line_BLUPs.csv") %>%
+  dplyr::filter(pop==27) %>%
+  dplyr::select( Taxa = geno_code, gdd_anth_long, gdd_anth_short,gdd_anth_photo_resp
+                 , gdd_silk_long, gdd_silk_short, gdd_silk_photo_resp)
+
+# https://datacommons.cyverse.org/browse/iplant/home/shared/commons_repo/curated/Kremling_Nature3RNASeq282_March2018
+
+tissue_file <- list.files(pattern = "TASSEL.*Dups.txt") # This dataset is huge add to .gitignorre
+tissue <-  gsub(".*and_Altnames_","",tissue_file)
+tissue <-  gsub("_.*","",tissue)
+names(tissue_file) <- tissue
+tissue  <- c(tissue[c(1,2,4,5,3)], NA,tissue[c(6,7)])
+
+
+RNA <-read.table(file=tissue_file["GShoot"], skip =2, header = TRUE)
+RNA$Taxa <- gsub("282set_","",RNA$Taxa)
+
+DTF_RNA <- gddtf %>%
+  dplyr::inner_join(RNA) %>%
+  dplyr::select(Taxa, gdd_anth_long, gdd_anth_short, gdd_anth_photo_resp, gdd_silk_long, gdd_silk_short, gdd_silk_photo_resp,everything())
+
+colnames(DTF_RNA) <- gsub("gdd_","",colnames(DTF_RNA))
+
+# hapmap data from Panzea AGPv3 282 set genotypes for GRMZM2G353444 cds
+
+hmp <- file.path(data_dir,'GRMZM2G353444_AGPV3_282.hapmap.hmp.txt')
+
+tree <- read.tree("ZmPLA1.2_282_til_german_AA.tree")
+class(tree)
+
+tree$tip.label
+quartz()
+plotTree(tree)
+nodelabels()
+
+PT_lineage <- extract.clade(tree, 317)
+B73_lineage <- extract.clade(tree, 336)
+PT_lineage$tip.label
+
+quartz()
+plotTree(B73_lineage)
+
+quartz()
+plotTree(PT_lineage)
+
+gt <- read.table(hmp, skip =1)
+
+con <- file(hmp)
+first_line <- readLines(con,n=1)
+close(con)
+
+h <- strsplit(first_line,"\t") %>% unlist
+
+h <- gsub("#|282set_","", h) 
+h %>%  length()
+colnames(gt)  <- h 
+
+pla12_lpcat <- DTF_RNA %>%
+  dplyr::select(Taxa, anth_long, anth_short,
+                anth_photo_resp, silk_long, 
+                silk_short, silk_photo_resp,GRMZM2G353444,GRMZM2G481755)
+gtm <- gt %>% 
+  dplyr::filter(grepl("/",alleles) ) %>%
+  dplyr::select(-(alleles:QCcode)) %>% t()
+colnames( gtm) <- paste0("S",gtm[1,])
+gtm <- gtm[-1,]
+gtm <-  cbind(rownames(gtm),gtm)
+colnames(gtm)[1] <- "Taxa"
+as.data.frame(gtm)
+
+# adding lineage inforrmation
+clade_RNA_FT <- as.data.frame(gtm) %>% left_join(pla12_lpcat)
+
+clade_RNA_FT$lineage <- NULL
+clade_RNA_FT$lineage[clade_RNA_FT$Taxa %in% PT_lineage$tip.label] <- "PT"
+clade_RNA_FT$lineage[clade_RNA_FT$Taxa %in% B73_lineage$tip.label] <- "B73"
+
+#------------------------------------------------------------------
+
+toplot <- clade_RNA_FT %>%
+  dplyr::filter(!is.na(lineage)) 
+
+p1 <- toplot  %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_long)
+  ) +
+  xlab("ZmPLA1.2") +
+  ylab("Long Days DTA (gdd)") +
+  labs(color = "Lineage") + 
+  ggplot2::geom_point(aes( group = lineage,
+                           color = lineage))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor(label.sep = "\n",label.x.npc = 0.75,label.y.npc = 0.1)  +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+  ggpubr::theme_pubr(legend = "none") 
+
+
+# Marginal densities along x axis
+
+xdens <- ggboxplot(toplot, "lineage", "GRMZM2G353444",
+                   color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens  <- ggboxplot(toplot, "lineage", "anth_long",
+                    color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5) 
+
+p12 <- cowplot::insert_xaxis_grob(p1, xdens, grid::unit(.2, "null"), position = "top")
+p13 <- cowplot::insert_yaxis_grob(p12, ydens, grid::unit(.2, "null"), position = "right")
+
+p2 <- toplot  %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_short)
+  ) +
+  xlab("ZmPLA1.2") +
+  ylab("Short Days DTA (gdd)") +
+  ggplot2::geom_point(aes( group = lineage,
+                           color = lineage))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor(label.sep = "\n",label.x.npc = 0.75,label.y.npc = 0.1)  +
+  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+  ggpubr::theme_pubr(legend="none") 
+
+# Marginal densities along x axis
+xdens <- ggboxplot(toplot, "lineage", "GRMZM2G353444",
+                   color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+ydens  <- ggboxplot(toplot, "lineage", "anth_short",
+                    color = "lineage", palette = c("#df1b23","#1260ad"), alpha = 0.5)
+
+p22 <- cowplot::insert_xaxis_grob(p2, xdens, grid::unit(.2, "null"), position = "top")
+
+p23 <- cowplot::insert_yaxis_grob(p22, ydens, grid::unit(.2, "null"), position = "right")
+
+
+quartz(height= 1.5*4.72, width =1.5*2.3)
+ggpubr::ggarrange(cowplot::ggdraw(p13),cowplot::ggdraw(p23),
+                  ncol = 1,
+                  common.legend = TRUE,
+                  align = "hv")
+
+#------------------------------------------------------------------
+toplot <- clade_RNA_FT %>%
+  dplyr::filter(!is.na(S3_8543470)) %>%
+  dplyr::filter(!S3_8543470 == "N") 
+
+p1 <- toplot  %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_long)
+  ) +
+  xlab("ZmPLA1.2") +
+  ylab("Long Days DTA (gdd)") +
+  ggplot2::geom_point(aes( group = S3_8543470,
+                           color = S3_8543470))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor()  +
+ scale_color_manual(values = c("#1260ad", "#df1b23","#68ac57")) +
+  ggpubr::theme_pubr(legend = "none") 
+
+
+# Marginal densities along x axis
+
+xdens <- ggboxplot(toplot, "S3_8543470", "GRMZM2G353444",
+                   color = "S3_8543470",  palette = c("#df1b23","#1260ad","#68ac57"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens  <- ggboxplot(toplot, "S3_8543470", "anth_long",
+                    color = "S3_8543470",  palette = c("#df1b23","#1260ad", "#68ac57"), alpha = 0.5) 
+
+p12 <- cowplot::insert_xaxis_grob(p1, xdens, grid::unit(.2, "null"), position = "top")
+p13 <- cowplot::insert_yaxis_grob(p12, ydens, grid::unit(.2, "null"), position = "right")
+
+p2 <- toplot %>%
+  ggplot2::ggplot( aes( x = GRMZM2G353444, 
+                        y = anth_short)
+  ) +
+  ggplot2::xlab("ZmPLA1.2") +
+  ggplot2::ylab("Short Days DTA (gdd)") +
+  ggplot2::labs(color = "S3_8543470") + 
+  ggplot2::geom_point(aes( group = S3_8543470,
+                           color = S3_8543470))  +
+  ggplot2::geom_smooth(method = "lm", se=FALSE, col = "black") +
+  ggpubr::stat_cor() +
+  scale_color_manual(values = c("#1260ad", "#df1b23","#68ac57")) +
+  ggpubr::theme_pubr(legend = "none") 
+
+# Marginal densities along x axis
+xdens <- ggboxplot(toplot, "S3_8543470", "GRMZM2G353444",
+                   color = "S3_8543470",  palette = c("#df1b23","#1260ad", "#68ac57"), alpha = 0.5) +
+  ggplot2::coord_flip()
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+ydens  <- ggboxplot(toplot, "S3_8543470", "anth_short",
+                    color = "S3_8543470",  palette = c("#df1b23","#1260ad", "#68ac57"), alpha = 0.5)
+
+p22 <- cowplot::insert_xaxis_grob(p2, xdens, grid::unit(.2, "null"), position = "top")
+
+p23 <- cowplot::insert_yaxis_grob(p22, ydens, grid::unit(.2, "null"), position = "right")
+
+
+ggpubr::ggarrange(cowplot::ggdraw(p13),cowplot::ggdraw(p23),
+                  legend ="none",
+                  nrow = 2,
+                  common.legend = TRUE,
+                  widths = c(1, 1.4))
+
+```
+
+
 
 
