@@ -1,1 +1,68 @@
 #TODO: Heatmap Code
+
+
+```
+
+simplified <- c("GRMZM2G353444","GRMZM2G481755", "GRMZM2G179264",
+                "GRMZM2G171650","GRMZM2G700665","GRMZM2G154366",
+                "GRMZM2G032339")
+names(simplified) <- c("PLA1.2","LPCAT1","ZCN8","MADS69","RAP2.7","PAP",  "ZMM4")
+simplified <- simplified[1:5]  # exclude PAP and ZMM4
+
+check_all_tissues(cor_list= tissue_cor[aerial],  genes = simplified)
+
+col_fun = colorRamp2(c(-0.5, 0, 0.5), c("blue", "white", "red"))
+
+quartz()
+
+ht_list <- NULL  ## Heatmap(...) + NULL gives you a HeatmapList object
+m <-NULL
+tissue_cor[[t]][simplified,]
+for(t in aerial) {
+
+  m <- tissue_cor[[t]][simplified,]
+row_names <- row.names(m)
+row.names(m) <- names(simplified)
+row.names(m)
+ht_list = ht_list +
+  ComplexHeatmap::Heatmap(
+    m,
+    cluster_columns = FALSE,
+    cluster_rows = TRUE,
+    column_title = t,
+    col = col_fun)
+}
+
+
+ComplexHeatmap::draw(ht_list ,merge_legend = TRUE)
+
+M <- NULL
+for(t in aerial) {
+  m <- tissue_cor[[t]][simplified,]
+  M <- cbind(M,m)
+}
+
+rownames(M) <- names(simplified)
+colnames(M) <-rep(c("Anthesis Long","Anthesis Short","Anthesis Response",
+      "Silking Long","Silking Short","Silking Response"),5)
+
+col_fun = colorRamp2(c(-0.5, 0, 0.5), c("blue", "white", "red"))
+
+ha <-  rowAnnotation(foo = anno_text(rownames(M)))
+
+quartz(height = 2*2.30, width = 2*4.72)
+hm <- ComplexHeatmap::Heatmap(M,
+                              cluster_columns = FALSE,
+                              cluster_rows = FALSE,
+                              col = col_fun,
+                              column_split = rep(aerial, each = 6),
+                              heatmap_legend_param = list(title = "Correlation"),
+                              # layer_fun = function(j, i, x, y, w, h, fill) {
+                              #  ind_mat = restore_matrix(j, i, x, y)
+                              #  grid.points(x[1:2], y[1:2], pch = 16, size = unit(1, "mm"))}
+) + ha
+
+quartz()
+ComplexHeatmap::draw(hm ,merge_legend = TRUE)
+
+```

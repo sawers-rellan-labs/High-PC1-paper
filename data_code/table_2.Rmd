@@ -1,5 +1,5 @@
 ---
-title: "Convergent Evolution and Genetic Constraint"
+title: "Broad sense Heritability estimates"
 author: "Fausto Rodriguez"
 date: "9/18/2020"
 output:
@@ -12,72 +12,63 @@ output:
 library(inti)
 library(agridat)
 
-
 base_pheno <- read.csv('B73xPT_base_phenotype_reps.csv')  %>%
   # dplyr::select(id:lipid_batch_number,PCs.LPCs) %>%
   dplyr::mutate(rep = paste0("rep",rep)) %>%
-  dplyr::arrange(FIELD, ROW_ID)
+  dplyr::rename(batch = "lipid_batch_number") %>%
+  dplyr::arrange(FIELD, ROW_ID) 
+  
 
-hr <-NULL
 hr1 <- H2cal(data = base_pheno
             , trait = "PCs.LPCs"
             , gen.name = "id"
             , rep.n = 3
-            , fix.model = "rep + (1|rep:FIELD) + id"
-            , ran.model = "rep + (1|rep:FIELD) + (1|id)"
+            , fix.model = "rep + (1|batch) + (1|rep:FIELD) + id"
+            , ran.model = "rep + (1|batch) + (1|rep:FIELD) + (1|id)"
             , emmeans = TRUE
             , plot_diag = TRUE
             , plot_dots = "rep"
             , outliers.rm = FALSE
 )
 
+hr1$tabsmr$h2.s
+# 0.7511645
 
-hr <-NULL
-hr <- H2cal(data = base_pheno,
+hr2 <- H2cal(data = base_pheno,
             , trait = "LPCs"
             , gen.name = "id"
             , rep.n = 3
-            , fix.model = "rep + (1|rep:FIELD) + id"
-            , ran.model = "rep + (1|rep:FIELD) + (1|id)"
+            , fix.model = "rep + (1|batch) + (1|rep:FIELD) + id"
+            , ran.model = "rep + (1|batch) + (1|rep:FIELD) + (1|id)"
             , emmeans = TRUE
             , plot_diag = TRUE
             , plot_dots = "rep"
             , outliers.rm = FALSE
 )
 
-hr$tabsmr$h2.s
-# 0.6666027
+hr2$tabsmr$h2.s
+# 0.71374
 
-hr <-NULL
-hr <- H2cal(data = base_pheno,
+hr3 <- H2cal(data = base_pheno,
             , trait = "PCs"
             , gen.name = "id"
             , rep.n = 3
-            , fix.model = "rep + (1|rep:FIELD) + id"
-            , ran.model = "rep + (1|rep:FIELD) + (1|id)"
+            , fix.model = "rep + (1|batch) + (1|rep:FIELD) + id"
+            , ran.model = "rep + (1|batch) + (1|rep:FIELD) + (1|id)"
             , emmeans = TRUE
             , plot_diag = TRUE
             , plot_dots = "rep"
             , outliers.rm = FALSE
 )
 
-hr$tabsmr$h2.s
-# 0.5727905
+hr3$tabsmr$h2.s
+# 0.628772
+h2_col <- c("h2.s","h2.c", "h2.p")
 
+rbind(
+  hr1$tabsmr[,h2_col],
+  hr2$tabsmr[,h2_col],
+  hr3$tabsmr[,h2_col]
+)
 
-# dt <- john.alpha
-# 
-# hr <- H2cal(data = dt
-#             , trait = "yield"
-#             , gen.name = "gen"
-#             , rep.n = 3
-#             , fix.model = "rep + (1|rep:block) + gen"
-#             , ran.model = "rep + (1|rep:block) + (1|gen)"
-#             , emmeans = TRUE
-#             , plot_diag = TRUE
-#             , plot_dots = "rep"
-#             , outliers.rm = FALSE
-# )
-# 
-# hr
 ```

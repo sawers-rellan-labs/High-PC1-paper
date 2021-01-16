@@ -299,7 +299,7 @@ gddtf <- read.csv("Dataset_S2.Photoperiod_paper_data_supplement_line_BLUPs.csv")
 
 # https://datacommons.cyverse.org/browse/iplant/home/shared/commons_repo/curated/Kremling_Nature3RNASeq282_March2018
 
-tissue_file <- list.files(pattern = "TASSEL.*Dups.txt") # This dataset is huge add to .gitignorre
+tissue_file <- list.files(pattern = "TASSEL.*Dups.txt") # This dataset is huge add to .gitignore
 tissue <-  gsub(".*and_Altnames_","",tissue_file)
 tissue <-  gsub("_.*","",tissue)
 names(tissue_file) <- tissue

@@ -92,9 +92,9 @@ new_peaks  <- refined_peaks[refined_peaks$lod > refined_peaks$thresh_adj,]
 
 # Variance explained by  3@8.5
 
-pla12_pos <- pull.map(cross = cross)[[3]]["S3_8542287"]
+hpc1_pos <- pull.map(cross = cross)[[3]]["S3_8542287"]
 
-q1 <- makeqtl(sim.geno(cross), 3, pla12_pos, "3@8.5")
+q1 <- makeqtl(sim.geno(cross), 3, hpc1_pos, "3@8.5")
 
 qtraits <-  c("PCs","LPCs","PCs.LPCs")
 
@@ -113,8 +113,8 @@ trait_var <- lapply(qtraits, function(x){
 names(trait_var) <- qtraits
 trait_var
 
-##### Output Profile ##########################################################
-
+base_size <- 24
+       
 p1 <- single_scan  %>%
   dplyr::select( chr,pos, LPCs, PCs,PCs.LPCs) %>%
   tidyr::pivot_longer(cols = c("LPCs", "PCs","PCs.LPCs"),
@@ -130,11 +130,14 @@ p1 <- single_scan  %>%
                       strip.position = "bottom",
                       ncol = 10)  +
   ggplot2::geom_rug(aes(x = pos),sides="b", size =0.01) +
-  ggpubr::theme_classic2(base_size = 18) +
+  ggpubr::theme_classic2(base_size = base_size) +
   ggplot2::theme(legend.position = "none",
                  strip.background = ggplot2::element_blank(),
                   strip.placement = "outside",
-                  axis.text.x = ggplot2::element_text(size =8, angle = 90))
+                  axis.text.x = ggplot2::element_text(size =14, angle = 90)
+                 )
+
+
 
 p2 <- single_scan  %>%
   dplyr::filter(chr==3) %>%
@@ -144,59 +147,68 @@ p2 <- single_scan  %>%
   dplyr::mutate(trait = factor(trait, levels = c( "PCs","LPCs", "PCs.LPCs"))) %>%
   ggplot2::ggplot() +
   ggplot2::geom_line(aes(x = pos, y = LOD, col = trait))+
-  ggplot2::xlab("Position cM") +
-  ggplot2::ylab("") +
   ggplot2::geom_hline(aes(yintercept = LPCs_thresh), col = pal[1], lty =2)+
-  ggplot2::geom_vline(aes(xintercept = pla12_pos), col = "red") +
+  ggplot2::geom_vline(aes(xintercept = hpc1_pos), col = "red") +
   ggplot2::geom_rug(aes(x = pos),sides="b", size =0.1) +
-  ggpubr::theme_classic2() +
+  ggpubr::theme_classic2(base_size = base_size) +
   ggplot2::theme( plot.margin = unit(c(0,0,0,0), "lines"),
-                  legend.position = "none")
+                  legend.position = "none",
+                  axis.title = ggplot2::element_blank())
 
 plot.with.inset <-
   cowplot::ggdraw() +
   cowplot::draw_plot(p1) +
-  cowplot::draw_plot(p2, x = 0.3, y = .45, width = .68, height = .45)
+  cowplot::draw_plot(p2, x = 0.31, y = .46, width = .68, height = .45)
 
 
-png(file = "Figure3A.png", height = 616, width = 1168)
+base_size <- 18
+
+#png(file = "Figure3A.png", height = 616, width = 1168)
+pdf(file = "Figure3A.pdf", height = 6.16, width = 11.68)
 
 # quartz(height = 2*3.08, width = 2*5.84)
 
 print(plot.with.inset)
- 
-grid::grid.text(expression(italic("ZmPla1.2")),
-                just = "left", x = 0.475, y = 0.92)
-grid::grid.text(expression(italic("qPCs/LPCs")),
-                just = "left", x = 0.525, y = 0.85)
-grid::grid.text(expression(italic("qLPCs")),
-                just = "left",  x = 0.54, y = 0.675)
-grid::grid.text(expression(italic("qPCs")),
-                just = "left", x = 0.55, y = 0.63)
 
-grid::grid.lines(x = unit(c(0.512, 0.523), "npc"),
-                 y = unit(c(0.85, 0.85), "npc"),
+
+grid::grid.text("LOD",
+                just = "left", x = 0.3 , y = 0.95,  gp=grid::gpar(fontsize= base_size))
+grid::grid.text("cM",
+                just = "left", x = 0.95, y = 0.485,  gp=grid::gpar(fontsize= base_size))
+
+grid::grid.text(expression(italic("HPC1")),
+                just = "left", x = 0.48, y = 0.93, gp=grid::gpar(fontsize= base_size))
+grid::grid.text(expression(italic("qPCs/LPCs3@8.5")),
+                just = "left", x = 0.53, y = 0.85, gp=grid::gpar(fontsize= base_size))
+grid::grid.text(expression(italic("qLPCs3@8.5")),
+                just = "left",  x = 0.54, y = 0.71, gp=grid::gpar(fontsize= base_size))
+grid::grid.text(expression(italic("qPCs3@8.5")),
+                just = "left", x = 0.55, y = 0.66,  gp=grid::gpar(fontsize= base_size))
+
+grid::grid.lines(x = unit(c(0.5188, 0.53), "npc"),
+                 y = unit(c(0.89, 0.86), "npc"),
                  gp = grid::gpar(col= pal[3]))
 
-grid::grid.lines(x = unit(c(0.51, 0.538), "npc"),
-                 y = unit(c(0.656, 0.675), "npc"),
+grid::grid.lines(x = unit(c(0.513, 0.538), "npc"),
+                 y = unit(c(0.679, 0.71), "npc"),
                  gp = grid::gpar(col= pal[2]))
 
-grid::grid.lines(x = unit(c(0.515, 0.548), "npc"),
-                 y = unit(c(0.60, 0.63), "npc"),
+grid::grid.lines(x = unit(c(0.513, 0.548), "npc"),
+                 y = unit(c(0.627, 0.66), "npc"),
                  gp = grid::gpar(col= pal[1]))
 
-grid::grid.lines(x = unit(c(0.255, 0.36), "npc"),
-                 y = unit(c(0.215, 0.49), "npc"),
+grid::grid.lines(x = unit(c(0.272, 0.361), "npc"),
+                 y = unit(c(0.288, 0.437), "npc"),
                  gp = grid::gpar(fill="black"),
                  arrow = grid::arrow(length = unit(0.1, "inches"),
                                      ends="last", type="closed"))
-grid::grid.lines(x = unit(c(0.33, 0.95), "npc"),
-                 y = unit(c(0.215, 0.49), "npc"),
+grid::grid.lines(x = unit(c(0.342, 0.95), "npc"),
+                 y = unit(c(0.288, 0.435), "npc"),
                  gp = grid::gpar(fill="black"),
                  arrow = grid::arrow(length = unit(0.1, "inches"),
                                      ends="last", type="closed"))
 dev.off()
+ 
 ```
 
 ## Effect Sizes.
@@ -639,10 +651,10 @@ line_x2 <- "LPCs"
 line_x3 <- "PCs/LPCs"
 
 line_y0 <- "Z-score"
-line_y1 <- "BILs"
+line_y1 <- "RILs"
 line_y2 <- expression(italic("3@8.5"))
 line_y3 <- "CRISPR/CAS9"
-line_y4 <- expression(italic("ZmPLA1.2"))
+line_y4 <- expression(italic("HPC1"))
 
 fig3CD <- cowplot::ggdraw(fig) + 
  # cowplot::draw_label(line_x0, x = 0.45, y = 0.05) +
@@ -668,25 +680,29 @@ dev.off()
 
 ```{r}
 
-exp_valuesPLALPCAT <- read_csv("data/fig_4/ZmPla-Lpcat.csv")
+exp_valuesPLALPCAT <- read_csv("data/fig_4/ZmPla-Lpcat.csv") %>%
+  mutate(temp_tx = factor(temp_tx, levels = c("control","cold")))
 
-ZmPla1_exp <- exp_valuesPLALPCAT %>%
+ZmPla1_exp <-
+  exp_valuesPLALPCAT %>%
   filter(gene=="ZmPla1.2") %>%
   #filter(fertilizer_tx=="high") %>%
-	ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
-  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
-	geom_jitter(position=position_jitter(0.1), size = 3) +
+  ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  labs(x = "Temperature", y = "*HPC1* (log<sub>2</sub>[CPM])") +
+  geom_jitter(position=position_jitter(0.1), size = 4) +
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
-               color = "black") +
-  #ylim(0,8) +
-  labs(x = "Temperature", y = "*ZmPLA1.2*") +
-  md_theme_classic() +
-  #theme_cowplot(16) +
-  #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
+               color = "black", size = 1) +
   facet_grid(cols = vars(line)) +
-  #coord_fixed(ratio = 0.9) +
-  theme(legend.position="none",
-        strip.background = element_rect(colour="white", fill="white"))
+  md_theme_classic(base_size = 28)+
+  scale_color_manual(values= c("#df1b23","#1260ad")) +
+  theme( legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"),
+        )
+
+pdf(file = "Fig_3E.pdf", height = 7, width =8.5)
+print(ZmPla1_exp)
+dev.off()
+
 
 ZmLpcat_exp <- exp_valuesPLALPCAT %>%
   filter(gene=="ZmLpcat") %>%
@@ -715,7 +731,7 @@ ratio_exp <- exp_valuesPLALPCAT %>%
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black") +
   #ylim(0,8) +
-  ylab("ZmPla1.2/ZmLpcat1") +
+  ylab("HPC1/ZmLpcat1") +
   xlab("Temperature") +
   theme_cowplot(16) +
   #facet_grid(cols = vars(line), rows = vars(fertilizer_tx)) +
