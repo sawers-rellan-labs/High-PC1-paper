@@ -15,7 +15,7 @@
 \newboolean{displaylineno}
 \setboolean{displaylineno}{false}
 
-\DeclareOption{lineno}{\setboolean{displaylineno}{true}}
+\DeclareOption{lineno}{\setboolean{displaylineno}{false}}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{extarticle}}
 \ProcessOptions*
 \LoadClass{extarticle}
@@ -50,10 +50,10 @@
 \newcommand{\keywordsfont}{\normalfont\sffamily\linespread{1.2}\fontsize{8}{10}\selectfont}
 \newcommand{\copyrightfont}{\normalfont\sffamily\fontsize{7}{9}\selectfont}
 
-\RequirePackage{datetime}
+%\RequirePackage{datetime}
 
-\newdateformat{monthyeardate}{%
-  \monthname[\THEMONTH] \THEYEAR}
+%\newdateformat{monthyeardate}{%
+ % \monthname[\THEMONTH] \THEYEAR}
 
 \RequirePackage{enumitem} 
 \setlist[itemize]{noitemsep}
@@ -323,8 +323,8 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 
 \newcommand{\equalcontrib}[1]{\@authfootnote{#1}{These authors contributed equally to this work.}}
 
-\newcommand{\firstpagefootnote}{\blfootnote{\copyrightfont \ifthenelse{\boolean{displaycopyright}}{\copyrightstatement}{}\\%
-Manuscript compiled: \today%
+%\newcommand{\firstpagefootnote}{\blfootnote{\copyrightfont \ifthenelse{\boolean{displaycopyright}}{\copyrightstatement}{}\\%
+%Manuscript compiled: \today%
 }}
 
 \newenvironment{tableminipage}[1]{\begin{minipage}{#1}\renewcommand\footnoterule{ \kern -1ex}%
