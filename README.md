@@ -1,7 +1,7 @@
 # Teosinte introgression modulates phosphatidylcholine levels and induces early maize flowering
 *Fausto Rodríguez-Zapata<sup>1</sup>, Allison C Barnes<sup>1</sup>, Karla A Blöcher-Juárez<sup>1</sup>, Dan Gates, Andi Kur, Li Wang, Garrett M Janzen, Sarah Jensen, Juan M Estévez-Palmas, Taylor Crow, Rocío Aguilar-Rangel, Edgar Demesa-Arevalo, Tara Skopelitis, Sergio Pérez-Limón, Whitney L Stutts, Peter Thompson, Yu-Chun Chiu, David Jackson, Oliver Fiehn, Daniel Runcie, Edward S Buckler, Jeffrey Ross-Ibarra, Matthew B. Hufford, Ruairidh JH Sawers and Rubén Rellán-Álvarez**
 
-![CoverArt](/cover_repo.png)
+![Cover Art by Andi Kur](/cover_repo.png)
 
 ## Summary
 After domestication in the tropical lowlands of México, maize expanded throughout the Americas and adapted to very diverse environments. 
