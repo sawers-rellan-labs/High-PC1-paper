@@ -1,1 +1,88 @@
+---
+title: "Supp Fig3 Code"
+output: html_document
+---
+
 # Panel C
+
+```{r}
+library(qtl)
+library(dplyr)
+library(ggplot2)
+
+data_dir <- "../data/fig_3"
+geno_file  <- file.path(data_dir, "B73xPT_MARKERTYPE.txt")
+pheno_file <- file.path(data_dir, "B73xPT_combined_phenotype.csv")
+
+cross <- read.cross(
+  format = "csvs",  file = geno_file,
+  na.strings = c("-",NA),
+  phefile = pheno_file,
+  genotypes = c("AA","BB","AB")) %>%
+  jittermap() %>%
+  calc.genoprob( step = 1)
+
+# cross$pheno$RIL <- gsub("LANMLR17B","B",cross$pheno$RIL)
+
+
+pheno <- read.csv("B73xPT_combined_phenotype.csv") %>%
+  dplyr::group_by(RIL)
+
+cross$pheno$RIL
+
+S3_8542287 <-factor(pull.geno(cross,3)[, "S3_8542287"])
+levels(S3_8542287) <-  c("B73","PT", "B73/PT")
+
+S3_8542287 <-factor(S3_8542287, levels = c("B73","B73/PT", "PT"))
+table(S3_8542287)                  
+to_plot <- dplyr::inner_join(
+  data.frame( RIL = cross$pheno$RIL,
+              genotype = S3_8542287),
+  pheno
+)
+
+to_plot$PCs.LPCs
+to_plot$genotype
+base_size <- 18
+
+quartz()
+to_plot %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = PCs.LPCs %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.2), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  ggplot2::ylab("PCs/LPCs (Z-score)") +
+  ggplot2::xlab("Genotype") +
+  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
+  ggplot2::scale_color_manual(values = c("#df1b23","purple","#1260ad")) +
+  ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+
+quartz()
+to_plot %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = log10(PCs.LPCs) %>% scale() %>% as.vector(), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  ggplot2::ylab("log10(PCs/LPCs) Z-score") +
+  ggplot2::xlab("Genotype") +
+  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
+  ggplot2::scale_color_manual(values = c("#df1b23","purple","#1260ad")) +
+  ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+quartz()
+to_plot %>%
+  dplyr::filter(!is.na(genotype)) %>%
+  ggplot2::ggplot(aes(x = genotype, y = log10(PCs.LPCs), colour = genotype)) +
+  ggplot2::geom_jitter(position=position_jitter(0.1), size = 2) +
+  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange", color = "black") +
+  ggplot2::ylab("log10(PCs/LPCs)") +
+  ggplot2::xlab("Genotype") +
+  # ggplot2::ggtitle("B73 x PT RILs Chr03 @ 8542287") +
+  ggplot2::scale_color_manual(values = c("#df1b23","purple","#1260ad")) +
+  ggpubr::theme_pubr(legend ="none", base_size=base_size) +
+  ggplot2::theme(axis.title.x=element_blank())
+
+```

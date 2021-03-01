@@ -383,7 +383,7 @@ names(pal) <- levels(zm_change_grp$Pos60)
 pal["I"] <- "#df1b23"
 pal["V"] <- "#1260ad"
 
-quartz(width=2*3.28, height=2*2.24)
+# quartz(width=2*3.28, height=2*2.24)
 
 zm_change_grp %>% 
   ggplot(aes( x = Pos60, 
@@ -424,12 +424,12 @@ iv_aa_plt <- ggplot(iv_aa, aes(x = Pos60, y = OGT, fill = Pos60)) +
   xlab("Amino Acid") +
   ylab('Bacteria OGT') +
   theme(legend.title = element_blank())
-quartz()
-pdf('../../figures/OGTplt_IV.pdf', )
+# quartz()
+# pdf('../../figures/OGTplt_IV.pdf', )
 iv_aa_plt
-dev.off()
+# dev.off()
 
-pdf('../../figures/OGTplt_allAA.pdf', )
+# pdf('../../figures/OGTplt_allAA.pdf', )
 all_aa_plt
-dev.off()
+# dev.off()
 ```

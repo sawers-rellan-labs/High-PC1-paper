@@ -163,7 +163,7 @@ colm %>%
   #xlim(5379695, 5395010) +
   #ylim(0, 130)
 
-# ZmPLA1.2 figure
+# HPC1 figure
 
 A <-  colm %>%
   filter(CHR == 3) %>%
@@ -264,16 +264,18 @@ colm %>%
 
 # Source data from:
 #  http://germinate.seedsofdiscovery.org/maize/#accession-overview
-# SeeD GWAS GbS Analysisa ccessions (4022)
-accn_file <- file.path('data','fig_2','germinate_SEED_GWAS_GBS_4022.tab')
+# SeeD GWAS GBS Analysis accessions (4022)
+
+data_dir  <- file.path('../data')
+accn_file <- file.path('germinate_SEED_GWAS_GBS_4022.tab')
 accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
 nrow(accn_info)
-SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
+SEED_GWAS_GID <- read.table(file = file.path(data_dir,'fig_2', "SEED_GWAS_GID.tab"),
                             header = TRUE, quote = "",sep ="\t")
 
 # There are one or more GWAS seed identifiers per general identifier in the table
 
-GWAS_ID <- read.table(file = file.path('data','fig_2',"GWAS_ID.tab"), quote = "",sep ="\t")
+GWAS_ID <- read.table(file = file.path(data_dir,'fig_2',"GWAS_ID.tab"), quote = "",sep ="\t")
 GWAS_ID$taxa <- paste(GWAS_ID$V1,GWAS_ID$V2,GWAS_ID$V3,GWAS_ID$V4, sep = ":")
 
 colnames(GWAS_ID)[1] <-"sample_id"
@@ -305,9 +307,9 @@ mex_filtered <- mex %>% dplyr::inner_join(bins) %>%
 ##########################################################################
 # Extracted genotypes from Romero Navarro data with Tassel
 # input as tassel table
-genotype <- read.table(file.path('data','fig_2','S3_8542287.tab'), header = TRUE, sep ="\t") %>%
-  # dplyr::inner_join(read.table(file.path('data','fig_2','S4_5387180.tab'), header = TRUE, sep ="\t")  %>%
-  dplyr::inner_join(read.table(file.path('data','fig_2','S5_195455216.tab'), header = TRUE, sep ="\t"))
+genotype <- read.table(file.path(data_dir,'fig_2','S3_8542287.tab'), header = TRUE, sep ="\t") %>%
+  # dplyr::inner_join(read.table(file.path(data_dir,'fig_2','S4_5387180.tab'), header = TRUE, sep ="\t")  %>%
+  dplyr::inner_join(read.table(file.path(data_dir,'fig_2','S5_195455216.tab'), header = TRUE, sep ="\t"))
 
 colnames(genotype) <- c("taxa","S3_8542287", "S5_195455216")
 
@@ -327,7 +329,7 @@ ele_fr  <- mex_info %>%
   dplyr::select(ele_bin, ends_with("fr")) %>%
   dplyr::rename(Elevation ="ele_bin")
 
-pla1_plot <- ele_fr %>% ggpubr::ggscatter(  x = "Elevation", y = "S3_8542287_fr",
+hpc1_plot <- ele_fr %>% ggpubr::ggscatter(  x = "Elevation", y = "S3_8542287_fr",
                                add = "loess",               # Add regression line
                                conf.int = TRUE,             # Add confidence interval
                                color = "#1260ad") +
@@ -337,7 +339,6 @@ pla1_plot <- ele_fr %>% ggpubr::ggscatter(  x = "Elevation", y = "S3_8542287_fr"
   ggplot2::scale_y_continuous(breaks = seq(0, 1, .25), limits = c(0, 1.15)) +
   theme_cowplot(12)
   ggpubr::theme_classic2(base_size = 20)
-
 
 
 lpcat_plot <- ele_fr %>%
@@ -353,13 +354,9 @@ lpcat_plot <- ele_fr %>%
   theme_cowplot(12)
   #ggpubr::theme_classic2(base_size = 20)
 
-plot_grid(pla1_plot, lpcat_plot)
+plot_grid(hpc1_plot, lpcat_plot)
 
-pdf(file.path('output',"fig_1CD.pdf"), width = 14)
-ggpubr::ggarrange(pla1_plot,lpcat_plot) %>% print()
-dev.off()
 ```
-
 
 #PBE analysis
 # redundant localization of files

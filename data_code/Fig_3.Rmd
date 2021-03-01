@@ -42,14 +42,15 @@ library(GenomicRanges)
 library(ggbio)
 library(igraph)
 library(qtl)
-source("detect_peaks.R")
+data_dir <- "../data/fig_3"
+source(file.path(data_dir,"detect_peaks.R"))
 
 ##### QTL analysis ##########################################################
 n_threads <- 5
 n_perm <- 1000
 seed <- 1234567890
 set.seed(seed)
-data_dir <- "../data/fig_3"
+
 geno_file  <- file.path(data_dir, "B73xPT_AGPv3_genotype.csv")
 pheno_file <- file.path(data_dir, "B73xPT_combined_phenotype.csv")
 
@@ -71,8 +72,9 @@ nphe <- nphe(cross)
 missing <- colSums(is.na(cross$pheno))
 missing_thresh <- 0.5
 
-pheno_col <- which( missing < missing_thresh * nind + 4) # this form comes from the readcross warning
-                                                         # RILs with genotype but no phenotype
+# this comes from the readcross warning
+# RILs with genotype but no phenotype
+pheno_col <- which( missing < missing_thresh * nind + 4) 
 pheno_col <- pheno_col[-1]
 
 
@@ -138,7 +140,6 @@ p1 <- single_scan  %>%
                  )
 
 
-
 p2 <- single_scan  %>%
   dplyr::filter(chr==3) %>%
   dplyr::select( chr,pos, LPCs, PCs,PCs.LPCs) %>%
@@ -163,8 +164,8 @@ plot.with.inset <-
 
 base_size <- 18
 
-#png(file = "Figure3A.png", height = 616, width = 1168)
-pdf(file = "Figure3A.pdf", height = 6.16, width = 11.68)
+# png(file = "Figure3A.png", height = 616, width = 1168)
+# pdf(file = "Figure3A.pdf", height = 6.16, width = 11.68)
 
 # quartz(height = 2*3.08, width = 2*5.84)
 
@@ -216,9 +217,10 @@ dev.off()
 ```{r}
 base_size <- 13
 
-metabolite <- read.csv("pla_phyt_20.csv") %>%
+metabolite <- read.csv(file.path(data_dir,"pla_phyt_20.csv")) %>%
   dplyr::mutate(geno = gsub("hom","mut", geno)) %>%
-  dplyr::mutate(geno = gsub("wt","wt", geno)) %>%
+  dplyr::mutate(PCs = rowSums(select(., matches("PC..")) , na.rm = TRUE),
+             LPCs = rowSums(select(., matches("LPC..")) , na.rm = TRUE)) %>%
   dplyr::rename(genotype = geno)
 
 
@@ -264,15 +266,15 @@ pe12 <- species_effect %>%
 # Now with the RILs 
 ```{r}
 cross <- read.cross(
-  format = "csvs",  file = "B73xPT_AGPv3_genotype.csv",
+  format = "csvs",  file = file.path(data.dir,"B73xPT_AGPv3_genotype.csv"),
   na.strings = c("-",NA),
-  phefile = "B73xPT_combined_phenotype.csv",
+  phefile = file.path(data.dir,"B73xPT_combined_phenotype.csv"),
   genotypes = c("A","B")) %>%
   convert2riself() %>%
   jittermap() %>%
   calc.genoprob( step = 1)
 
-pheno <- read.csv("B73xPT_combined_phenotype.csv") %>%
+pheno <- file.path(data.dir,"B73xPT_combined_phenotype.csv")%>%
     dplyr::group_by(id)
 
 cross$pheno$id
@@ -312,15 +314,13 @@ pe11 <- species_effect %>%
   ggplot2::theme( axis.title = element_blank(),
                  strip.text = element_blank())
 
-quartz(height =2.5, width =6)
-
 ```
 
 ### Effect by species 
 
 ```{r}
 ### CRISPR data first  
-CRISPR <- read.csv("pla_phyt_20.csv") %>%
+CRISPR <- read.csv(file.path(data_dir,"pla_phyt_20.csv")) %>%
   dplyr::mutate(geno = gsub("hom","mut", geno)) %>%
   # dplyr::mutate(geno = gsub("wt","AA", geno)) %>%
   dplyr::rename(genotype = geno)
@@ -370,7 +370,7 @@ CRISPR_norm <- rbind(
 library(qtl)
 
 cross <- read.cross(
-  format = "csvs",  file = "B73xPT_AGPv3_genotype.csv",
+  format = "csvs",  file = file.path(data_dir, "B73xPT_AGPv3_genotype.csv"),
   na.strings = c("-",NA),
   phefile = "B73xPT_combined_phenotype.csv",
   genotypes = c("A","B")) %>%
@@ -669,9 +669,9 @@ fig3CD <- cowplot::ggdraw(fig) +
   cowplot::draw_label(line_y3, x = 0.95, y = 0.3, angle = -90) + # use relative coordinates for positioning
   cowplot::draw_label(line_y4, x = 0.93, y = 0.3, angle = -90)
   
-pdf(file= "Figure3CD.pdf", height = 5, width = 12)
+# pdf(file= "Figure3CD.pdf", height = 5, width = 12)
 fig3CD
-dev.off()
+# dev.off()
 ```
 
 
@@ -680,7 +680,7 @@ dev.off()
 
 ```{r}
 
-exp_valuesPLALPCAT <- read_csv("data/fig_4/ZmPla-Lpcat.csv") %>%
+exp_valuesPLALPCAT <- read_csv("data/fig_3/ZmPla-Lpcat.csv") %>%
   mutate(temp_tx = factor(temp_tx, levels = c("control","cold")))
 
 ZmPla1_exp <-
@@ -753,8 +753,6 @@ library(qtl)
 library(dplyr)
 library(ggplot2)
 
-
-data_dir <- "../data/fig_3" # all the source data is the same as Fig_3
 geno_file  <- file.path(data_dir, "B73xPT_AGPv3_genotype.csv")
 pheno_file <- file.path(data_dir, "B73xPT_combined_phenotype.csv")
 base_pheno_file <- file.path(data_dir, "B73xPT_base_phenotype.csv")
@@ -827,7 +825,7 @@ scatter_data <- bg_data %>%
   dplyr::mutate(id = forcats::fct_reorder(id,log10_PCs.LPCs,.fun = mean, na.rm = TRUE))
 
 
-png(file = "Fig_4D.png", width = 7, height = 7, units = "in", res = 200)
+# png(file = "Fig_4D.png", width = 7, height = 7, units = "in", res = 200)
 # quartz()
 bg_data %>%
   dplyr::inner_join(pheno) %>%
@@ -857,5 +855,5 @@ bg_data %>%
   ) +
   ggplot2::coord_flip() +
   ggpubr::theme_pubr(legend = "none", base_size = 18)
-dev.off()
+# dev.off()
 ```

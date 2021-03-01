@@ -1,5 +1,5 @@
 ---
-title: "fig6_fitness_effects"
+title: "fig4_fitness_effects"
 author: "Dan Gates, RRA, FRZ"
 date: "5/4/2020"
 output: html_document

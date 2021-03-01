@@ -1,6 +1,30 @@
 #PBE resample P-value HeatMap
 
-# Panels A B (Codigo de dan) and C
+# Panel A data?
+
+
+# Panel B  see code for Fig_2
+```{r}
+gbs <- read_csv("data/fig_2/hpl_GBS_data.csv")
+mapping_file <- read_csv("data/fig_2/mapping_file.csv")
+AccID <- read_csv("data/fig_2/AccID.csv")
+allLines_mapping <- read_csv("data/fig_2/allLines_with_GID.csv")
+load("data/fig_2/pcadapt_corrected.Rimage")
+
+
+# All chromosomes figure
+
+colm %>%
+  ggplot(aes(x = BP/1000000, -log10(P), colour = -log10(P))) +
+  scale_color_viridis(option = "plasma", direction = -1) +
+  geom_point(size = 0.3) +
+  theme_cowplot(9) +
+  facet_wrap( ~ CHR, ncol=5)
+  #geom_segment(x = 195.495, xend = 195.505, y = 110, yend = 110, colour = "red", size = 6) +
+  #xlim(5379695, 5395010) +
+  #ylim(0, 130)
+```
+
 
 ```{r}
 library(pglipid)
@@ -8,9 +32,36 @@ library(ggplot2)
 library(cowplot)
 library(Hmisc)
 library(ComplexHeatmap)
+```
 
-pval        <- read.csv(file.path( "data","fig_1", "PBE_pvalues.csv"))
-pglipid_cyc <- read.csv(file.path( "data","fig_1", "pglipid_cyc.csv"))
+Panel C
+
+```
+test_genes_PBE <- file.path("../Sup_files","Supplementary_File1.csv")
+set_m <- test_genes_PBE[,c("gene",pops,"sum")] %>%
+  dplyr::filter( sum >0) %>%
+  dplyr::select(gene:AN) %>%
+  tibble::column_to_rownames("gene") %>%
+  as.matrix()
+
+
+# n <- length(names(genes))
+n <- length(testgeneID)
+Result <- SuperExactTest::supertest(SET_input(set_m) ,n=n, degree = 2:4)
+
+pvalues <- Result$P.value
+
+# plot(Result, Layout="landscape", sort.by="size", keep=FALSE)
+
+# Blue plot
+pglipid::plot_blue(set_m, Result$P.value)
+```
+
+Panel D
+
+```{r}
+pval        <- read.csv(file.path( "../data","fig_1", "PBE_pvalues.csv"))
+pglipid_cyc <- read.csv(file.path( "../data","fig_1", "pglipid_cyc.csv"))
 
 pwy_summary <- pval  %>%
   dplyr::left_join(pglipid_cyc, by =c(geneset ="Pathway.id") )
@@ -63,3 +114,6 @@ print(hm)
 dev.off()
 
 ```
+
+
+

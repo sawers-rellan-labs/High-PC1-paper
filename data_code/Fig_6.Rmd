@@ -38,6 +38,7 @@ library(dplyr)
 library(ape)
 library(msa)
 library(Biostrings)
+data_dir <- "../fig_6"
 
 fasta <- file.path(data_dir,"ZmPLA12_cds.fasta")
 
@@ -101,7 +102,7 @@ msaPrettyPrint(mut_aln, file=out_file, output="pdf",
 fd from palomeros and mushito
 
 ```{r}
-fd_chr3 <- read_csv("data/fig_5/fd_chr_3_pts.csv")
+fd_chr3 <- read_csv("data/fig_6/fd_chr_3_pts.csv")
 
 names(fd_chr3)[7] <- "fd"
 	
@@ -133,11 +134,12 @@ fd_chr3 %>%
 
 ```{r}
 # Getting georeferenced data
-accn_file <- file.path('data','fig_2','germinate_SEED_GWAS_GBS_4022.tab')
+data_dir <- "../"
+accn_file <- file.path(data_dir,'fig_2','germinate_SEED_GWAS_GBS_4022.tab')
 accn_info <- read.table(file = accn_file, header = TRUE, quote = "",sep ="\t")
 nrow(accn_info)
 
-SEED_GWAS_GID <- read.table(file = file.path('data','fig_2', "SEED_GWAS_GID.tab"),
+SEED_GWAS_GID <- read.table(file = file.path(data_dir,'fig_2', "SEED_GWAS_GID.tab"),
                             header = TRUE, quote = "",sep ="\t")
 
 # There are one or more GWAS seed identifiers per general identifier in the table
@@ -167,7 +169,7 @@ assoc <- mex %>%
 # Using a combination of tassel and shell cmds I:
 # Merged SEEDs data with HapMap, which required:
 # Download data from hapmap 282 set in AGPV2 for ZmPLA1.2
-# Merge with SEDDs data for ZmPLA1.2 that is in AGPv2
+# Merge with SEEDs data for ZmPLA1.2 that is in AGPv2
 # Liftover to AGPV3
 # Filter heterozygote accessions out
 # In order to use the Haplotype network plotting function
@@ -175,7 +177,7 @@ assoc <- mex %>%
 # From 56 initial variants found in SEEDs down to 11 sites
 
 
-vcf_file <-  file.path('data','fig_4', 'zmpla12_merged_het0_AGPv3_phased.vcf')
+vcf_file <-  file.path('data','fig_6', 'zmpla12_merged_het0_AGPv3_phased.vcf')
 
 vcf <- vcfR::read.vcfR(vcf_file) 
 ncol(vcf@gt) - 1
@@ -286,7 +288,7 @@ library(ggpubr)
 library(ape)
 library(phytools)
 
-data_dir <- "../data/fig_5"
+data_dir <- "../data/fig_6"
 
 # Make phenotype table #########################################################
 # Summer - winter data Hung et al 2012

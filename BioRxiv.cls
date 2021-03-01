@@ -47,6 +47,7 @@
 \newcommand{\datesfont}{\normalfont\sffamily\itshape\fontsize{8}{10}\selectfont}
 \renewcommand\UrlFont{\color{color1}\sffamily}
 \newcommand{\absfont}{\normalfont\sffamily\linespread{1.2}\fontsize{10}{12}\selectfont}
+\newcommand{\significancestatement}[1]{\def\@significancestatement{#1}}
 \newcommand{\keywordsfont}{\normalfont\sffamily\linespread{1.2}\fontsize{8}{10}\selectfont}
 \newcommand{\copyrightfont}{\normalfont\sffamily\fontsize{7}{9}\selectfont}
 
