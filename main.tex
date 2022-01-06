@@ -32,11 +32,11 @@
      }
 
 
-\title{Teosinte introgression modulates phosphatidylcholine levels and induces early maize flowering time}
+\title{Teosinte \textit{mexicana} introgression modulates phosphatidylcholine levels and maize flowering time}
 
 
-\author[a,b,1]{Fausto Rodríguez-Zapata}
 \author[a,1]{Allison C Barnes}
+\author[a,b,1]{Fausto Rodríguez-Zapata}
 \author[b,1]{Karla A Blöcher-Juárez}
 \author[c]{Dan Gates}
 \author[a]{Andi Kur}
@@ -45,6 +45,9 @@
 \author[e]{Sarah Jensen}
 \author[b]{Juan M Estévez-Palmas}
 \author[f]{Taylor Crow}
+\author[a]{Heli Kavi}
+\author[a]{Hannah Pil}
+\author[a]{Ruthie Stokes}
 \author[b]{Rocío Aguilar-Rangel}
 \author[g]{Edgar Demesa-Arevalo}
 \author[g]{Tara Skopelitis}
@@ -117,9 +120,9 @@ Thus, \textit{HPC1} introgressed from teosinte \textit{mexicana} underlies a lar
 
 \subsection{Significance Statement}
 Despite more than a century of genetic research, our understanding of the genetic basis of the astounding capacity of maize to adapt to new environments is still in its infancy. 
-Recent work in many crops has pointed to a potentially important role for introgression in underpinning adaptation, but clear examples of adaptive loci arising via this process are lacking. 
-Here, we used an interdisciplinary analysis of the genetic basis of phospholipid metabolism and its role in maize local adaptation to high elevations.
-We elucidate the evolutionary history of a novel, major metabolic QTL, that we mapped down to a single gene \textit{HPC1}, and  is the result of a highland teosinte mexicana introgression in maize, which leads to high phosphatidylcholine levels and improves fitness via induction of early flowering. 
+%Recent work in many crops has pointed to a potentially important role for introgression in underpinning adaptation, but clear examples of adaptive loci arising via this process are lacking. 
+%Here, we used an interdisciplinary analysis of the genetic basis of phospholipid metabolism and its role in maize local adaptation to high elevations.
+We elucidate the evolutionary history of a novel, major metabolic QTL, that we mapped down to a single gene \textit{HPC1}, which  is the result of a highland teosinte mexicana introgression in maize, leads to high phosphatidylcholine levels, and improves fitness via induction of early flowering. 
 
 \section{Introduction}
 %How do organisms adapt to high elevations
@@ -169,8 +172,9 @@ These results suggest that the \textit{HPC1} highland allele has a beneficial ef
 \section{Results}
 \label{sec:results}
 \subsection{Highland Mesoamerican landraces show high PC/LPC ratios and selection of highly unsaturated PCs}
-We grew a diversity panel composed of 120 highland and lowland landraces from Mesoamerica and South America (Figure \ref{Fig1}A, Sup. File 1), hereafter referred to as the HiLo diversity panel, in highland and lowland Mexican common gardens and quantified glycerolipid levels.    
-We observed that Mesoamerican highland landraces have  high PC/LPC ratios,  particularly when grown in the highlands (Figure \ref{Fig1}B).
+Knowing that lipids play an important role in adaptation to adverse environments, we quantified the glycerolipids of 120 highland and lowland landraces from Mesoamerica and South America(Figure \ref{Fig1}A, Sup. File 1). 
+This  diversity panel, hereafter referred to as the HiLo diversity panel, was grown in highland and lowland common garden experiments in Mexico.
+After comparing many different glycerolipids and the relevant ratios for key lipid biosynthesis enzymes, we observed that Mesoamerican highland landraces have  high PC/LPC ratios,  particularly when grown in the highlands (Figure \ref{Fig1}B).
 The differences observed in phospholipid levels between highland and lowland maize may be the result of adaptive natural selection or random genetic drift during the process of maize colonization of highland environments.
 To distinguish between these two competing possibilities, we compared the variance of each phenotype across the population with the genetic variance of neutral markers, using a $Q_{ST}$-$F_{ST}$ comparison \cite{Leinonen2013-ic}.
 We calculated $Q_{ST}$-$F_{ST}$ using DartSeq genotypic data from the same plants that were used to analyze glycerolipid levels, and calculated the $Q_{ST}$-$F_{ST}$ values for each glycerolipid species for highland/lowland populations from each continent. 
@@ -263,7 +267,7 @@ We grew the Hilo diversity panel and the B73 x PT BC1S5 mapping population in th
 The locally adapted PT landrace showed higher fitness than B73 in the highland field (Figure \ref{Fig3}A), probably due to adaptation to low temperatures in this highland environment.  
 In the Mexican highlands, values of around 5 GDD are typical, while 15-20 GDD are common in lowland environments. 
 We detected major quantitative trait loci (QTLs) for the sum of LPC species levels, PC species levels and the PC/LPC ratio that all mapped to the same locus on chromosome 3, at around 8.5 Mb (Figure \ref{Fig3}B). 
-The PC/LPC ratio QTL had the highest logarithm of the odds (LOD) score, i.e., 24.5, and explained the most phenotypic variance (87\%). 
+% The PC/LPC ratio QTL had the highest logarithm of the odds (LOD) score, i.e., 24.5, and explained the most phenotypic variance (87\%). 
 We searched for evidence of epistatic interactions for LPC levels, PC levels, and the PC/LPC ratio through a combination of R/qtl \code{scantwo} and \code{stepwise} functions \cite{Broman2003-ac}, but identified none.
 The three QTLs \textit{qLPCs3@8.5}, \textit{qPCs3@8.5} and \textit{qPCs/LPCs3@8.5} were robust against environmental effects and were detected in both the highland and lowland environments.
 The additive effect of the PT allele at these QTLs was associated with high levels of PCs, low levels of LPCs and consequently high PC/LPC ratios, while the B73 allele had the opposite effect (Figure \ref{Fig3}C, top panel).
@@ -281,7 +285,7 @@ The arrow within CTP indicates the nucleotide insertion introduced by CRISPR/Cas
 Magenta indicates the coding sequence fragment that encodes the flap lid domain and the corresponding amino acids.
 Residues in bold showed significant associations with prokaryote optimal growth temperature.
 \textbf{B)} Prokaryote optimal growth temperature (OGT) test of different amino acids at the polymorphic residue 211 of HPC1.
-\textbf{C)} Top I-TASSER model (plum) for the putative phospholipase encoded by HPC1-B73, overlaid on chain B of the crystal structure of phospholipase A1 from
+\textbf{C)} Top I-TASSER model (purple) for the putative phospholipase encoded by HPC1-B73, overlaid on chain B of the crystal structure of phospholipase A1 from
 Arabidopsis (PDB 2YIJ, tan). 
 Residues that differ between the PT and B73 phospholipase are shown in yellow and some are labeled} 
 \label{Fig5}
@@ -289,6 +293,7 @@ Residues that differ between the PT and B73 phospholipase are shown in yellow an
 \end{figure*}
 
 We then sought to identify candidate genes underlying the QTLs on chromosome 3.
+The PC/LPC ratio QTL had the highest logarithm of the odds (LOD) score, i.e., 24.5, and explained the most phenotypic variance (87\%). 
 The QTL contained 72 genes within its 1.5 LOD drop confidence interval (7.9-10 Mb) 
 We hypothesized that the metabolic phenotypes we observed might be due to a gene involved in the process of PC-LPC conversion.  
 The maize genome encodes 75 putative phospholipases (\ref{SupFig3}A), of which half are predicted to be phospholipase A1-type (PLA1) (\ref{SupFig3}A).  
@@ -323,8 +328,11 @@ PC/LPC levels in RIL B042 were similar to other RILs that are homozygous for the
 This result supports the hypothesis that the metabolic effect we see is likely due to an impaired function of the HPC1-PT enzyme rather than to changes in the \textit{HPC1-PT} regulatory region.
 If \textit{HPC1} is the underlying causal gene of this QTL, the observed metabolic phenotypes would be consistent with reduced or loss of function of the HPC1-PT enzyme leading to higher levels of PCs and lower levels of LPCs in the PT background. 
 Next, we generated a genome-edited \textit{hpc1\textsuperscript{CR}} mutant via clustered regularly interspaced short palindromic repeats (CRISPR) and the CRISPR-associated nuclease Cas9 (Sup. File 4) in the B104 background, a temperate inbred derived from B73. 
-We then measured PC and LPC species in wild-type and mutant plants grown under standard greenhouse conditions. 
-\textit{hpc1\textsuperscript{CR}} plants recapitulated the effects seen for the \textit{PT} allele in the RILs (Figure \ref{Fig3} C-D bottom panels), further confirming that the \textit{HPC1-PT} allele impairs HPC1 function and thus underlies the QTL on chromosome 3 at around 8.5 Mb. 
+We identified two transgenic events, hereafter designated \textit{hpc1\textsuperscript{CR T ins}} and \textit{hpc1\textsuperscript{CR T del}} (Supplemental Figure)
+We then measured PC and LPC species in wild-type and mutant plants grown under long day conditions. %standard greenhouse conditions. 
+Patterns in the \textit{hpc1\textsuperscript{CR}} plants 
+%recapitulated the effects 
+correspond to those seen for the \textit{PT} allele in the RILs (Figure \ref{Fig3} C-D bottom panels, Supplemental Figure), further confirming that the \textit{HPC1-PT} allele impairs HPC1 function and thus underlies the QTL on chromosome 3 at around 8.5 Mb. 
 
 Together, these data show that \textit{HPC1} underlies a major metabolic QTL explaining PC/LPC ratio. A mutation affecting the enzymatic activity of its encoded protein probably leads to impaired function in the highland PT allele.  
 
@@ -338,9 +346,9 @@ Variation at \textit{HPC1} showed conditional neutrality on the fresh ear weight
 \subsection{Identification of the putative causal SNP in \textit{HPC1}.} 
 We sequenced the \textit{HPC1} locus from several RILs harboring the PT haplotype at \textit{HPC1} and identified several of non-synonymous SNPs within the coding sequence that might influence HPC1 function (\ref{SupFig7})
 We focused our attention on SNP 631 in the flap lid domain, which leads to a conservative replacement of isoleucine for valine (V211I, Figure \ref{Fig5}A).  
-The flap lid domain is important for phospholipase activity and is located in a lipase class 3 domain (PFAM domain PF01764) that is highly conserved across the tree of life. 
+The flap lid domain is important for phospholipase activity and is located in a lipase class 3 domain (PFAM domain PF01764) that is highly conserved across the tree of life \cite{Jensen2021-zm}. 
 We recovered 982 observations of the lipase class 3 PFAM domain from 719 prokaryotic species using PfamScan \cite{Potter2018-tk, El-Gebali2019-pw}, and estimated optimal growth temperatures from their tRNA sequences \cite{Cimen2020-dm}.
-We then tested whether genetic variation in the lipase class 3 domain was significantly associated with optimal growth temperature in bacteria. 
+We then tested whether genetic variation in the lipase class 3 domain was significantly associated with optimal growth temperature in bacteria \cite{Jensen2021-iv}. 
 We identified several significant associations, all of which were located in the flap lid region (Figure \ref{Fig5}B, bold letters).  
 Notably, the presence of a valine at residue 211, as observed in the PT allele, was associated with lower bacterial optimal growth temperatures relative to bacterial lipases that harbor the isoleucine residue observed in B73 (Figure \ref{Fig5}B), suggesting that the PT allele may be better adapted to the low temperatures to which highland maize is exposed.
 Figure \ref{Fig5} C shows the top I-TASSER model (plum) for the putative phospholipase encoded by \textit{HPC1-B73}, overlaid on chain B of the crystal structure of phospholipase A1 from Arabidopsis thaliana (PDB 2YIJ, tan). 
@@ -380,6 +388,17 @@ Furthermore, in both long days and short days, lines carrying the \textit{HPC1-P
 
 Taken together, these data show that \textit{HPC1} was introgressed from teosinte \textit{mexicana} into highland maize and that this introgression was carried over into high latitude adapted modern inbred lines that show low \textit{HPC1} expression in association with early flowering.
 
+\subsection{\textit{Phosphatidylcholine interactions with maize flowering time protein ZCN8}}
+To understand if the elevated levels of PC in highland maize we next examined the possibility that it interacts with ZCN8. 
+In Arabidopsis, the flowering protein Florigen (FT) has recently been shown to interact with both PC and phosphatidylglycerol (PG) depending on temperature and cellular location of FT \cite{Nakamura2014-qf, Susila2021-dz}.
+ZCN8 is a homolog of FT, thus, it could mediate the shortened flowering time of highland maize. 
+Recent work improved the crystal structure of FT, so we modeled ZCN8 against this new structure and compared the PC binding sites \cite{Nakamura2019-ht}. 
+Using VinaDock to simulate docking, we were able to identify sites 1 and 4 as potential binding sites of PC36:2.
+We next heterologously expressed tagged ZCN8 in yeast and purified it in an effort to test this \textit{in vivo}. 
+From our purified protein, we extracted lipids and analyzed them following the same lipidomics pipeline used for maize lipids. 
+We were able to identify PC34:2 as having been purified with the ZCN8 protein in all of our samples.
+
+
  \section{Discussion}
 \label{sec:discussion}
 Understanding the genetic, molecular and  physiological basis of crop adaptation to different environments and the role that wild relatives have played in these processes is relevant for the identification of favorable genetic variation that can be used to improve modern crops.
@@ -394,7 +413,7 @@ Additionally, in Arabidopsis, accumulation of certain highly unsaturated PC spec
 \caption{\textbf{Introgression of teosinte \textit{mexicana} into maize \textit{HPC1}.}  
 \textbf{A)} Alignments around the V211I polymorphism in the flap-lid domain of HPC1 in B73, \textit{mexicana} and \textit{parviglumis} and landraces of the Southwestern US (SWUS), Mexican Highland (MH) and Lowlands (ML), Guatemalan Highlands (GH), Andes (AN) and South America Lowlands (SAL).
 \textbf{B)} \(f_d\) analysis of the \textit{mexicana} introgression. Data were obtained from \cite{Gonzalez-Segovia2019-jy}. 
-\textbf{C)} Haplotype network analysis of SNPs within the \textit{HPC1} coding region, using 1,060 Mexican homozygous individuals from the SeeD dataset.
+\textbf{C)} Haplotype network analysis of SNPs within the \textit{HPC1} coding region, using 1,060 Mexican homozygous individuals from the SeeD dataset. Haplotypes are color-coded by elevation: red: 0-1000 masl, green: 1000-2000 masl, blue >2000 masl.
 \textbf{D)} Cluster analysis of the \textit{HPC1} coding region using a sample of Hapmap3 inbred lines and the PT landrace.
 \textbf{E)} Correlation between \textit{HPC1-PT} expression and days to anthesis (DTA) in plants grown in short or long days. 
 Inbred lines from the PT lineage shown in panel C are indicated in blue and inbred lines from the B73 lineage are in red;
@@ -566,7 +585,7 @@ Within-population and between-population variances were calculated with the R fu
 \begin{center}
 $Q_{ST}$ = \(\sigma^{2}_{GB}/(\sigma^{2}_{GB}+2\sigma^{2}_{GW})\)
 \end{center}
-\noindent in which $\sigma^{2}_{GB}$ and $\sigma^{2}_{GB}$ are the between- and within-population genetic variance components, respectively \cite{Leinonen2013-ic}.
+\noindent in which $\sigma^{2}_{GB}$ and $\sigma^{2}_{GW}$ are the between- and within-population genetic variance components, respectively \cite{Leinonen2013-ic}.
 Pairwise $F_{ST}$ was calculated with the R function fst.each.snp.hudson (R package \textit{dartR}, \citealp{gruber2018dartr}).
 
 \textbf{\textit{pcadapt} analysis of biological adaptation in Mexican landraces.}
@@ -620,8 +639,9 @@ The gRNA cassette was cloned into pGW-Cas9 using Gateway cloning.
 Two plants from the T\textsubscript{0} transgenic events were identified through genomic PCR amplification and Sanger sequencing and were self-pollinated. 
 In the next generation, several plants were allowed to self.
 Plants were genotyped using forward primer CAGTTCTCATCCCATGCACG and reverse primer CCTGATGAGAGCTGAGGTCC.
-Homozygous \textit{hpc1\textsuperscript{CR}} T2 plants were  usedd for lipid analysis in greenhouses at  North Carolina State University during Spring 2020 and then self-pollinated. 
-Cas9 positivity was tested for using 0.05\% glufosinate ammonium contained in Liberty herbicide. 
+%Homozygous \textit{hpc1\textsuperscript{CR}} T2 plants were  used for lipid analysis in greenhouses at  North Carolina State University during Spring 2020 and then self-pollinated. 
+Cas9 positivity was tested for using 0.05\% glufosinate ammonium contained in Liberty herbicide or by PCR genotyping. 
+\textit{hpc1\textsuperscript{CR}} T2 plants grown in Raleigh, NC under long day conditions were used for flowering time and lipid analysis.
 Wild-type plants from the same segregating families were used for analysis.
 
 \textbf{Expression analysis of \textit{HPC1} in B73, PT and B73xPT F1 hybrids in conditions simulating highland environments.}
@@ -689,6 +709,20 @@ The full tree is available as Sup. file 9.
 
 \textbf{Expression analysis of candidate genes and association with flowering traits in the 282 diversity panel.}
 We used gene expression RNA-seq data obtained from the 282 diversity panel at different developmental stages \cite{Kremling2018-gn} and BLUP values of several flowering and photoperiod sensitivity traits \cite{Hung2012-ms} to study the correlation of \textit{HPC1} expression values with flowering time traits.  
+
+\textbf{Heterologous expression and purification of \textit{ZmZCN8} using \textit{Saccharomyces cerevisiae}}
+We synthesized \textit{ZmZCN8} codon optimized for \textit{Saccharomyces cerevisiae} and tagged with a SPOT peptide tag (Chromotek, Planegg, Germany); this construct will further be called ZCN8-SPOT. 
+ZCN8-SPOT was then transformed into the galactose inducible vector pYES-DEST52 and expressed. 
+After 8 hours of induction, cultures were harvested and frozen for future protein extractions. 
+We purified protein with Chromotek SPOT-Cap beads (Chromotek, Planegg, Germany) and generally followed their protocol. 
+Briefly, 50mL of induction pellet was resuspended in lysis buffer (10mM HEPES, pH 7.5, 150mM Nacl, 0.5mM EDTA pH 8.0, 1mM DTT, 10mM MgCl\textsubscript{2}, 1x HALT protease and phsophatase inhibitor (Thermo Fisher Scientific, Waltham, MA, USA), and 1\% dodecylmaltoside) and ground in a Genogrinder with glass beads at max speed for one minute.
+This was followed by one minute on ice and repeated for a total of three minutes of grinding.
+The sample was then incubated on ice for five minutes, vortexed, and incubated for another five minutes. 
+After pelleting, the supernatant was diluted with wash buffer (10mM HEPES, pH 7.5, 150mM NaCL, 0.5mM EDTA, pH 8.0, 1X HALT protease and phosphatse inhibitor, and 0.1\% dodecylmaltoside) and put onto cleaned, equilibrated SPOT-Cap beads and left rotating at 4\textdegree C for one hour.
+The beads and lysate were separated by centrifugation at 2500xg for five minutes and the beads were washed three times with 20x bead volume of wash buffer. 
+Protein was eluted with either SPOT-peptide or 100mM Glycine, pH 2.0. 
+Glycine elutions were immediately neutralized with an equivalent amount of TRIS base, pH 10.4.
+Elutions were frozen and lipids were extracted and analyzed at a later date as described above.
 
 \section{Data Availability}
 Data and code used in the paper can be found in the \href{https://github.com/sawers-rellan-labs/High-PC1-paper}{Github repository} of the project. 
