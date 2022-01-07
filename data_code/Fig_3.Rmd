@@ -33,7 +33,7 @@ library(mdthemes)
 
 
 
-# Annotated LOD profile
+## Fig 3B Annotated QTL LOD profile
 
 ```{r}
 library(dplyr)
@@ -213,6 +213,41 @@ dev.off()
 ```
 
 
+## Fig 3C  F1 expression data
+
+```{r}
+
+exp_valuesPLALPCAT <- read.csv("data/fig_4/ZmPla-Lpcat.csv")
+
+stat.test <- exp_valuesPLALPCAT %>%
+  filter(gene=="ZmPla1.2") %>%
+  group_by(line) %>%
+  rstatix::t_test(expression ~ temp_tx, p.adjust.method = "BH") %>%
+  rstatix::adjust_pvalue(method = "bonferroni") %>%
+  # rstatix::add_significance() %>% 
+  rstatix::add_xy_position(x = "supp")
+stat.test 
+
+
+ZmPla1_exp <- exp_valuesPLALPCAT %>%
+  filter(gene=="ZmPla1.2") %>%
+  ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
+  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+  geom_jitter(position=position_jitter(0.1), size = 3) +
+  stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
+               color = "black", size = 0.8 ) +
+  ylim(c(1,8))+
+  ggpubr::stat_pvalue_manual(stat.test, tip.length = 0.01, size = 6) +
+  labs(x = "Temperature", y = "*HPC1* (log<sub>2</sub>[CPM])") +
+  md_theme_classic(base_size = 25,) +
+  facet_grid(cols = vars(line)) +
+  theme(legend.position="none",
+        strip.background = element_rect(colour="white", fill="white"))
+
+pdf(file = "Fig3E.pdf", height = 0.8*7.65, width = 0.9*8.22,)
+print(ZmPla1_exp)
+dev.off()
+```
 
 
 ## Figure 3C Sums effects
