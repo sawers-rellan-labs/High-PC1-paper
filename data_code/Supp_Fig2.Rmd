@@ -8,6 +8,7 @@ output: html_document
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(ggpubr)
 library(qtl)
 
 data_dir <- "../data/fig_3"
@@ -24,7 +25,7 @@ cross <- read.cross(
   calc.genoprob( step = 1)
 
 pheno <- read.csv(pheno_file) %>%
-    dplyr::group_by(id)
+  dplyr::group_by(id)
 
 cross$pheno$id
 
@@ -36,7 +37,7 @@ to_plot <- dplyr::inner_join(
   pheno
 )
 
-qtl <- read.csv("QTL/combined_QTL_intervals_refined.csv")
+qtl <- read.csv("QTL/combined_QTL_intervals_adjusted.csv")
 
 ratio_traits <- qtl %>%
   dplyr::filter(grepl(".LPC",trait) &  trait != "PCs.LPCs") %>%
@@ -46,16 +47,16 @@ ratio_traits <- qtl %>%
 
 
 PC_traits <- qtl %>%
-  dplyr::filter(grepl("^PC",trait) &  !grepl("\\.",trait) & chr == 3) %>%
+  dplyr::filter(grepl("^PC_",trait) &  !grepl("\\.",trait) & chr == 3) %>%
   dplyr::arrange(-peak_marker_lod) %>%
   dplyr::pull(trait) %>% unique()
 
 LPC_traits <- qtl %>%
-  dplyr::filter(grepl("^LPC",trait) & !grepl("\\.",trait) & trait != "LPCs") %>%
+  dplyr::filter(grepl("^LPC_",trait) & !grepl("\\.",trait) & trait != "LPCs") %>%
   dplyr::arrange(-peak_marker_lod) %>%
   dplyr::pull(trait) %>% unique()
 
-plot_traits <- c(ratio_traits, PC_traits, LPC_traits)
+plot_traits <- c(PC_traits, LPC_traits, ratio_traits)
 
 species_effect <-  to_plot %>% 
   dplyr::select(id, genotype, all_of(plot_traits)) %>%
@@ -71,26 +72,52 @@ sp_label <- sub("LPC_","LPC", sp_label,fixed = TRUE)
 sp_label <- gsub("(PC\\d\\d)_","\\1:", sp_label)
 sp_label <- gsub("(LPC\\d\\d)_","\\1:", sp_label)
 sp_label <- gsub("_","", sp_label)
-sp_label <- paste0("q", sp_label,"-3@8.5")
+sp_label <- paste0("q", sp_label," 3@8.5")
 names(sp_label) <- plot_traits
 facet_labeller <- ggplot2::labeller(species = sp_label) 
 
 length(sp_label)
 length(plot_traits)
 
-quartz( width = 12, height =7)
-species_effect %>%
-  dplyr::filter(!is.na(genotype)) %>%
-  dplyr::mutate(species = factor(species, levels = plot_traits)) %>%
-  ggplot2::ggplot(aes(x = genotype, y = Zscore, color =genotype)) +
-  ggplot2::ylab("Z-score") + ggplot2::xlab("Genotype") +
-  ggplot2::geom_jitter(position=position_jitter(0.2), size = 1.5) +
-  ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), 
-                        geom="pointrange", color = "black", size = 0.5) +
-  ggplot2::facet_wrap(. ~ species, scales = "free", ncol = 6,
-                      labeller = facet_labeller)  +
-  ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
-  ggpubr::theme_pubr(legend ="none") +
-  ggplot2::theme(strip.text = element_text(face = "bold", size = 9),
-                 strip.background =element_rect(color ="white",  fill="white"))
+levels(factor(species_effect$species))
+
+
+p.list <-  lapply(plot_traits, function(i) {
+  
+  species_effect %>%
+    dplyr::filter(!is.na(genotype) & species == i) %>%
+    dplyr::mutate(species = factor(species, levels = plot_traits)) %>%
+    ggplot2::ggplot(aes(x = genotype, y = Zscore, color =genotype)) +
+    ggplot2::ylab("Z-score") + ggplot2::xlab("Genotype") +
+    ggplot2::geom_jitter(position=position_jitter(0.2), size = 1.5) +
+    ggplot2::stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), 
+                          geom="pointrange", color = "black", size = 0.5) +
+   # ggplot2::facet_wrap(. ~ species, scales = "free", ncol = 6, # full facets
+    ggplot2::facet_wrap(~ species, scales = "free", ncol = 6, # split into plot list
+                        labeller = facet_labeller)  +
+    ggplot2::scale_color_manual(values = c("#df1b23","#1260ad")) +
+    ggpubr::theme_pubr(legend ="none") +
+    ggplot2::theme(strip.text = element_text(face = "bold", size = 9),
+                   strip.background =element_rect(color ="white",  fill="white")) + 
+    ggpubr::rremove("ylab") +  ggpubr::rremove("xlab")
+  
+})
+
+
+p <- ggpubr::ggarrange(plotlist = p.list, 
+               labels = letters[1:18],
+               ncol =6, nrow = 3) 
+
+q <- ggpubr:: annotate_figure( p, 
+    left = textGrob("Z-score", 
+                    rot = 90, 
+                    vjust = 1,
+                    gp = gpar(cex = 1.3)
+                    ),
+   bottom = textGrob("Genotype", gp = gpar(cex = 1.3))
+  )
+                
+pdf( file = "Sup_Fig_2.pdf", width = 12, height =7)
+print(q)
+dev.off()
 ```

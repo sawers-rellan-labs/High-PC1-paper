@@ -1,5 +1,5 @@
 ---
-title: "Supp Fig3 Code"
+title: "Supp Fig8 Code"
 output: html_document
 ---
 
@@ -28,7 +28,7 @@ tissue_cor <- list()
 
 # Specific genes for pair wise correlation plots of gene expression
 exp_set <-  c("GRMZM2G353444","GRMZM2G481755", "GRMZM2G179264", "GRMZM2G171650")
-names(exp_set) <- c("PLA1.2","LPCAT1", "ZCN8","MADS69")
+names(exp_set) <- c("HPC1","LPCAT1", "ZCN8","MADS69")
 
 exp_cor <- list()
 
@@ -62,7 +62,7 @@ for (t in tissue){
 simplified <- c("GRMZM2G353444","GRMZM2G481755", "GRMZM2G179264",
                 "GRMZM2G171650","GRMZM2G700665","GRMZM2G154366",
                 "GRMZM2G032339")
-names(simplified) <- c("PLA1.2","HPC1","ZCN8","MADS69","RAP2.7","PAP",  "ZMM4")
+names(simplified) <- c("HPC1","HPC1","ZCN8","MADS69","RAP2.7","PAP",  "ZMM4")
 simplified <- simplified[1:5]  # exclude PAP and ZMM4
 
 check_all_tissues(cor_list= tissue_cor[aerial],  genes = simplified)
@@ -116,7 +116,8 @@ hm <- ComplexHeatmap::Heatmap(M,
                               #  grid.points(x[1:2], y[1:2], pch = 16, size = unit(1, "mm"))}
 ) + ha
 
-
-ComplexHeatmap::draw(hm ,merge_legend = TRUE)
+pdf("Supp_Fig8.pdf, "height = 2*2.30, width = 2*4.72)
+ComplexHeatmap::draw(hm,merge_legend = TRUE),
+dev.off()
 
 ```

@@ -213,26 +213,29 @@ dev.off()
 ```
 
 
-## Fig 3C  F1 expression data
+## Fig 3E  F1 expression data
 
 ```{r}
 
 exp_valuesPLALPCAT <- read.csv("data/fig_4/ZmPla-Lpcat.csv")
+temp_order <- c("control", "cold")
+
+exp_valuesPLALPCAT$temp_tx <- factor(exp_valuesPLALPCAT$temp_tx,levels = temp_order )
 
 stat.test <- exp_valuesPLALPCAT %>%
   filter(gene=="ZmPla1.2") %>%
   group_by(line) %>%
   rstatix::t_test(expression ~ temp_tx, p.adjust.method = "BH") %>%
   rstatix::adjust_pvalue(method = "bonferroni") %>%
-  # rstatix::add_significance() %>% 
   rstatix::add_xy_position(x = "supp")
 stat.test 
+
 
 
 ZmPla1_exp <- exp_valuesPLALPCAT %>%
   filter(gene=="ZmPla1.2") %>%
   ggplot(aes(x = temp_tx, y = expression, color = temp_tx)) +
-  scale_color_manual(values=c("#1260ad","#df1b23", "#fd6820", "#14ade8")) +
+  scale_color_manual(values=c("#df1b23","#1260ad")) +
   geom_jitter(position=position_jitter(0.1), size = 3) +
   stat_summary(fun.data=mean_sdl,fun.args = list(mult = 1), geom="pointrange",
                color = "black", size = 0.8 ) +
@@ -243,6 +246,9 @@ ZmPla1_exp <- exp_valuesPLALPCAT %>%
   facet_grid(cols = vars(line)) +
   theme(legend.position="none",
         strip.background = element_rect(colour="white", fill="white"))
+
+quartz()
+ZmPla1_exp
 
 pdf(file = "Fig3E.pdf", height = 0.8*7.65, width = 0.9*8.22,)
 print(ZmPla1_exp)
