@@ -13,9 +13,9 @@
 \RequirePackage{xifthen}
 \newboolean{displaycopyright}
 \newboolean{displaylineno}
-\setboolean{displaylineno}{false}
+\setboolean{displaylineno}{true}
 
-\DeclareOption{lineno}{\setboolean{displaylineno}{false}}
+\DeclareOption{lineno}{\setboolean{displaylineno}{true}}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{extarticle}}
 \ProcessOptions*
 \LoadClass{extarticle}
@@ -101,6 +101,8 @@
 \setlength{\parindent}{12pt} % Paragraph indent
 \setlength{\parskip}{0.1em}
 
+
+
 % Set document color scheme
 \definecolor{black50}{gray}{0.5} % 50% black for hrules
 \definecolor{color0}{RGB}{0,0,0} % Base color
@@ -122,8 +124,8 @@
 \captionsetup[table]{position=below} % Reduce spacing below caption
 
 % Figure caption style
-\setlength\abovecaptionskip{0.5\baselineskip}
-\setlength\belowcaptionskip{-15pt}
+% \setlength\abovecaptionskip{0.5\baselineskip}
+% \setlength\belowcaptionskip{-15pt}
 
 % Algorithm style
 \newcommand\fs@coloruled{\def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@coloruled
@@ -326,7 +328,6 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 
 %\newcommand{\firstpagefootnote}{\blfootnote{\copyrightfont \ifthenelse{\boolean{displaycopyright}}{\copyrightstatement}{}\\%
 %Manuscript compiled: \today%
-}}
 
 \newenvironment{tableminipage}[1]{\begin{minipage}{#1}\renewcommand\footnoterule{ \kern -1ex}%
 \setlength{\myFootnoteLabel}{0.5em}%
