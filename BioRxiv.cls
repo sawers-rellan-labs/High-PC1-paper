@@ -124,8 +124,8 @@
 \captionsetup[table]{position=below} % Reduce spacing below caption
 
 % Figure caption style
-% \setlength\abovecaptionskip{0.5\baselineskip}
-% \setlength\belowcaptionskip{-15pt}
+\setlength\abovecaptionskip{0.5\baselineskip}
+\setlength\belowcaptionskip{-15pt}
 
 % Algorithm style
 \newcommand\fs@coloruled{\def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@coloruled
