@@ -56,7 +56,8 @@ register_google(key = "AIzaSyC7ysJP7aVkxc-r1fIPskFkUtRiKGkzxCk")
 middle_point <- function(x){(min(x)+max(x))/2}
 zoom <- 4
 
-meso <- subset(hilo_panel, Lat > 15) 
+meso <- subset(hilo_panel, Lat > 15)
+nrow(meso)
 south<- subset(hilo_panel, Lat < 15) 
 
 borders <- c(-30,  35, -115, -50)
@@ -96,6 +97,11 @@ hilo_lipids  %<>%
   dplyr::select(-LPCs,-PCs) %>%
   janitor::clean_names(case = "all_caps")  
 
+hilo_lipids  %>% 
+  group_by( continent, mum_gen) %>%
+  summarize(n()) %>% 
+  group_by(continent)  %>%
+  summarize(n())
 
 colnames(hilo_lipids) <- gsub("_([A-Z])$",".\\1",colnames(hilo_lipids), perl =  TRUE)
 with_isomers <- colnames(hilo_lipids)[grepl("\\.([A-Z])$",colnames(hilo_lipids))]
@@ -154,11 +160,10 @@ stat_sign <- function(data, y = "logPCs.LPCs"){
   rstatix::adjust_pvalue(method = "BH") %>%
   rstatix::add_significance()  %>%
   dplyr::mutate( # p_raw = p, p = p.adj,
-                 pval_fmt = format.pval(p.adj, digits = 4),
+                 pval_fmt = format.pval(p.adj, digits = 2),
                  short.signif =  gsub("\\*.+","\\*",p.adj.signif, perl = TRUE)) %>%
   dplyr::arrange(p) 
 }
-
 ```
 
 ```{r}
