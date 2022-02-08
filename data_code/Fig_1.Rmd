@@ -4,26 +4,11 @@ output: html_document
 ---
 ```{r}
 rm(list = ls())
-library(tidyverse)
-library(data.table)
-library(cowplot)
-library(wesanderson)
+library(dplyr)
+library(tidyr)
 library(ggplot2)
-library(MASS)
-library(qtl)
-library(lme4)
-library(arm)
-library(emmeans)
-library(pbkrtest)
-library(cowplot)
-library(viridis)
-library(qtlcharts)
-library(readr)
-library(ggfortify)
 library(ggmap)
 library(maps)
-library(qtlcharts)
-
 ```
 
 
@@ -33,31 +18,28 @@ library(qtlcharts)
 ```{r}
 #file with hilo panel metadata
 
-hilo_panel <- read_csv("data/fig_1/hilo_panel_info.csv") %>%
+hilo_panel <- read.csv("data/fig_1/hilo_panel_info.csv") %>%
  mutate(ele = if_else(Elevation >=2000,"high","low")) %>%
  mutate(ele = factor(ele, levels=(c("low","high"))))
 
 ```
 
-Plot map withlocation of accessions
+Plot map with location of accessions
 
 ```{r}
 
 # palettes
-hot_red <- "#df1b23"
-cold_blue <- "#1260ad"
-meso_pal <- c( hot_red,cold_blue )
-south_pal <- c("#fd6820", "#14ade8") # hot orange and cold blue
+pal <- c(dark_red     = "#df1b23",
+         dark_blue    = "#1260ad",
+         light_orange = "#fd6820", 
+         light_blue   = "#14ade8")
 
+# blue <-> cold <-> highland
+meso_pal <- pal[c("dark_red", "dark_blue")] 
+south_pal <- pal[c("light_orange", "light_blue")] 
 
-#register google_key
-
-register_google(key = "AIzaSyC7ysJP7aVkxc-r1fIPskFkUtRiKGkzxCk")
-middle_point <- function(x){(min(x)+max(x))/2}
-zoom <- 4
 
 meso <- subset(hilo_panel, Lat > 15)
-nrow(meso)
 south<- subset(hilo_panel, Lat < 15) 
 
 borders <- c(-30,  35, -115, -50)
@@ -69,6 +51,7 @@ basemap <- get_stamenmap(
   maptype = "terrain-background",
   color = "bw")
 
+ggmap(basemap,extent='device')
 
 hilo_map <- ggmap(basemap, extent='device',
              base_layer = ggplot(hilo_panel, aes(x=Long, y=Lat))
@@ -79,243 +62,23 @@ hilo_map <- ggmap(basemap, extent='device',
               color = south_pal[factor(south$ele)], size =  2) +
    theme(legend.position="none") 
 hilo_map
-png("HiLo_map.png")
-hilo_map
-dev.off()
-```
 
-Fix names
-
-```{r}
-#file with hilo panel lipid data
-
-hilo_lipids <- read_csv("data/fig_1/hilo_panel_lipid.csv") 
-
-# Summarize lipids over isomers ----------------------
-
-hilo_lipids  %<>% 
-  dplyr::select(-LPCs,-PCs) %>%
-  janitor::clean_names(case = "all_caps")  
-
-hilo_lipids  %>% 
-  group_by( continent, mum_gen) %>%
-  summarize(n()) %>% 
-  group_by(continent)  %>%
-  summarize(n())
-
-colnames(hilo_lipids) <- gsub("_([A-Z])$",".\\1",colnames(hilo_lipids), perl =  TRUE)
-with_isomers <- colnames(hilo_lipids)[grepl("\\.([A-Z])$",colnames(hilo_lipids))]
-
-# Summarize over  desaturation isomers
-
-isomer_sum <- hilo_lipids %>% 
-  # dplyr::select(-LPCs,-PCs) %>%
-  dplyr::select(with_isomers) %>%
-  t() %>% as.data.frame() %>%
-  group_by(., id = gsub('\\..*', '', rownames(.))) %>%
-  summarise_all(sum, na.rm = TRUE) %>%
-  data.frame() %>%
-  column_to_rownames(var = 'id') %>%
-  t() 
-
-hilo_lipids <- cbind(hilo_lipids %>% 
-                       dplyr::select(-with_isomers), 
-                     isomer_sum) 
-sp_cols <- colnames(hilo_lipids %>% 
-                      dplyr::select(-(ROW_ID:LIPID_BATCH_NUMBER))) %>%
-                    sort()
-
-hilo_lipids <- hilo_lipids %>% dplyr::select(ROW_ID:LIPID_BATCH_NUMBER,
-                                             all_of(sp_cols))
-not_lipid <- hilo_lipids %>% dplyr::select(ROW_ID:LIPID_BATCH_NUMBER) %>% colnames()
-colnames(hilo_lipids)[1:length(not_lipid)] <- tolower(not_lipid)
-
-# summarize per group of lipids
-group <- c("DG", "LPC", "PC", "SM", "TG")
-
-for (g in group){
-  hilo_lipids[paste0(g,"s")] <- hilo_lipids %>%
-    dplyr::select(dplyr::starts_with(paste0(g,"_"))) %>%
-    rowSums(na.rm = TRUE)
-}
-
-hilo_lipids %<>%
-  mutate(elevation = factor(elevation, levels = c("Low","High"))) %>%
-  mutate(PCs.LPCs = PCs/LPCs) %>%
-  mutate(logPCs.LPCs = log10(PCs.LPCs)) 
+# png("HiLo_map.png")
+# hilo_map
+# dev.off()
 ```
 
 
-```{r}
-# Pvalues for common garden plot
-
-stat_sign <- function(data, y = "logPCs.LPCs"){ 
-  test_formula <-  paste0(y, " ~ elevation" ) %>% formula()
-  # make all species test?
-  data %>%
-  group_by(location) %>%
-  rstatix::t_test(., test_formula) %>%
-  rstatix::add_x_position(x = "elevation") %>%
-  rstatix::add_xy_position() %>%
-  rstatix::adjust_pvalue(method = "BH") %>%
-  rstatix::add_significance()  %>%
-  dplyr::mutate( # p_raw = p, p = p.adj,
-                 pval_fmt = format.pval(p.adj, digits = 2),
-                 short.signif =  gsub("\\*.+","\\*",p.adj.signif, perl = TRUE)) %>%
-  dplyr::arrange(p) 
-}
-```
+Fixing lipid names, it is a lot of fixing because of lack of a standard for names that would play nice with R column names :/
 
 ```{r}
-
-
-logPC_LPC_str <-  expression("log"[10]*"[PCs/LPCs]") 
-
-field <- c("Highland Field", "Lowland Field")
-names(field) <-  levels(as.factor(hilo_lipids$location)) 
-
-home <- c("Lowland", "Highland")
-names(home) <-  levels(as.factor(hilo_lipids$elevation)) 
-
-hilo_lipids$elevation
-plot_common_garden <- function(data, var = NULL){
-   data %>%
-   ggplot(aes_string(x = "elevation", y = var, color = "elevation"))  +
-   # geom_boxplot() +
-   # ggbeeswarm::geom_quasirandom( aes(fill = elevation),
-   #                               color = "white", 
-   #                               alpha = 0.8, 
-   #                               shape =21) +
-   ggbeeswarm::geom_quasirandom( size = 2) +
-   facet_grid(location ~ .,
-       labeller = labeller(location = field),
-       scales = "free_y") +
-    xlab("Landrace Home") +
-   stat_summary(
-     fun.data=mean_sdl,
-     fun.args = list(mult = 1),
-     geom="pointrange", color = "black") +
-   ggpubr::stat_pvalue_manual(
-    stat_sign(data = data), 
-    label = "{pval_fmt}",
-    bracket.nudge.y = 0.1,
-    vjust = -0.3,
-    #fontface = "bold",
-    size = 5, bracket.size = 0.3,)  +
-   scale_x_discrete(expand=c(0, 0.75),
-                     labels = home) +
-   scale_y_continuous(expand = expansion(mult = c(0, .1))) +
-  ggpubr::theme_classic2(base_size = 15) +
-  theme( 
-    axis.text.x = element_text(color = "black"),
-    axis.title.y = element_text(vjust = 0),
-    axis.title.x=element_text(vjust = 1, hjust = 0.5, size = 12),
-    panel.border = element_blank(),
-    #panel.spacing.y=unit(0, "lines"),
-    strip.background = element_blank(),
-    strip.text.x = element_blank(),
-    strip.text.y = element_blank(),
-    #strip.text.y = element_text(angle=90, vjust = 2, hjust = 0.5), # <<<
-    legend.position ="none",
-    plot.margin=unit(c(0.01,0.1,0.5,0.1), "cm")
-  ) 
-  }  
-
-
-
-add_continent <- function(label = NULL, x = 1.5, y=-Inf){
-label_data  <- data.frame(
-    location = c("PV","MT"),
-    elevation = "Low",
-    label = c(label,"")
-  )
-    geom_text(
-    data = label_data ,
-    mapping = aes( x = x, y = y, label = label),
-    fontface = "bold",
-    color = "black",
-    hjust = 0.5, vjust = -0.7, size = 16*0.35)
-}  
-
-add_field <- function(x = Inf,y=1){
-   label_data <-  data.frame(
-    location = c("PV","MT"),
-    elevation = "High",
-    label = field %>% rev()
-  )
-    geom_text(
-    data = label_data,
-    mapping = aes( x = x, y = y, label = label),
-    color = "black",
-    angle = 90,
-    # fontface = "bold",
-    hjust = 0.5, vjust = -0.3, size = 13*0.35, )
-} 
-
-# version for  mean +- 1 sd
-fig <- ggpubr::ggarrange( 
-  #quartz(height = 3.5, width = 2.2)
-  #quartz()
-  hilo_lipids %>%
-    dplyr::filter(continent == "Mex" ) %>%
-    plot_common_garden(var = "logPCs.LPCs") +
-    add_continent(label = "Mesoamerica", y = -Inf) +
-    add_field(y = c(1.5, 1)) +
-    scale_y_continuous(name = logPC_LPC_str, 
-                    limits = c(-0.3, 2.5), 
-                    breaks = 0:2,
-                    expand = expansion(mult = c(0, 0.1))
-                    ) +
-    scale_color_manual(values =  meso_pal) +
-    scale_fill_manual(values =  meso_pal),
-  
-  hilo_lipids %>%
-    dplyr::filter(continent == "SA") %>%
-    plot_common_garden(var = "logPCs.LPCs") +
-    add_continent(label = "South America", y = -Inf) +
-    add_field(y = c(1.2, 0.7)) +
-    scale_y_continuous(name = logPC_LPC_str,
-                   limits = c(-0.7, 2.3),
-                   breaks = c(0:2),
-                   expand = expansion(mult = c(0, .1))
-                   ) +
-    scale_color_manual(values =  south_pal) +
-    scale_fill_manual(values =  south_pal),
-  nrow = 2
-)
-
-
-# version for boxplot
-# scale scale_y_continuous 
-# bp_par_meso <- list( limits = c(-0.3, 2.5), 
-#                     breaks = 0:2,
-#                     expand = expansion(mult = c(0, .1))
-#                     )
-# bp_par_south <- list(limits = c(-0.5, 2.3),
-#                     breaks = c(0:2),
-#                     xpand = expansion(mult = c(0, .1))
-
-
-
-
-
-ggsave(file = "Fig1A.png", 
-       fig, 
-       width = 2.3, height = 8, 
-       units = "in", dpi = "print",
-       bg = "transparent")
-                    
-```
-
-
-```{r}
-# go back to original sp
-
-#file with hilo panel lipid data
-# lipid name format
-# lipid abbreviation [no space] carbon number [colon] number of desaturations [dot] isomer letter 
+########################################################################
+# Lipid name format for plot labels
+#
+#[abbreviation][no space][carbon number][colon][number of desaturations][dot][isomer letter] 
 # LC18:0
 # PC38:5.A
+########################################################################
 
 has_isomer <- function(x){
 # the compound must end with a number
@@ -354,138 +117,420 @@ to_lipid_label <- function(x){
   remove_isomer() 
 }
 
-hilo_lipids <- read_csv("data/fig_1/hilo_panel_lipid.csv") 
 
-# Excluding LPC PC ratios
-is_sum <- grepl( "s$", colnames(hilo_lipids)) 
-with_start   <- grepl( "^PC|^LPC", colnames(hilo_lipids)) 
-with_den <- grepl( "[_]PC|[_]LPC", colnames(hilo_lipids)) 
+
+base_pheno <- read.csv("data/fig_1/hilo_panel_lipid.csv") 
+
+
+
+# Excluding LPC PC ratios ------------------------------------------------------
+
+# I'll recalculate the sums later exclude them now
+# assuming sums have a lowercase 's' suffix
+is_sum <- grepl( "s$", colnames(base_pheno)) 
+
+# these ratios are in the file, we  won't use  them
+ratios_in_file <- c("PC_LPC",
+                     "PC34_1_LPC18_1",
+                     "PC34_1_LPC18_2",
+# These will be excluded too", ethers? plasmogens?:
+                     "PC_p_34_2__PC_o_34_3", 
+                     "PC_p_36_3__PC_o_36_4",
+                     "PC_p_36_4__PC_o_36_5")
+
+# these 'ratio' names will match  "[_]PC|[_]LPC"
+with_denominator <- grepl( "[_]PC|[_]LPC", colnames(base_pheno)) 
+
+colnames(base_pheno) <- gsub("_([A-Z])$",".\\1",colnames(base_pheno), perl =  TRUE)
+
+with_isomers <- colnames(base_pheno)[grepl("\\.([A-Z])$",colnames(base_pheno))]
+
+# Summarize lipids over isomers ----------------------
+# uncomment if you want the summaries over the desaturation isomers
+#
+# isomer_sum <- base_pheno %>% 
+#   select(with_isomers) %>%
+#   t() %>% as.data.frame() %>%
+#   group_by(., id = gsub('\\..*', '', rownames(.))) %>%
+#   summarise_all(sum, na.rm = TRUE) %>%
+#   data.frame() %>%
+#   tibble::column_to_rownames(var = 'id') %>%
+#   t() 
+# 
+# base_pheno <- cbind(base_pheno %>% 
+#                        dplyr::select(-with_isomers), 
+#                      isomer_sum) 
 
 # Nightmare!
-hilo_lipids %<>%
+base_pheno %<>%
     janitor::clean_names(case = "all_caps") %>% 
   tibble()
-#?to_any_case
 
-dont_select <- colnames(hilo_lipids)[is_sum | with_start & with_den] 
+exclude <- colnames(base_pheno)[is_sum | with_denominator] 
 
-hilo_lipids %<>% 
-  dplyr::select( -(all_of(dont_select))) %>% 
+# Finally get rid of the unwanted lipids
+base_pheno %<>%
+  dplyr::select( -(all_of(exclude))) %>%
   tibble()
 
-sp_cols <- hilo_lipids %>% 
-    dplyr::select(-(ROW_ID:LIPID_BATCH_NUMBER)) %>%
-    colnames() %>%
-    sort()
 
-hilo_lipids %<>% 
-   dplyr::select(ROW_ID:LIPID_BATCH_NUMBER, all_of(sp_cols)) %>%
-   tibble()
-                  
-new_sp_cols <- sp_cols  %>% to_dot_isomer()
+# fix non_lipid columns
+# even better do this before making hilo_panel_lipid.csv
 
+field_key <- c(PV="Lowland",MT = "Highland")
 
-colnames(hilo_lipids)[ colnames(hilo_lipids) %in% sp_cols ] <- new_sp_cols
+# add FIELD_LABEL, relocate LIPID_BATCH_NUMBER
+# This will make my life easier
 
-not_lipid <- hilo_lipids %>% dplyr::select(ROW_ID:LIPID_BATCH_NUMBER) %>% colnames()
-not_lipid <- tolower(not_lipid)
+base_pheno %<>%
+   mutate(LOC_YEAR = FIELD, .after = YEAR) %>%
+   mutate(FIELD = recode(LOCATION, !!!field_key)) %>% 
+   mutate(FIELD = factor(FIELD, levels = unname(field_key))) %>%
+   relocate(LIPID_BATCH_NUMBER, .after = ELEVATION) 
 
-colnames(hilo_lipids)[1:length(not_lipid)] <- not_lipid
+lipid_pheno_cols <- base_pheno %>%
+                select(CE_20_3:TG_56_4) %>%
+                colnames() %>% sort
 
+other_pheno_cols <- base_pheno %>%
+                select(STD:EN) %>%
+                colnames()
+exp_attr <- base_pheno %>%
+                select(ROW_ID:LIPID_BATCH_NUMBER) %>%
+                colnames()
+exp_attr
 
+# 200 data points in  hilo_panel_lipid.csv
+nrow(base_pheno)
 
-# Do not make sums of signal per isomer group.
+# 108 'GENOTYPE's (landraces I guess?) have 1 rep
+#  46 'GENOTYPE's  have 2 reps
 
-# make sums of signal per group of lipids
-group <- c("DG", "LPC", "PC", "SM", "TG")
+base_pheno %>%
+  group_by(FIELD, GENOTYPE) %>%
+  summarise(reps = n()) %>%
+  ungroup() %>%
+  pull(reps) %>%
+  table()
 
-for (g in group){
-  hilo_lipids[paste0(g,"s")] <- hilo_lipids %>%
-    dplyr::select(dplyr::starts_with(paste0(g,"_"))) %>%
+# 200 = 108 +2*46
+
+# So I need to take the mean of the phenotypes where there are 2 reps.
+# Repeated measures on a genotype in the same field 
+# are not statistically independent with regards to landrace origin.
+# we are assuming that each landrace is a random sample of highland/lowland
+# population
+
+# the following columns can be used to distinguish between the two reps
+rep_def_cols  <- c("ROW_ID","ROW_NUM", "BLOCK","PAIR","LIPID_BATCH_NUMBER")
+
+norep_attr_table <- base_pheno %>% 
+  select(all_of(exp_attr)) %>% 
+  select(-all_of(rep_def_cols)) %>%
+  distinct() 
+
+nrow(norep_attr_table)
+
+# when I take those columns out I get a set of attributes 
+# that I can use for the mean phenotype table
+
+norep_attr <- colnames(norep_attr_table)
+
+# First calculate derived phenotypes
+# then do the means.
+
+# make sums of signal per lipid_class 
+lipid_class <- c("DG", "LPC", "PC", "SM", "TG")
+
+lipid_calc <- base_pheno %>%
+  select(FIELD, GENOTYPE)
+
+for (class in lipid_class){
+   lipid_calc[paste0(class,"s")] <- base_pheno %>%
+    dplyr::select(dplyr::starts_with(paste0(class,"_"))) %>%
     rowSums(na.rm = TRUE)
 }
 
-hilo_lipids %<>%
-  mutate(elevation = factor(elevation, levels = c("Low","High"))) %>%
+
+# Add PCs/LPCs ratio
+lipid_calc %<>% 
   mutate(PCs.LPCs = PCs/LPCs) %>%
   mutate(logPCs.LPCs = log10(PCs.LPCs)) 
 
+lipid_calc_cols <- lipid_calc %>% select(-FIELD, -GENOTYPE) %>%
+                    colnames()
 
-# is  PC_36_5.B in both continents?
-hilo_lipids$PC_36_5.B
-quartz()
-hilo_lipids %>%
-  ggplot(aes(x = location, y = PC_36_5.B)) +
-  ggbeeswarm::geom_quasirandom() +
-  facet_grid(continent ~.)
 
-no_cluster <- Qst_Fst%>%
-  filter(cluster > 20) %>% pull(metabolite) %>%
-  gsub(":","_",.) %>%
-  gsub("-","_",.) %>%
-  to_dot_isomer()
+# getting the mean phenotypes
 
-no_cluster <- no_cluster[no_cluster %in% colnames(hilo_lipids)]
+mean_lipid<- base_pheno %>% 
+  select(FIELD, GENOTYPE, 
+         all_of(lipid_pheno_cols)) %>%
+  dplyr::group_by(FIELD, GENOTYPE) %>%
+  dplyr::summarise_if(is.numeric, function(x){
+    mean(x,na.rm = TRUE) %>% 
+      round(digits = 0) %>%
+      as.integer()
+    }) %>%
+  dplyr::ungroup() 
 
-hilo_lipids%>%
-  dplyr::select(continent, location,all_of(no_cluster)) %>%
-  tidyr::pivot_longer(cols =all_of(no_cluster),
-                      names_to = "lipid",
-                      values_to = "signal") %>%
-  filter(!is.na(signal)) %>%
-  group_by(lipid,continent, location) %>%
-  summarise(n())  %>% print( n= 24)
+nrow(mean_lipid)
 
-hilo_missing <- hilo_lipids%>%
-#  filter(location == "MT") %>%
-  dplyr::select(continent, location, all_of(new_sp_cols)) %>%
-  tidyr::pivot_longer(cols = new_sp_cols,
-                      names_to = "lipid",
-                      values_to = "signal") %>%
-  group_by(lipid,continent, location) %>%
-  summarise(missing_pct = sum(is.na(signal))/n())  %>%
-  arrange(-missing_pct) 
+mean_lipid_calc<- lipid_calc %>% 
+  dplyr::group_by(FIELD, GENOTYPE) %>%
+  dplyr::summarise_if(is.numeric, mean, na.rm = TRUE) %>%
+  dplyr::ungroup() 
 
-hilo_missing %>%
-  tidyr::pivot_wider(names_from = c("continent","location"),values_from = missing_pct,)
-  print( n= 200)
+nrow(mean_lipid)
 
-# Plot how much missing data
-#quartz()
-# hilo_missing %>%
-#   ggplot(aes( y = missing_pct,x = seq_along(missing_pct))) +
-#   geom_point()
-  
+mean_other<- base_pheno %>% 
+  select(FIELD, GENOTYPE, 
+         all_of(other_pheno_cols)) %>%
+  dplyr::group_by(FIELD, GENOTYPE) %>%
+  dplyr::summarise_if(is.numeric, mean, na.rm = TRUE) %>%
+  dplyr::ungroup() 
 
-  
-# cell: location X  field
-  
-missing_per_cell <- hilo_missing %>%
-  tidyr::pivot_wider(names_from = c("continent","location"),values_from = missing_pct,) %>%
-  print( n= 200) 
+nrow(mean_other)
 
-missing_per_cell %>%
-  filter(lipid %in% no_cluster)
-    
-# Acceptable quality data 
-# no more than 25% missing data in each location X  field cell
-# correlation clustering figure:  50 lipids
-#                    these data:  37 lipids
-# this criterion is more stringent
+hilo_lipids <- norep_attr_table %>%
+  left_join(mean_other) %>%
+  left_join(mean_lipid) %>%
+  left_join(mean_lipid_calc) 
 
-missing_25 <- missing_per_cell %>%
-  filter(across(Mex_MT:SA_PV, function(x){x < 0.25})) %>%
-  print(n=50) %>%
-  pull(lipid)
+other_pheno_cols
+pheno_cols  <- c(other_pheno_cols,
+                 lipid_pheno_cols,
+                 lipid_calc_cols)
+
+
+# change the name of the lipid cols to a nicer format
+
+new_lipid_cols <- lipid_pheno_cols  %>% to_dot_isomer()
+
+# change case of left columns referring to experimental attributes other than lipids
+
+colnames(hilo_lipids)[ colnames(hilo_lipids) %in% lipid_pheno_cols ] <- new_lipid_cols
+
+colnames(hilo_lipids)[1:length(norep_attr)] <- tolower(norep_attr)
+
+
+hilo_lipids %<>%
+  mutate(field = factor(field, levels = unname(field_key))) %>%
+  mutate(elevation = factor(elevation, levels = c("Low","High")))
+
+# I must have 154 (108 + 46, genotypes [single rep + two reps] )
+nrow(hilo_lipids)
+
 ```
+
+
+```{r}
+# With long data instead of wide data I made this function nicer
+# see get_signif_long
+# It would be nice I if I also make common garden plot from long data
+# instead of wide data 
+
+get_signif <- function(data, y = "logPCs.LPCs"){ 
+  # This test operates on wide data column per column
+  test_formula <-  paste0(y, " ~ elevation" ) %>% formula()
+  data %>%
+    group_by(continent, field) %>%
+    rstatix::t_test(., test_formula) %>%
+    rstatix::add_x_position(x = "elevation") %>%
+    rstatix::add_xy_position() %>%
+    rstatix::adjust_pvalue(method = "BH") %>%
+    rstatix::add_significance()  %>%
+    dplyr::mutate( # p_raw = p, p = p.adj,
+                   pval_fmt = format.pval(p.adj, digits = 2),
+                   short.signif =  gsub("\\*.+","\\*",p.adj.signif, perl = TRUE)) %>%
+    dplyr::arrange(p) 
+}
+```
+
+
+
+```{r, fig.height = 2.3/2, fig.width = 8/2}
+#  Common garden plot for PCs/LPCs ratio
+
+logPC_LPC_str <-  expression("log"[10]*"(PCs/LPCs)") 
+
+field_long <- c("Lowland Field", "Highland Field")
+
+names(field_long) <-  levels(as.factor(hilo_lipids$field)) 
+
+home <- c("Lowland", "Highland")
+names(home) <-  levels(as.factor(hilo_lipids$elevation)) 
+
+plot_common_garden <- function(data, var = NULL, signif = NULL){
+  
+    if(is.null(signif)){
+      signif  <- get_signif(data)
+    }
+  
+   data %>%
+   ggplot(aes_string(x = "elevation", y = var, color = "elevation"))  +
+   ggbeeswarm::geom_quasirandom(size = 2) +
+   facet_grid(field ~ .,
+       labeller = labeller(field = field_long),
+       scales = "free_y") +
+    xlab("Landrace Home") +
+   stat_summary(
+     fun.data=mean_sdl,
+     fun.args = list(mult = 1),
+     geom="pointrange", color = "black") +
+   ggpubr::stat_pvalue_manual(
+    signif, 
+    label = "{pval_fmt}",
+    bracket.nudge.y = 0.1,
+    vjust = -0.3,
+    #fontface = "bold",
+    size = 5, bracket.size = 0.3,)  +
+   scale_x_discrete(expand=c(0, 0.75),
+                     labels = home) +
+   scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+  ggpubr::theme_classic2(base_size = 15) +
+  theme( 
+    axis.text.x = element_text(color = "black"),
+    axis.title.y = element_text(vjust = 0),
+    axis.title.x=element_text(vjust = 1, hjust = 0.5, size = 12),
+    panel.border = element_blank(),
+    #panel.spacing.y=unit(0, "lines"),
+    strip.background = element_blank(),
+    strip.text.x = element_blank(),
+    strip.text.y = element_blank(),
+    #strip.text.y = element_text(angle=90, vjust = 2, hjust = 0.5), # <<<
+    legend.position ="none",
+    plot.margin=unit(c(0.01,0.1,0.5,0.1), "cm")
+  ) 
+  }  
+
+
+
+add_continent <- function(label = NULL, x = 1.5, y=-Inf){
+label_data  <- data.frame(
+    field = c("Lowland", "Highland"),
+    elevation = "Low",
+    label = c(label,"")
+  )
+    geom_text(
+    data = label_data ,
+    mapping = aes( x = x, y = y, label = label),
+    fontface = "bold",
+    color = "black",
+    hjust = 0.5, vjust = -0.7, size = 16*0.35)
+}  
+
+mid_ranges <- function(data, var=NULL){
+  c(range(data %>%
+      filter(field == "Lowland")%>%
+            pull(!!var)) %>% 
+      mean(),
+    range(data %>%
+              filter(field == "Highland") %>%
+              pull(!!var)) %>% 
+        mean()
+  )
+}
+
+add_field <- function(x = Inf,y=1){
+   label_data <-  data.frame(
+    field = c("Lowland", "Highland"),
+    elevation = "High",
+    label = field_long
+  )
+    geom_text(
+    data = label_data,
+    mapping = aes( x = x, y = y, label = label),
+    color = "black",
+    angle = 90,
+    # fontface = "bold",
+    hjust = 0.5, vjust = -0.3, size = 13*0.35, )
+} 
+
+
+# Count sample size for figure caption.
+hilo_lipids  %>% 
+  group_by(continent, genotype) %>%
+  summarize(n()) %>% 
+  group_by(continent)  %>%
+  summarize(n())
+
+# Is this significance right?
+# this should match the significance calculated with
+# long data
+
+common_garden_signif <-   hilo_lipids %>%  
+  select(all_of(norep_attr %>%tolower()), logPCs.LPCs) %>%
+  get_signif(y = "logPCs.LPCs")
+
+common_garden_signif  %>%
+  select(field:p,p.adj)
+
+# version for  mean +- 1 sd
+fig <- ggpubr::ggarrange( 
+  #quartz(height = 3.5, width = 2.2)
+  hilo_lipids %>%
+    dplyr::filter(continent == "Mex" ) %>%
+    plot_common_garden(
+      var = "logPCs.LPCs", 
+      signif = common_garden_signif %>%
+               filter(continent == "Mex")) +
+    add_continent(label = "Mesoamerica", y = -Inf) +
+    add_field(y = c(1.5, 1)) +
+    scale_y_continuous(name = logPC_LPC_str, 
+                    limits = c(-0.3, 2.5), 
+                    breaks = 0:2,
+                    expand = expansion(mult = c(0, 0.1))
+                    ) +
+    scale_color_manual(values = unname(meso_pal)) +
+    scale_fill_manual(values =  unname(meso_pal)),
+  
+  hilo_lipids %>%
+    dplyr::filter(continent == "SA") %>%
+  plot_common_garden(
+      var = "logPCs.LPCs", 
+      signif = common_garden_signif %>%
+               filter(continent == "SA")) +
+    add_continent(label = "South America", y = -Inf) +
+    add_field(y = c(1.2, 0.7)) +
+    scale_y_continuous(name = logPC_LPC_str,
+                   limits = c(-0.7, 2.3),
+                   breaks = c(0:2),
+                   expand = expansion(mult = c(0, .1))
+                   ) +
+    scale_color_manual(values = unname(south_pal)) +
+    scale_fill_manual(values =  unname(south_pal)),
+  nrow = 2
+)
+
+fig 
+
+ggsave(file = "Fig1A.png",
+       fig,
+       width = 2.3, height = 8,
+       units = "in", dpi = "print",
+       bg = "transparent")
+                    
+```
+
 
 Qst-Fst 
 
-```{r}
+``````{r, fig.height = 7, fig.width = 3.5}
+
+# (I think we must recalculate the Qst to match the RILs methods
+# i.e. summing over the desaturation isomers).
+# Additionally I have just the Fst for Mesoamerica
+Fst_meso = 0.01984786
+# I estimated Fst for southamerica from an earlier plot
+Fst_south = 0.031
+# Where is this Fst value? recalculate too? I would need the genotypes
+# I'll work with this now
 
 Qst_Fst <- read.csv("data/fig_1/qst_df.csv")
 Qst_Fst$metabolite_old <-  Qst_Fst$metabolite
 
+# Now fix the lipid names in this file! :/ ---------------------------
 
 #carbon number desaturation names
 Qst_Fst$with_isomer <- has_isomer(Qst_Fst$metabolite_old)
@@ -494,260 +539,399 @@ Qst_Fst$metabolite <- Qst_Fst$metabolite %>%
   janitor::make_clean_names(case = "all_caps") %>% 
   to_dot_isomer()
 
-
-Qst_Fst$carbon_ndes <- Qst_Fst$metabolite  %>%
-  to_carbon_ndes() %>%
+Qst_Fst$lipid_label <- Qst_Fst$metabolite  %>%
+  # just n_carbons:n_desaturations
+  to_colon_dot() %>%
   remove_isomer()
 
-Qst_str <- expression(italic("Q"["st"]))
 
-Qst_Fst%>%
-  dplyr::filter(metabolite  %in% missing_25)
-
-
-
-by_continent<- function(x, var = NULL) {
-# x  =  Qst_Fst
-# var = "qst_elevation_mex"
- x %<>%
-  tibble() %>%
-  mutate(Qst = x[,var]) %>%
-  filter(class %in% c("PC","LPC")) %>%
-   dplyr::arrange(-Qst) %>%
-  group_by(cluster) %>%
-  filter(row_number() ==1) %>%
-  dplyr::select(metabolite,carbon_ndes, Qst) 
-  x$metabolite <- forcats::fct_reorder(x$metabolite , x$Qst)
-  x
+by_continent<- function(x, Qst_col =  "qst_elevation_mex") {
+ x %>%
+  mutate(Qst = x[,Qst_col]) %>%
+      dplyr::select(cluster,metabolite,lipid_label, Qst)  %>%
+    arrange(-Qst) %>%
+    droplevels() %>% # I think this line is making my life difficult for plots
+  mutate(metabolite = forcats::fct_reorder(metabolite , Qst),
+         lipid_label = forcats::fct_reorder(lipid_label, Qst)) 
 }
 
+# I'll be using this function for a parallele analysis
+get_top_by_cluster <- function(x,top =1){
+   x %>%
+    group_by(cluster) %>%
+    dplyr::arrange(-Qst) %>%
+     filter(row_number() == top) %>%  
+    ungroup() 
+}
 
 plot_Qst <- function(x, Fst = NULL){
+ 
+  Qst_xlab <- expression(italic("Q"["ST"]))
+ 
   ggplot(data = x, aes(x = Qst, 
              y = metabolite, col = Qst)) +
   geom_point(size = 3) +  
   scale_y_discrete( breaks= x$metabolite,
-        labels= x$carbon_ndes) +
-  scale_color_viridis(option = "plasma", direction = -1) +
-  xlab(Qst_str)+
+         labels= x$lipid_label) +
+  scale_color_viridis_c(option = "plasma", direction = -1) +
+  xlab(Qst_xlab)+
   xlim(0,1) +
   geom_vline(xintercept = Fst, color="red", size= 1) +
   ggpubr::theme_classic2(base_size = 18) +
   theme(legend.position = "none",
         axis.title.y = element_blank(),
-        axis.title.x = element_text(vjust = 4,size = 18),
-        plot.margin=unit(c(0.01,0,-0.2,0.1), "cm")
+        axis.title.x = element_text(vjust = 1.5,size = 16),
+        plot.margin=unit(c(0.1,0.2,-0.1,0.1), "cm")
         )
 }
-Qst_Fst$cluster
 
-mesoamerica_Qst <- by_continent(
-  Qst_Fst %>% filter(!is.na(cluster)), 
-  "qst_elevation_mex")
+```
+
+
+
+```{r}
+
+# retrieve just PCs LPCs by continent
+in_cluster <- !is.na(Qst_Fst$cluster)
+Qst_in_cluster <- Qst_Fst %>% filter(in_cluster)
+
+in_hilo_lipids <- Qst_Fst$metabolite %in% colnames(hilo_lipids)
+
+# "PC_36_1" "DG_36_3" are not in  hilo_lipids
+Qst_Fst$metabolite[!in_hilo_lipids]
+
+mesoamerica_Qst <- Qst_Fst%>%
+  filter(in_hilo_lipids  & in_cluster) %>%
+  filter(class %in% c("PC","LPC")) %>%
+  by_continent(Qst_col = "qst_elevation_mex") %>%
+  get_top_by_cluster(top = 1)
+
 nrow(mesoamerica_Qst)
 
-southamerica_Qst <- by_continent(
-  Qst_Fst %>% filter(!is.na(cluster)), 
-  "qst_elevation_sa")
+
+southamerica_Qst <- Qst_Fst%>%
+  filter(in_hilo_lipids  & in_cluster) %>%
+  filter(class %in% c("PC","LPC")) %>%
+  by_continent(Qst_col = "qst_elevation_sa") %>%
+  get_top_by_cluster(top = 1)
+
 nrow(southamerica_Qst)
 
-mesoamerica_Qst <- by_continent(
-  Qst_Fst %>%  filter(metabolite %in% missing_25), 
-  "qst_elevation_mex")
-nrow(mesoamerica_Qst)
+# Pivot and scale data  -----------------------
+# Transformmin to long data for correct statistical significance
+#  for multiple comparisons of metabolites
+scale_lipids <- function(data = NULL, cols = NULL){
+   data %>%
+    dplyr::select(all_of(norep_attr %>% tolower()),
+                  all_of(cols)) %>%
+    dplyr::mutate_if(colnames(.) %in% cols ,
+                     function(x){scale(x) %>% as.vector()}) 
+}
 
-southamerica_Qst <- by_continent(
-  Qst_Fst %>% filter(metabolite %in% missing_25), 
-  "qst_elevation_sa")
-nrow(southamerica_Qst )
+pivot_lipids <- function(data = NULL, cols = NULL, 
+                         to = "signal"){
+data  %>%
+    dplyr::select(all_of(norep_attr %>% tolower()),
+                  all_of(cols))  %>%
+    tidyr::pivot_longer(
+      cols = all_of(cols), 
+      names_to = "metabolite", 
+      values_to = to
+    ) %>%   
+#    mutate(elevation = factor(elevation, labels = home_label)) %>% # make optional
+    mutate(lipid_label =  to_lipid_label(metabolite)) %>%
+    mutate(metabolite = factor( metabolite, levels =  cols)
+    ) 
+}
 
-quartz(width=5, height =10)
-plot_Qst(mesoamerica_Qst)
-ggpubr::ggarrange(
-  plot_Qst(mesoamerica_Qst, Fst = 0.01984786),
-  plot_Qst(southamerica_Qst, Fst = 0.01984786), # I don't have another Fst threshold 
-  nrow = 2
-)
+meso_lipids <- hilo_lipids %>% filter(continent == "Mex")
+south_lipids <- hilo_lipids %>% filter(continent == "SA")
 
+
+Qst_lipids <- mesoamerica_Qst$metabolite %>% as.character()
+no_data <- Qst_lipids[!Qst_lipids %in% colnames(hilo_lipids)]
+# PC36:1 is absent from hilo_lipids!
+# But it has a calculated Qst value why?
+no_data
+# these data must be in the raw file in the QTL folder
+# work with the other 11 for now add an empty row for 36:1
+meso_selected <- Qst_lipids[Qst_lipids %in% colnames(hilo_lipids)]
+
+scaled_meso <- meso_lipids %>% droplevels() %>%
+  scale_lipids(cols = meso_selected) %>%
+  pivot_lipids(cols = meso_selected)
+  
+
+Qst_lipids <- southamerica_Qst$metabolite %>% as.character()
+no_data <- Qst_lipids[!Qst_lipids %in% colnames(hilo_lipids)]
+south_selected <- Qst_lipids[Qst_lipids %in% colnames(hilo_lipids)]
+
+scaled_south <- south_lipids %>% droplevels() %>%
+  scale_lipids(cols = south_selected) %>%
+  pivot_lipids(cols = south_selected)
+
+```
+
+```{r}
+# With long data I don't need the lapply over the column names
+# just group_by(field, metabolite) 
+# and inside the get_signif function
+# signal ~ elevation 
+
+get_signif_long <- function(data){ 
+  test_formula <-  signal ~ elevation
+  # make all species test
+  data %>%
+  group_by(continent, field, metabolite) %>%
+  rstatix::t_test(., test_formula) %>%
+  rstatix::add_x_position(x = "elevation") %>%
+  rstatix::add_xy_position() %>%
+  rstatix::adjust_pvalue(method = "BH") %>%
+  rstatix::add_significance()  %>%
+  dplyr::mutate( # p_raw = p, p = p.adj,
+                 pval_fmt = format.pval(p.adj, digits = 2),
+                 short.signif =  gsub("\\*.+","\\*",p.adj.signif, perl = TRUE)) %>%
+  dplyr::arrange(p) 
+}
 
 ```
 
 ```{r}
 
+# Does the wide data calculated significance match with
+# the long data one?
+
+common_garden_signif_long <-   hilo_lipids %>% 
+  pivot_lipids(cols = "logPCs.LPCs") %>%
+  droplevels() %>%
+  get_signif_long()
+
+# Nice! they match
+common_garden_signif  %>%
+  select(field:p,p.adj)
+
+common_garden_signif_long  %>%
+  select(field:p,p.adj)
 
 
-
-
-quartz()
-plot_common_garden(hilo_lipids %>%
-                     filter(continent == "Mex"),
-                     var= "PC_32_0")
-
-# boxplots of differences
-
-
-
-get_selected_by_Qst <- function(Qst = NULL, 
-                                lipids = NULL, 
-                                threshold = NULL,
-                                top = NULL){
-  if(is.null(top)){
-  top <- length(selected_lipids)
-  }
-  # Qst = southamerica_Qst 
-  # lipids = hilo_lipids %>%
-  #           filter(continent == "Mex") %>%
-  #           filter(location == "MT") 
-  # first = 2
-  # threshold = 0.01984786
-  Qst %<>%
-    tibble() %>%
-    filter(Qst > threshold) %>%
-    arrange(-Qst)%>%
-    slice(1:top) %>%
-    droplevels()
-    
-  selected_lipids <-  Qst$metabolite
-  
-  scaled <- lipids %>%
-    dplyr::select(continent,location,
-                  elevation, 
-                  all_of(selected_lipids)) %>%
-    dplyr::mutate_if(is.numeric, function(x){scale(x) %>% as.vector()})
-   
-  scaled %>%
-    tibble() %>%
-    tidyr::pivot_longer(
-      cols = selected_lipids, 
-      names_to = "metabolite", 
-      values_to = "Z_score"
-    ) %>%   
-    mutate(elevation = factor(elevation, labels = c("L", "H"))) %>%
-    mutate(metabolite_old = metabolite) %>%
-    mutate(metabolite =  to_lipid_label(metabolite)) %>%
-    mutate(metabolite = factor(metabolite, levels =  rev(selected_lipids) %>% 
-                                                    to_lipid_label()))
+y_position  <-  function(x, var){
+  x %>% filter(metabolite == var) %>% pull(signal) %>% max()
 }
   
+# t_test for the metepec experiment (highland field)
+# corrected for all 4 comparisons
+get_signif_long(
+  hilo_lipids %>%
+    pivot_lipids(cols = "PCs.LPCs") 
+) %>%
+  select(field:p, p.adj)
 
+```
 
-scaled_meso <- get_selected_by_Qst (
-  Qst = mesoamerica_Qst , 
-  lipids = hilo_lipids %>%
-            filter(continent == "Mex") %>%
-            filter(location == "MT") , 
-  top = 2,
-  threshold = 0.01984786)
+```{r}
+# plotting metabolite pairwise difference between fields
+plot_diff <- function(
+  data, Qst =  NULL, 
+  signif = NULL ){
+  
+  lipid_labeller <- levels(Qst$metabolite) %>% to_lipid_label()
+  names(lipid_labeller)  <- levels(Qst$metabolite)
 
-scaled_south <- get_selected_by_Qst (
-  Qst = southamerica_Qst, 
-  lipids = hilo_lipids %>%
-            filter(continent == "Mex") %>%
-            filter(location == "MT") , 
-  top = 2,
-  threshold = 0.01984786)
-library(dplyr)
-plot_top_Qst_lipids <- function(x){
- #  x <- mesoamerica_Qst
- x <- x %>%
-    mutate(metabolite = forcats::fct_reorder(metabolite,-Qst))
-  x %>%
-  ggplot(aes(y = Z_score, x = elevation, color = elevation)) +
-  #ggtitle("Highland Field") +
+  if(is.null(signif)){
+    signif  <- get_signif_long(data)
+  }
+
+  # data is in long format!!!!!
+lipid_Qst  <-  data %>%
+    right_join(Qst) %>%
+    mutate(metabolite = forcats::fct_reorder(metabolite, Qst)) 
+
+ lipid_Qst  %>%
+  ggplot(aes(y = signal, x = elevation, color = elevation)) +
   xlab("Landrace Home") +
-  # geom_boxplot()+
-  ggbeeswarm::geom_quasirandom()  +
+  ggbeeswarm::geom_quasirandom() +
+  stat_summary(
+       fun.data=mean_sdl,
+       fun.args = list(mult = 1),
+       geom="pointrange", color = "black") +
+ ggpubr::stat_pvalue_manual(
+  signif, 
+  label = "short.signif",
+  bracket.nudge.y = 0.1,
+  vjust = -0.3,
+  #fontface = "bold",
+  size = 5, bracket.size = 0.3) +
+  scale_y_continuous( expand = expansion(mult = c(0.1, .2))) +
   facet_wrap(. ~ metabolite,
              scales = "free_x",
-             ncol = 8,
-       labeller = labeller(location = field)) +
+             ncol = 12,
+       labeller = labeller(field = field_long,
+                           metabolite = lipid_labeller)) +
+  scale_x_discrete(labels= c("L","H")) +
   ggpubr::theme_classic2(base_size = 15) +
     theme( legend.position = "none",
-         panel.spacing = unit(0, "lines"), 
+         panel.spacing = unit(0, "lines"),
+         axis.title = element_blank(),
          strip.background = element_blank(),
          strip.placement = "outside") 
 }
-  
-quartz( height = 3, width = 7/3) 
-  plot_top_Qst_lipids(scaled_meso) +
-  scale_color_manual(values = meso_pal)
-
-quartz( height = 3, width = 7/3) 
-  plot_top_Qst_lipids(scaled_south) +
-  scale_color_manual(values = south_pal)
-    
-  
 ```
 
+
 ```{r}
-# Garret list
-meso_lipids <- c("LPC_18_0","PC_35_3", "LPC_18_1", "LPC_18_3", 
-                 "LPC_16_0", "PC_33_2", "PC_36_2",  "PC_32_1",
-                 "PC_34_2", "PC_36_5.A","PC_38_5.A", "PC_35_2")
+# Selected lipids per cluster
+# Not clear what was the criteria forr selecting these
+# particular metabolites but this is the list
+
+figure_selected <- c("LPC_18_0","PC_35_3", "LPC_18_1", "LPC_18_3", 
+                     "LPC_16_0", "PC_33_2", "PC_36_2",  "PC_32_1",
+                     "PC_34_2", "PC_36_5.A","PC_38_5.A", "PC_35_2")
 
 # Check whether there are many isomers per lipid
 #
 # Qst_Fst %>% 
 #   mutate(Qst = qst_elevation_mex) %>%
-#   arrange(carbon_ndes)
+#   arrange(lipid_label)
 #
 # No, no isomers found the list is OK
 
-garret_meso <- data.frame(metabolite  = meso_lipids) %>%
+mesoamerica_Qst <- Qst_Fst %>%
+  filter(metabolite %in% figure_selected) %>%
+  by_continent( Qst_col = "qst_elevation_mex")
+
+southamerica_Qst <- Qst_Fst %>%
+  filter(metabolite %in% figure_selected) %>%
+  by_continent(  Qst_col = "qst_elevation_sa")
+
+
+scaled_meso <- hilo_lipids %>%
+  filter(continent == "Mex") %>%
+  select(all_of(norep_attr %>% tolower()),
+         all_of(figure_selected)) %>%
+  scale_lipids(cols = figure_selected) %>%
+  pivot_lipids(cols = figure_selected)
+  
+scaled_south <- hilo_lipids %>%
+  filter(continent == "SA") %>%
+  select(all_of(norep_attr %>% tolower()),
+         all_of(figure_selected)) %>%
+  scale_lipids(cols = figure_selected) %>%
+  pivot_lipids(cols = figure_selected)
+
+meso_high_diff_plot <- scaled_meso  %>%
+  filter(field == "Highland") %>%
+  plot_diff(
+    Qst = mesoamerica_Qst,
+    signif = get_signif_long(scaled_meso) %>%  # significance data from both fields
+            droplevels() %>%
+      filter(continent =="Mex", field == "Highland") # just plot the significance for Highlands
+  ) +
+  ylab("Z-score") +
+  scale_color_manual(values = unname(meso_pal))
+
+
+south_high_diff_plot <-  scaled_south %>%
+  filter(field == "Highland") %>%
+  plot_diff(
+    Qst = southamerica_Qst,
+    signif = get_signif_long(scaled_south) %>%      # significance data from both fields
+      droplevels() %>%
+      filter(continent =="SA", field == "Highland") # just plot the significance for Highlands
+  ) +
+  ylab("Z-score") +
+  scale_color_manual(values = unname(south_pal))
+
+continent_field_plot <-
+  ggpubr::ggarrange(
+    meso_high_diff_plot,
+    south_high_diff_plot,align = "hv", 
+    legend = "none",
+    common.legend = TRUE,
+    nrow = 2
+  )
+
+
+ggsave(file = "home_sp_field_diff.png",
+       continent_field_plot,
+       width = 12, height = 7,
+       units = "in", dpi = "print",
+       bg = "transparent")
+
+#  In the highland field the difference 
+#  in diverging lipids (Qst >Fst) 
+#  is significant between highland and lowland samples
+#  just for:
+#  PC38:5 in Mesoamerican landraces
+get_signif_long(scaled_meso) %>%
+  select(field:p,p.adj) %>%
+  print(n =25)
+
+#  PC35:2 in Southamerican  landraces
+#  (PC38:5 Qst < Fst in Southamerica even though the difference is significant)
+
+get_signif_long(scaled_south) %>%
+  select(field:p,p.adj) %>%
+  print(n =25)
+
+# Matching effect of highland origin is positive on PC38:5,
+# that means that highland Mesoamerican landraces have 
+# higher PC38:5 signal than lowland landraces when grown
+# at the highland field.
+
+# This significance changes depending on the list of species
+# tested! See what happens when I pick the highest Qst
+
+
+```
+
+```{r}
+# Plotting Qst values for the selected lipid species
+
+# Make sure the order of metabolitas matches
+# thw Qst statistic
+
+selected_Qst_meso <- data.frame(metabolite  = figure_selected) %>%
   left_join(Qst_Fst %>%
               mutate(Qst = qst_elevation_mex)) %>%
   mutate(metabolite = forcats::fct_reorder(metabolite,Qst))%>%
   arrange(-Qst)
+nrow(selected_Qst_meso)
 
-garret_south <- data.frame(metabolite  = meso_lipids) %>%
+selected_Qst_south <- data.frame(metabolite  = figure_selected) %>%
   left_join(Qst_Fst %>%
               mutate(Qst = qst_elevation_sa)) %>%
   mutate(metabolite = forcats::fct_reorder(metabolite,Qst))%>%
   arrange(-Qst)
+nrow(selected_Qst_south)
 
-garret_south %>% dplyr::select(metabolite,carbon_ndes, Qst) 
+selected_Qst_south  %>% dplyr::select(metabolite,lipid_label, Qst) 
+
 # the threshold for South America is ~ 0.031
 # Qst(LPC_18_1)) < Fst Qst(LPC_34_2))
 # but I don't have the exact value
+#  Finally 
 
-quartz(width=4, height =9)
-ggpubr::ggarrange(
-    plot_Qst(garret_meso, Fst   = 0.01984786) + 
-      xlim(0,0.3),
-    plot_Qst(garret_south, Fst = 0.031) + 
-      xlim(0,0.3),
+meso_xlab <- expression(italic("Q"["ST"]) ~ "Mesoamerica")
+south_xlab <- expression(italic("Q"["ST"]) ~ "South America")
+        
+
+Qst_plot <- ggpubr::ggarrange(
+    plot_Qst(selected_Qst_meso, 
+             Fst   = 0.01984786) + 
+      xlim(0,0.3) +
+      xlab(meso_xlab),
+    plot_Qst(selected_Qst_south,
+             Fst = 0.031) + 
+      xlim(0,0.3)+
+      xlab(south_xlab),
     nrow = 2
 ) 
 
-```
-```{r}
-ruben_meso <- get_selected_by_Qst (
-    Qst = Qst_Fst %>% filter(metabolite %in% meso_top) %>%
-        mutate(Qst = qst_elevation_mex), 
-  lipids = hilo_lipids %>%
-            filter(continent == "Mex") %>%
-            filter(location == "MT") , 
-  top = 3,
-  threshold = 0.01984786)
+ggsave(file = "Qst_plot.png",
+       Qst_plot,
+       width = 4, height = 8,
+       units = "in", dpi = "print",
+       bg = "transparent")
 
-south_top <- c("PC_34_2","PC_35_2","PC_32_1")
-
-ruben_south <- get_selected_by_Qst (
-  Qst = Qst_Fst %>% filter(metabolite %in% south_top) %>%
-        mutate(Qst = qst_elevation_sa), 
-  lipids = hilo_lipids %>%
-            filter(continent == "Mex") %>%
-            filter(location == "MT") , 
-  top = 3,
-  threshold = 0.01984786)
-
-quartz( height = 4, width = 2*7/5) 
-  plot_top_Qst_lipids(ruben_meso) +
-  scale_color_manual(values = meso_pal)
-
-quartz( height = 4, width = 2*7/5) 
-  plot_top_Qst_lipids(ruben_south) +
-  scale_color_manual(values = south_pal)
-    
 ```
 
